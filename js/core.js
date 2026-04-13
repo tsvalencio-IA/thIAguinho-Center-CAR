@@ -1,351 +1,273 @@
 /**
- * JARVIS ERP — core.js
- * Estado global, listeners Firestore, utilitários
+ * ERP MASTER - NÚCLEO DO SISTEMA (CORE)
+ * Responsável por: Autenticação, Isolamento SaaS (Tenants), RBAC (Permissões) e Listeners Globais.
  */
 
-'use strict';
-
-// ============================================================
-// NAMESPACE GLOBAL
-// ============================================================
-window.J = {
-  // SESSÃO
-  tid:         sessionStorage.getItem('j_tid')         || null,
-  role:        sessionStorage.getItem('j_role')        || null,
-  nome:        sessionStorage.getItem('j_nome')        || 'Usuário',
-  tnome:       sessionStorage.getItem('j_tnome')       || 'Oficina',
-  fid:         sessionStorage.getItem('j_fid')         || null,
-  gemini:      sessionStorage.getItem('j_gemini')      || null,
-  nicho:       sessionStorage.getItem('j_nicho')       || 'carros',
-  cloudName:   sessionStorage.getItem('j_cloud_name')  || 'dmuvm1o6m',
-  cloudPreset: sessionStorage.getItem('j_cloud_preset')|| 'evolution',
-  brand:       JSON.parse(sessionStorage.getItem('j_brand') || 'null'),
-  comissao:    parseFloat(sessionStorage.getItem('j_comissao') || '0'),
-
-  // ESTADO IN-MEMORY
-  os:           [],
-  clientes:     [],
-  veiculos:     [],
-  estoque:      [],
-  financeiro:   [],
-  equipe:       [],
-  fornecedores: [],
-  agendamentos: [],
-  mensagens:    [],
-  chatEquipe:   [],
-  auditoria:    [],
-  chatAtivo:    null,
-
-  // DB REFERENCE (preenchido em initCore)
-  db: null
+// ============================================================================
+// 1. CONFIGURAÇÃO E INICIALIZAÇÃO DO FIREBASE (FIRESTORE)
+// ============================================================================
+const firebaseConfig = {
+    // ATENÇÃO: Substitua pelas chaves reais do seu projeto Firebase Enterprise
+    apiKey: "AIzaSy_SUA_CHAVE_AQUI",
+    authDomain: "seu-erp-master.firebaseapp.com",
+    projectId: "seu-erp-master",
+    storageBucket: "seu-erp-master.appspot.com",
+    messagingSenderId: "123456789",
+    appId: "1:123456789:web:abcdef123456"
 };
 
-// ============================================================
-// INICIALIZAÇÃO
-// ============================================================
-window.initCore = function() {
-  // Firebase
-  J.db = window.initFirebase();
-
-  // Proteção de rota
-  if (!J.tid) {
-    window.location.replace('index.html');
-    return;
-  }
-
-  // Aplicar brand do tenant
-  if (J.brand) window.aplicarBrand(J.brand);
-
-  // Popular UI base
-  _populateBaseUI();
-
-  // Start all listeners
-  _escutarOS();
-  _escutarClientes();
-  _escutarVeiculos();
-  _escutarEstoque();
-  _escutarFinanceiro();
-  _escutarEquipe();
-  _escutarFornecedores();
-  _escutarMensagens();
-  _escutarAgendamentos();
-  _escutarAuditoria();
-};
-
-window.initCoreEquipe = function() {
-  J.db = window.initFirebase();
-  if (!J.tid || J.role === 'admin') {
-    window.location.replace('index.html');
-    return;
-  }
-  if (J.brand) window.aplicarBrand(J.brand);
-  _escutarOS();
-  _escutarClientes();
-  _escutarVeiculos();
-  _escutarEstoque();
-  _escutarChatEquipe();
-  _escutarComissoesEquipe();
-};
-
-function _populateBaseUI() {
-  const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-  set('sbTenantNome', J.tnome);
-  set('sbUserNome', J.nome);
-  set('sbUserRole', (J.role || 'equipe').toUpperCase());
-  set('topNomeTenant', J.tnome);
-
-  const av = document.getElementById('sbAvatar');
-  if (av) av.textContent = J.nome.charAt(0).toUpperCase();
-
-  const nicho = { carros: '🚗 Carros', motos: '🏍️ Motos', bicicletas: '🚲 Bicicletas', multi: '🔧 Multi' };
-  const tnEl = document.getElementById('tbNicho');
-  if (tnEl) tnEl.textContent = nicho[J.nicho] || '🚗 Carros';
+// Inicializa o Firebase apenas se não tiver sido inicializado antes
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
 }
 
-// ============================================================
-// LISTENERS
-// ============================================================
-function _escutarOS() {
-  J.db.collection('ordens_servico')
-    .where('tenantId', '==', J.tid)
-    .onSnapshot(snap => {
-      J.os = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      if (window.renderKanban)    renderKanban();
-      if (window.renderDashboard) renderDashboard();
-      if (window.calcComissoes)   calcComissoes();
-    });
-}
+// Instâncias Globais do Banco de Dados e Autenticação
+const db = firebase.firestore();
+const auth = firebase.auth();
 
-function _escutarClientes() {
-  J.db.collection('clientes')
-    .where('tenantId', '==', J.tid)
-    .onSnapshot(snap => {
-      J.clientes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      if (window.renderClientes) renderClientes();
-      popularSelects();
-    });
-}
+// Habilita persistência offline (Cache poderoso: se a internet da oficina cair, o sistema continua abrindo O.S. e sincroniza depois)
+db.enablePersistence().catch((err) => {
+    console.warn("Persistência offline falhou. Erro: ", err.code);
+});
 
-function _escutarVeiculos() {
-  J.db.collection('veiculos')
-    .where('tenantId', '==', J.tid)
-    .onSnapshot(snap => {
-      J.veiculos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      if (window.renderVeiculos) renderVeiculos();
-      popularSelects();
-    });
-}
+// ============================================================================
+// 2. OBJETO GLOBAL DE ESTADO E MÉTODOS DO NÚCLEO
+// ============================================================================
+window.core = {
+    // Memória da Sessão Atual
+    session: {
+        uid: null,          // ID do Usuário Logado
+        tenantId: null,     // ID da Oficina (Garante que não vaze dados)
+        nome: null,         // Nome do Usuário
+        role: null,         // Nível de Acesso (admin, gestor, mecanico)
+        empresaNome: null   // Nome fantasia da Oficina
+    },
 
-function _escutarEstoque() {
-  J.db.collection('estoqueItems')
-    .where('tenantId', '==', J.tid)
-    .onSnapshot(snap => {
-      J.estoque = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      if (window.renderEstoque)   renderEstoque();
-      if (window.renderDashboard) renderDashboard();
-    });
-}
+    // Listeners ativos (para podermos desligar quando o usuário sair)
+    listeners: [],
 
-function _escutarFinanceiro() {
-  J.db.collection('financeiro')
-    .where('tenantId', '==', J.tid)
-    .onSnapshot(snap => {
-      J.financeiro = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      if (window.renderFinanceiro) renderFinanceiro();
-      if (window.renderDashboard)  renderDashboard();
-    });
-}
+    /**
+     * Ponto de Partida do Sistema (Chamado no final do jarvis.html)
+     */
+    init: function() {
+        console.log("[CORE] Iniciando Motor ERP Master...");
+        this.observarAutenticacao();
+    },
 
-function _escutarEquipe() {
-  J.db.collection('funcionarios')
-    .where('tenantId', '==', J.tid)
-    .onSnapshot(snap => {
-      J.equipe = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      if (window.renderEquipe)  renderEquipe();
-      if (window.calcComissoes) calcComissoes();
-      popularSelects();
-    });
-}
+    /**
+     * Vigia se o usuário está logado ou se a sessão expirou
+     */
+    observarAutenticacao: function() {
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                console.log("[CORE] Usuário autenticado. Verificando credenciais...");
+                await this.carregarPerfil(user.uid);
+            } else {
+                console.error("[CORE] Acesso negado. Redirecionando para Login.");
+                window.location.href = "index.html"; // Expulsa pro login
+            }
+        });
+    },
 
-function _escutarFornecedores() {
-  J.db.collection('fornecedores')
-    .where('tenantId', '==', J.tid)
-    .onSnapshot(snap => {
-      J.fornecedores = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      if (window.renderFornecedores) renderFornecedores();
-      popularSelects();
-    });
-}
+    /**
+     * Busca os dados do usuário e a qual Oficina (Tenant) ele pertence
+     */
+    carregarPerfil: async function(uid) {
+        try {
+            // Busca o cadastro do usuário na coleção global
+            const userDoc = await db.collection("usuarios").doc(uid).get();
+            
+            if (!userDoc.exists) {
+                throw new Error("Perfil de usuário não encontrado no banco de dados.");
+            }
 
-function _escutarMensagens() {
-  J.db.collection('mensagens')
-    .where('tenantId', '==', J.tid)
-    .onSnapshot(snap => {
-      J.mensagens = snap.docs
-        .map(d => ({ id: d.id, ...d.data() }))
-        .sort((a, b) => (a.ts || 0) - (b.ts || 0));
-      if (window.renderChatLista) renderChatLista();
-      if (J.chatAtivo && window.renderChatMsgs) renderChatMsgs(J.chatAtivo);
-      // Badge
-      const unread = J.mensagens.filter(m => m.sender === 'cliente' && !m.lidaAdmin).length;
-      const badge = document.getElementById('chatBadge');
-      if (badge) {
-        badge.textContent = unread;
-        badge.classList.toggle('show', unread > 0);
-      }
-    });
-}
+            const userData = userDoc.data();
+            
+            // Verifica se a oficina dele não está bloqueada por falta de pagamento do SaaS
+            const tenantDoc = await db.collection("tenants").doc(userData.tenantId).get();
+            if (!tenantDoc.exists || tenantDoc.data().status === "bloqueado") {
+                alert("SISTEMA BLOQUEADO. Entre em contato com o suporte financeiro do ERP.");
+                this.sair();
+                return;
+            }
 
-function _escutarAgendamentos() {
-  J.db.collection('agendamentos')
-    .where('tenantId', '==', J.tid)
-    .onSnapshot(snap => {
-      J.agendamentos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      if (window.renderAgenda) renderAgenda();
-    });
-}
+            // Alimenta a memória global
+            this.session = {
+                uid: uid,
+                tenantId: userData.tenantId,
+                nome: userData.nome,
+                role: userData.role,
+                empresaNome: tenantDoc.data().nomeFantasia
+            };
 
-function _escutarAuditoria() {
-  J.db.collection('lixeira_auditoria')
-    .where('tenantId', '==', J.tid)
-    .onSnapshot(snap => {
-      J.auditoria = snap.docs
-        .map(d => ({ id: d.id, ...d.data() }))
-        .sort((a, b) => b.ts > a.ts ? 1 : -1);
-      if (window.renderAuditoria) renderAuditoria();
-    });
-}
+            console.log(`[CORE] Bem-vindo ${this.session.nome} | Cargo: ${this.session.role}`);
 
-// Chat equipe↔admin (equipe.html)
-function _escutarChatEquipe() {
-  J.db.collection('chat_equipe')
-    .where('tenantId', '==', J.tid)
-    .onSnapshot(snap => {
-      J.chatEquipe = snap.docs
-        .map(d => ({ id: d.id, ...d.data() }))
-        .sort((a, b) => (a.ts || 0) - (b.ts || 0));
-      if (window.renderChatEquipe) renderChatEquipe();
-    });
-}
+            // Preenche os dados visuais na tela
+            document.getElementById("lbl-usuario-nome").textContent = this.session.nome;
+            document.getElementById("lbl-empresa-nome").textContent = this.session.empresaNome;
 
-function _escutarComissoesEquipe() {
-  if (!J.fid) return;
-  J.db.collection('financeiro')
-    .where('tenantId', '==', J.tid)
-    .where('isComissao', '==', true)
-    .where('mecId', '==', J.fid)
-    .onSnapshot(snap => {
-      const fins = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      if (window.renderComissoes) renderComissoes(fins);
-    });
-}
+            // Dispara as engrenagens de interface e banco
+            this.aplicarPermissoes(this.session.role);
+            this.iniciarEscutasEmTempoReal();
+            
+            // Chama a inicialização da UI (se já estiver carregada)
+            if (window.ui && typeof window.ui.init === "function") {
+                window.ui.init();
+            }
 
-// ============================================================
-// POPULAR SELECTS (usado em vários módulos)
-// ============================================================
-window.popularSelects = function() {
-  const cOpts = '<option value="">Selecione...</option>' +
-    J.clientes.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+        } catch (error) {
+            console.error("[CORE] Falha crítica ao carregar perfil:", error);
+            alert("Erro ao carregar dados do usuário. Recarregue a página.");
+        }
+    },
 
-  ['osCliente', 'agdCliente', 'veicDono'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.innerHTML = cOpts;
-  });
+    /**
+     * Aplica o RBAC (Role-Based Access Control)
+     * Oculta financeiro, lixeira e configurações dependendo de quem logou.
+     */
+    aplicarPermissoes: function(role) {
+        const adminElements = document.querySelectorAll('.admin-only');
+        const gestaoElements = document.querySelectorAll('.gestao-only');
 
-  const mOpts = '<option value="">Não atribuído</option>' +
-    J.equipe.map(f => `<option value="${f.id}">${f.nome} — ${JARVIS_CONST.CARGOS[f.cargo] || f.cargo}</option>`).join('');
+        // Se for mecânico padrão, esconde tudo que for de gestão ou admin
+        if (role === 'mecanico') {
+            adminElements.forEach(el => el.classList.add('d-none'));
+            gestaoElements.forEach(el => el.classList.add('d-none'));
+        } 
+        // Se for gestor (Dono da Oficina), esconde apenas coisas de SuperAdmin
+        else if (role === 'gestor') {
+            adminElements.forEach(el => el.classList.add('d-none'));
+            gestaoElements.forEach(el => el.classList.remove('d-none'));
+        } 
+        // Se for Master (Você), vê tudo
+        else if (role === 'master' || role === 'admin') {
+            adminElements.forEach(el => el.classList.remove('d-none'));
+            gestaoElements.forEach(el => el.classList.remove('d-none'));
+        }
+    },
 
-  ['osMec', 'agdMec'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.innerHTML = mOpts;
-  });
+    /**
+     * Liga os "Ouvidos" do Firebase para reagir em Tempo Real (A Mágica da Automação)
+     */
+    iniciarEscutasEmTempoReal: function() {
+        const tenantId = this.session.tenantId;
 
-  const fOpts = '<option value="">Selecione...</option>' +
-    J.fornecedores.map(f => `<option value="${f.id}">${f.nome}</option>`).join('');
+        // 1. Escuta de Notificações / Alertas (Aprovações do Cliente)
+        const unsubNotificacoes = db.collection("tenants").doc(tenantId)
+            .collection("notificacoes")
+            .where("lida", "==", false)
+            .orderBy("dataHora", "desc")
+            .onSnapshot((snapshot) => {
+                let unreadCount = snapshot.docs.length;
+                const badgeAlertas = document.getElementById("badge-alertas-os");
+                const listaAlertas = document.getElementById("conteudo-alertas-os");
+                
+                if (unreadCount > 0) {
+                    badgeAlertas.textContent = unreadCount;
+                    badgeAlertas.classList.remove("d-none");
+                    
+                    let htmlAlertas = "";
+                    snapshot.docChanges().forEach((change) => {
+                        // Se for uma nova notificação (Ex: Orçamento Aprovado via Web)
+                        if (change.type === "added") {
+                            const notif = change.doc.data();
+                            
+                            // Dispara Alerta Sonoro!
+                            this.tocarAlerta("os");
+                            
+                            // Monta a notificação no Sino dropdown
+                            htmlAlertas += `
+                                <li>
+                                    <a class="dropdown-item text-white border-bottom border-secondary py-2" href="#" onclick="core.marcarNotificacaoLida('${change.doc.id}')">
+                                        <div class="d-flex justify-content-between">
+                                            <strong class="${notif.tipo === 'aprovacao' ? 'text-success' : 'text-warning'}">${notif.titulo}</strong>
+                                            <small class="text-white-50">${new Date(notif.dataHora.toDate()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</small>
+                                        </div>
+                                        <span class="small text-white-50 text-wrap">${notif.mensagem}</span>
+                                    </a>
+                                </li>
+                            `;
+                            
+                            // Se a UI já estiver pronta, dispara um Toast na tela também
+                            if(window.ui && window.ui.mostrarToast) {
+                                window.ui.mostrarToast(notif.titulo, notif.mensagem, notif.tipo === 'aprovacao' ? 'success' : 'warning');
+                            }
+                        }
+                    });
+                    
+                    if(htmlAlertas !== "") {
+                        listaAlertas.innerHTML = htmlAlertas;
+                    }
 
-  ['nfFornec'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.innerHTML = fOpts;
-  });
-};
+                } else {
+                    badgeAlertas.classList.add("d-none");
+                    listaAlertas.innerHTML = '<li><span class="dropdown-item text-white-50 text-center small">Tudo tranquilo. Nenhum alerta pendente.</span></li>';
+                }
+            }, (error) => {
+                console.error("[CORE] Erro na escuta de notificações: ", error);
+            });
 
-window.filtrarVeiculosOS = function() {
-  const cid  = _v('osCliente');
-  const tipo = _v('osTipoVeiculo');
-  let veics  = J.veiculos.filter(v => v.clienteId === cid);
-  if (tipo) veics = veics.filter(v => v.tipo === tipo);
-  const el = document.getElementById('osVeiculo');
-  if (el) el.innerHTML = '<option value="">Selecione...</option>' +
-    veics.map(v => `<option value="${v.id}">${v.modelo} (${v.placa})</option>`).join('');
-};
+        // Adiciona aos listeners para desativar no logout
+        this.listeners.push(unsubNotificacoes);
 
-window.filtrarVeicsAgenda = function() {
-  const cid  = _v('agdCliente');
-  const veics = J.veiculos.filter(v => v.clienteId === cid);
-  const el = document.getElementById('agdVeiculo');
-  if (el) el.innerHTML = '<option value="">Selecione...</option>' +
-    veics.map(v => `<option value="${v.id}">${v.modelo} (${v.placa})</option>`).join('');
-};
+        // 2. Chama a Inicialização do Kanban na O.S (se o script de O.S estiver carregado)
+        if (window.os && typeof window.os.iniciarKanban === "function") {
+            window.os.iniciarKanban(tenantId);
+        }
+    },
 
-// ============================================================
-// AUDITORIA
-// ============================================================
-window.audit = async function(modulo, acao) {
-  try {
-    await J.db.collection('lixeira_auditoria').add({
-      tenantId: J.tid,
-      modulo,
-      acao,
-      usuario: J.nome,
-      ts: new Date().toISOString()
-    });
-  } catch (e) { /* silencioso */ }
-};
+    /**
+     * Toca o som de notificação correspondente
+     */
+    tocarAlerta: function(tipo) {
+        // Para evitar tocar o som dezenas de vezes ao carregar a página pela primeira vez,
+        // só tocamos o áudio se a página já terminou de carregar faz uns segundos.
+        if (performance.now() > 3000) {
+            try {
+                let audio;
+                if (tipo === "chat") {
+                    audio = document.getElementById("audio-notifica-chat");
+                } else {
+                    audio = document.getElementById("audio-notifica-os");
+                }
+                
+                if (audio) {
+                    audio.currentTime = 0;
+                    audio.play().catch(e => console.warn("Auto-play de áudio bloqueado pelo navegador."));
+                }
+            } catch(e){}
+        }
+    },
 
-// ============================================================
-// UTILITÁRIOS GLOBAIS
-// ============================================================
+    /**
+     * Marca uma notificação como lida no banco de dados
+     */
+    marcarNotificacaoLida: async function(notifId) {
+        try {
+            await db.collection("tenants").doc(this.session.tenantId)
+                .collection("notificacoes").doc(notifId)
+                .update({ lida: true });
+        } catch (error) {
+            console.error("Erro ao marcar notificação:", error);
+        }
+    },
 
-// Shorthand DOM
-window._$  = id  => document.getElementById(id);
-window._v  = id  => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
-window._sv = (id, val) => { const el = document.getElementById(id); if (el) el.value = val ?? ''; };
-window._st = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt ?? ''; };
-window._sh = (id, htm) => { const el = document.getElementById(id); if (el) el.innerHTML = htm ?? ''; };
-window._chk = id => { const el = document.getElementById(id); return el ? el.checked : false; };
-window._ck  = (id, v) => { const el = document.getElementById(id); if (el) el.checked = !!v; };
+    /**
+     * Encerrar a Sessão de forma limpa e segura
+     */
+    sair: function() {
+        // Desliga todos os "ouvidos" do Firebase para não consumir banda à toa
+        this.listeners.forEach(unsub => unsub());
+        this.listeners = [];
+        
+        // Zera o estado global
+        this.session = { uid: null, tenantId: null, nome: null, role: null };
 
-// Formatação
-window.moeda = v =>
-  new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(parseFloat(v) || 0);
-
-window.dtBr = iso => {
-  if (!iso) return '—';
-  try { return new Date(iso).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }); }
-  catch { return iso; }
-};
-
-window.dtHrBr = iso => {
-  if (!iso) return '—';
-  try { return new Date(iso).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }); }
-  catch { return iso; }
-};
-
-window.dtISO = () => new Date().toISOString();
-
-window.slugify = str =>
-  str.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-');
-
-window.randId = (n = 6) => Math.random().toString(36).slice(-n).toUpperCase();
-
-window.sair = function() {
-  sessionStorage.clear();
-  window.location.href = 'index.html';
-};
-
-// WhatsApp deep link
-window.abrirWpp = function(numero, msg) {
-  const n = (numero || '').replace(/\D/g, '');
-  const url = `https://wa.me/55${n}?text=${encodeURIComponent(msg || '')}`;
-  window.open(url, '_blank');
+        // Desloga do Auth
+        auth.signOut().then(() => {
+            window.location.href = "index.html";
+        }).catch((error) => {
+            console.error("Erro ao deslogar:", error);
+        });
+    }
 };
