@@ -250,10 +250,9 @@ window.fazerLogout = function() {
 // Todos os listeners de teclado e comportamento de UI ficam aqui.
 // FIX: listeners da aba Equipe estavam APENAS no inline do index.html — movidos para cá.
 // NÃO duplicar nenhum listener no inline do index.html.
+// FIX CRÍTICO: NÃO limpar sessionStorage no DOMContentLoaded — isso destrói a sessão após refresh!
 // ============================================================
 document.addEventListener('DOMContentLoaded', () => {
-  sessionStorage.clear();
-
   // --- ABA MASTER ---
   const usr = document.getElementById('usr');
   const pwd = document.getElementById('pwd');
