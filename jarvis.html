@@ -319,6 +319,7 @@
   <!-- FIREBASE -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
   <!-- SCRIPTS -->
   <script src="js/config.js"></script>
@@ -353,9 +354,8 @@
       const pgtoOpts = JARVIS_CONST.FORMAS_PGTO.map(p => `<option value="${p.value}">${p.label}</option>`).join('');
       document.getElementById('finPgto').innerHTML = pgtoOpts;
 
-      renderDashboard();
-      renderKanban();
-      renderFinanceiro();
+      // renderDashboard, renderKanban e renderFinanceiro são chamados automaticamente pelos listeners do core.js
+      // quando os dados são carregados do Firestore. Não chamar aqui para evitar erro de "J.db is null".
     });
   </script>
 </body>
