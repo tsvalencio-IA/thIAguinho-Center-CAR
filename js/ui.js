@@ -1,69 +1,80 @@
 /**
- * ERP MASTER - MÓDULO DE INTERFACE (UI)
- * Responsável por: Navegação SPA, Notificações Visuais (Toasts), Comportamento do Kanban e Responsividade.
+ * JARVIS ERP - MÓDULO DE INTERFACE (UI)
+ * Responsável por: Navegação SPA, Controle de Modais, Filtros e Notificações Visuais.
  */
 
 window.ui = {
     /**
-     * Inicializa os comportamentos visuais básicos assim que o Core carrega o perfil
+     * Inicializa os componentes visuais
      */
     init: function() {
-        console.log("[UI] Inicializando Sistema Nervoso da Interface...");
-        this.initKanbanVisuals();
-        this.initFechamentoMenuMobile();
+        console.log("[UI] Inicializando componentes de interface...");
+        this.renderizarInfoOficina();
         
-        // Garante que a tela inicial seja o Pátio (Kanban)
-        const btnPatio = document.querySelector('button[onclick="ui.irSecao(\'sec-os\', this)"]');
-        if (btnPatio) {
-            this.irSecao('sec-os', btnPatio);
+        // Garante que o sistema inicia na seção de Pátio
+        const btnInicio = document.querySelector('button[onclick*="sec-os"]');
+        if (btnInicio) {
+            this.irSecao('sec-os', btnInicio);
         }
     },
 
     /**
-     * Navegação SPA (Single Page Application)
-     * Oculta todas as seções e mostra apenas a que o usuário clicou, sem dar "F5".
-     * * @param {string} secaoId - O ID da <section> que deve aparecer
-     * @param {HTMLElement} btnElement - O botão do menu que foi clicado
+     * Atualiza os nomes e fotos da oficina na interface
      */
-    irSecao: function(secaoId, btnElement) {
-        // 1. Remove a classe 'active' de todos os botões do menu
-        const botoesNav = document.querySelectorAll('.nav-btn');
-        botoesNav.forEach(btn => btn.classList.remove('active'));
-
-        // 2. Adiciona a classe 'active' apenas no botão clicado
-        if (btnElement) {
-            btnElement.classList.add('active');
+    renderizarInfoOficina: function() {
+        if (window.J && window.J.oficina) {
+            const lblEmpresa = document.getElementById('lbl-empresa-nome');
+            const lblUser = document.getElementById('lbl-usuario-nome');
             
-            // Atualiza o título no Topbar
-            const titulo = btnElement.innerText.trim();
-            document.getElementById('titulo-pagina').innerText = titulo;
+            if (lblEmpresa) lblEmpresa.textContent = window.J.oficina.nomeFantasia || "Oficina Jarvis";
+            if (lblUser) lblUser.textContent = window.J.user ? window.J.user.nome : "Usuário";
         }
+    },
 
-        // 3. Esconde todas as seções da área principal
+    /**
+     * Navegação entre as seções do sistema (SPA)
+     * @param {string} secaoId - ID da section a ser exibida
+     * @param {HTMLElement} btn - Botão clicado para aplicar classe active
+     */
+    irSecao: function(secaoId, btn) {
+        // 1. Remove classe ativa de todos os botões do menu
+        const botoes = document.querySelectorAll('.nav-btn');
+        botoes.forEach(b => b.classList.remove('active'));
+
+        // 2. Adiciona classe ativa no botão atual
+        if (btn) btn.classList.add('active');
+
+        // 3. Esconde todas as seções
         const secoes = document.querySelectorAll('.secao-tela');
-        secoes.forEach(sec => {
-            sec.classList.remove('d-flex'); // Remove display flex se tiver
-            sec.classList.add('d-none');    // Esconde
+        secoes.forEach(s => {
+            s.classList.add('d-none');
+            s.classList.remove('d-flex');
         });
 
-        // 4. Mostra a seção desejada
-        const secaoAlvo = document.getElementById(secaoId);
-        if (secaoAlvo) {
-            secaoAlvo.classList.remove('d-none');
-            // Se for a seção de OS, precisa de d-flex para o Kanban esticar
+        // 4. Mostra a seção alvo
+        const alvo = document.getElementById(secaoId);
+        if (alvo) {
+            alvo.classList.remove('d-none');
+            // Se for o pátio, usamos flex para manter o layout das colunas
             if (secaoId === 'sec-os') {
-                secaoAlvo.classList.add('d-flex');
+                alvo.classList.add('d-flex');
+            }
+            
+            // Atualiza o título da Topbar
+            const titulo = document.getElementById('titulo-pagina');
+            if (titulo && btn) {
+                titulo.textContent = btn.innerText.trim();
             }
         }
 
-        // 5. Se estiver no celular (mobile), fecha o menu lateral após o clique
+        // 5. Fecha a sidebar no mobile após clique
         if (window.innerWidth < 992) {
             this.toggleSidebar();
         }
     },
 
     /**
-     * Alterna a visibilidade do Menu Lateral (Sidebar) em telas pequenas (Celulares)
+     * Alterna a visibilidade da Sidebar no Mobile
      */
     toggleSidebar: function() {
         const sidebar = document.getElementById('sidebar');
@@ -73,144 +84,79 @@ window.ui = {
     },
 
     /**
-     * Fecha a sidebar automaticamente se o usuário clicar fora dela no celular
-     */
-    initFechamentoMenuMobile: function() {
-        document.addEventListener('click', (event) => {
-            if (window.innerWidth < 992) {
-                const sidebar = document.getElementById('sidebar');
-                const btnToggle = document.querySelector('button[onclick="ui.toggleSidebar()"]');
-                
-                // Se o menu estiver aberto e o clique NÃO foi no menu nem no botão de abrir
-                if (sidebar.classList.contains('show') && 
-                    !sidebar.contains(event.target) && 
-                    (!btnToggle || !btnToggle.contains(event.target))) {
-                    sidebar.classList.remove('show');
-                }
-            }
-        });
-    },
-
-    /**
-     * Lógica do Kanban Chevron: Minimizar e Maximizar Colunas
-     * Permite que o gestor clique no título da coluna para encolhê-la e focar no que importa.
-     */
-    initKanbanVisuals: function() {
-        const headers = document.querySelectorAll('.kanban-col h6');
-        
-        headers.forEach(header => {
-            // Muda o cursor para mostrar que é clicável
-            header.style.cursor = 'pointer';
-            header.title = 'Clique para minimizar/maximizar esta coluna';
-
-            header.addEventListener('click', function() {
-                const coluna = this.closest('.kanban-col');
-                coluna.classList.toggle('minimized');
-                
-                // Salva a preferência no LocalStorage (memória do navegador)
-                // Assim, se ele atualizar a página, a coluna continua minimizada
-                const idColuna = coluna.querySelector('.kanban-cards').id;
-                const isMinimized = coluna.classList.contains('minimized');
-                localStorage.setItem(`kanban_min_${idColuna}`, isMinimized);
-            });
-        });
-
-        // Restaura as colunas minimizadas ao carregar a página
-        const colunas = document.querySelectorAll('.kanban-col');
-        colunas.forEach(col => {
-            const idColuna = col.querySelector('.kanban-cards').id;
-            if (localStorage.getItem(`kanban_min_${idColuna}`) === 'true') {
-                col.classList.add('minimized');
-            }
-        });
-    },
-
-    /**
-     * Sistema Customizado de Notificações Flutuantes (Toasts)
-     * Muito mais leve e rápido que injetar via biblioteca externa.
-     * * @param {string} titulo - O título da notificação
-     * @param {string} mensagem - O texto explicativo
-     * @param {string} tipo - 'success', 'danger', 'warning', 'info'
-     */
-    mostrarToast: function(titulo, mensagem, tipo = 'info') {
-        const container = document.getElementById('toast-container');
-        if (!container) return;
-
-        // Mapeamento de Ícones e Cores com base no tipo
-        const temas = {
-            'success': { icon: 'bi-check-circle-fill', bg: 'bg-success', text: 'text-white' },
-            'danger': { icon: 'bi-exclamation-triangle-fill', bg: 'bg-danger', text: 'text-white' },
-            'warning': { icon: 'bi-exclamation-circle-fill', bg: 'bg-warning', text: 'text-dark' },
-            'info': { icon: 'bi-info-circle-fill', bg: 'bg-info', text: 'text-dark' }
-        };
-
-        const tema = temas[tipo] || temas['info'];
-        
-        // Criação dinâmica do elemento HTML do Toast
-        const toastEl = document.createElement('div');
-        toastEl.className = `toast align-items-center ${tema.text} ${tema.bg} border-0 mb-2 show`;
-        toastEl.setAttribute('role', 'alert');
-        toastEl.setAttribute('aria-live', 'assertive');
-        toastEl.setAttribute('aria-atomic', 'true');
-        toastEl.style.opacity = '0'; // Começa invisível para animar
-        toastEl.style.transition = 'opacity 0.3s ease-in-out';
-
-        toastEl.innerHTML = `
-            <div class="d-flex">
-                <div class="toast-body d-flex align-items-start gap-2">
-                    <i class="bi ${tema.icon} fs-5"></i>
-                    <div>
-                        <strong class="d-block">${titulo}</strong>
-                        <span class="small">${mensagem}</span>
-                    </div>
-                </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" onclick="this.closest('.toast').remove()"></button>
-            </div>
-        `;
-
-        container.appendChild(toastEl);
-
-        // Dispara a animação de Fade In
-        setTimeout(() => { toastEl.style.opacity = '1'; }, 10);
-
-        // Autodestruição após 4 segundos
-        setTimeout(() => {
-            toastEl.style.opacity = '0'; // Fade Out
-            setTimeout(() => {
-                if (container.contains(toastEl)) {
-                    container.removeChild(toastEl);
-                }
-            }, 300); // Tempo do fade out
-        }, 4000);
-    },
-
-    /**
-     * Filtro Global Básico (Oculta cartões e linhas que não batem com a busca)
-     * Será expandido nos outros módulos para buscar no Firebase se necessário.
+     * Filtro Global de Busca (Filtra cartões no Kanban e linhas na tabela de clientes)
      */
     filtrarGlobal: function() {
         const termo = document.getElementById('busca-global').value.toLowerCase().trim();
         
-        // 1. Filtrar no Kanban (Oculta os cartões que não contém o termo)
-        const cartoesOS = document.querySelectorAll('.os-card');
-        cartoesOS.forEach(cartao => {
-            const texto = cartao.innerText.toLowerCase();
-            if (texto.includes(termo)) {
-                cartao.style.display = 'block';
-            } else {
-                cartao.style.display = 'none';
-            }
+        // Filtrar Cartões de OS
+        const cartoes = document.querySelectorAll('.os-card');
+        cartoes.forEach(c => {
+            const texto = c.innerText.toLowerCase();
+            c.style.display = texto.includes(termo) ? 'block' : 'none';
         });
 
-        // 2. Filtrar na Tabela de Clientes
+        // Filtrar Tabela de Clientes
         const linhasClientes = document.querySelectorAll('#tb-clientes-corpo tr');
-        linhasClientes.forEach(linha => {
-            const texto = linha.innerText.toLowerCase();
-            if (texto.includes(termo)) {
-                linha.style.display = '';
-            } else {
-                linha.style.display = 'none';
-            }
+        linhasClientes.forEach(l => {
+            const texto = l.innerText.toLowerCase();
+            l.style.display = texto.includes(termo) ? '' : 'none';
         });
+    },
+
+    /**
+     * Sistema de Notificações Flutuantes (Toasts)
+     * @param {string} titulo - Título da mensagem
+     * @param {string} msg - Texto da mensagem
+     * @param {string} tipo - 'success', 'danger', 'warning', 'info'
+     */
+    mostrarToast: function(titulo, msg, tipo = 'info') {
+        const container = document.getElementById('toast-container');
+        if (!container) return;
+
+        const toastId = 'toast_' + Date.now();
+        const corFundo = tipo === 'success' ? 'bg-success' : (tipo === 'danger' ? 'bg-danger' : (tipo === 'warning' ? 'bg-warning text-dark' : 'bg-info text-dark'));
+        
+        const html = `
+            <div id="${toastId}" class="toast show align-items-center text-white ${corFundo} border-0 mb-2" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <strong class="d-block">${titulo}</strong>
+                        ${msg}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close" onclick="this.parentElement.parentElement.remove()"></button>
+                </div>
+            </div>
+        `;
+
+        container.insertAdjacentHTML('beforeend', html);
+
+        // Remove automaticamente após 4 segundos
+        setTimeout(() => {
+            const el = document.getElementById(toastId);
+            if (el) el.remove();
+        }, 4000);
+    },
+
+    /**
+     * Controla a exibição do Painel de Atenção no topo do Pátio
+     * @param {Array} alertas - Lista de strings com os alertas
+     */
+    atualizarPainelAtencao: function(alertas) {
+        const painel = document.getElementById('painel-atencao');
+        if (!painel) return;
+
+        if (alertas && alertas.length > 0) {
+            painel.classList.remove('d-none');
+            let html = '';
+            alertas.forEach(a => {
+                html += `<div class="attention-box bg-black border border-warning p-2 mb-2 text-warning fw-bold small">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i> ${a}
+                         </div>`;
+            });
+            painel.innerHTML = html;
+        } else {
+            painel.classList.add('d-none');
+        }
     }
 };
