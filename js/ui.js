@@ -1,265 +1,216 @@
 /**
- * JARVIS ERP — ui.js
- * Sistema de UI: toast, modal, tabs, loaders, navegação
+ * ERP MASTER - MÓDULO DE INTERFACE (UI)
+ * Responsável por: Navegação SPA, Notificações Visuais (Toasts), Comportamento do Kanban e Responsividade.
  */
 
-'use strict';
+window.ui = {
+    /**
+     * Inicializa os comportamentos visuais básicos assim que o Core carrega o perfil
+     */
+    init: function() {
+        console.log("[UI] Inicializando Sistema Nervoso da Interface...");
+        this.initKanbanVisuals();
+        this.initFechamentoMenuMobile();
+        
+        // Garante que a tela inicial seja o Pátio (Kanban)
+        const btnPatio = document.querySelector('button[onclick="ui.irSecao(\'sec-os\', this)"]');
+        if (btnPatio) {
+            this.irSecao('sec-os', btnPatio);
+        }
+    },
 
-// ============================================================
-// TOAST SYSTEM
-// ============================================================
-window.toast = function(msg, type = 'success', title = null) {
-  const icons = { success: '✓', error: '✕', warn: '⚠', info: 'ℹ' };
-  const container = document.getElementById('toast-container') || (() => {
-    const c = document.createElement('div');
-    c.id = 'toast-container';
-    document.body.appendChild(c);
-    return c;
-  })();
+    /**
+     * Navegação SPA (Single Page Application)
+     * Oculta todas as seções e mostra apenas a que o usuário clicou, sem dar "F5".
+     * * @param {string} secaoId - O ID da <section> que deve aparecer
+     * @param {HTMLElement} btnElement - O botão do menu que foi clicado
+     */
+    irSecao: function(secaoId, btnElement) {
+        // 1. Remove a classe 'active' de todos os botões do menu
+        const botoesNav = document.querySelectorAll('.nav-btn');
+        botoesNav.forEach(btn => btn.classList.remove('active'));
 
-  const el = document.createElement('div');
-  el.className = `toast ${type}`;
-  el.innerHTML = `
-    <div class="toast-icon">${icons[type] || '✓'}</div>
-    <div class="toast-content">
-      ${title ? `<div class="toast-title">${title}</div>` : ''}
-      <div class="toast-msg">${msg}</div>
-    </div>
-  `;
-  container.appendChild(el);
+        // 2. Adiciona a classe 'active' apenas no botão clicado
+        if (btnElement) {
+            btnElement.classList.add('active');
+            
+            // Atualiza o título no Topbar
+            const titulo = btnElement.innerText.trim();
+            document.getElementById('titulo-pagina').innerText = titulo;
+        }
 
-  // Auto-remove
-  const remove = () => {
-    el.style.opacity = '0';
-    el.style.transform = 'translateX(20px)';
-    el.style.transition = 'all 0.3s ease';
-    setTimeout(() => el.remove(), 320);
-  };
+        // 3. Esconde todas as seções da área principal
+        const secoes = document.querySelectorAll('.secao-tela');
+        secoes.forEach(sec => {
+            sec.classList.remove('d-flex'); // Remove display flex se tiver
+            sec.classList.add('d-none');    // Esconde
+        });
 
-  setTimeout(remove, type === 'error' ? 5000 : 3200);
-  el.addEventListener('click', remove);
+        // 4. Mostra a seção desejada
+        const secaoAlvo = document.getElementById(secaoId);
+        if (secaoAlvo) {
+            secaoAlvo.classList.remove('d-none');
+            // Se for a seção de OS, precisa de d-flex para o Kanban esticar
+            if (secaoId === 'sec-os') {
+                secaoAlvo.classList.add('d-flex');
+            }
+        }
+
+        // 5. Se estiver no celular (mobile), fecha o menu lateral após o clique
+        if (window.innerWidth < 992) {
+            this.toggleSidebar();
+        }
+    },
+
+    /**
+     * Alterna a visibilidade do Menu Lateral (Sidebar) em telas pequenas (Celulares)
+     */
+    toggleSidebar: function() {
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar) {
+            sidebar.classList.toggle('show');
+        }
+    },
+
+    /**
+     * Fecha a sidebar automaticamente se o usuário clicar fora dela no celular
+     */
+    initFechamentoMenuMobile: function() {
+        document.addEventListener('click', (event) => {
+            if (window.innerWidth < 992) {
+                const sidebar = document.getElementById('sidebar');
+                const btnToggle = document.querySelector('button[onclick="ui.toggleSidebar()"]');
+                
+                // Se o menu estiver aberto e o clique NÃO foi no menu nem no botão de abrir
+                if (sidebar.classList.contains('show') && 
+                    !sidebar.contains(event.target) && 
+                    (!btnToggle || !btnToggle.contains(event.target))) {
+                    sidebar.classList.remove('show');
+                }
+            }
+        });
+    },
+
+    /**
+     * Lógica do Kanban Chevron: Minimizar e Maximizar Colunas
+     * Permite que o gestor clique no título da coluna para encolhê-la e focar no que importa.
+     */
+    initKanbanVisuals: function() {
+        const headers = document.querySelectorAll('.kanban-col h6');
+        
+        headers.forEach(header => {
+            // Muda o cursor para mostrar que é clicável
+            header.style.cursor = 'pointer';
+            header.title = 'Clique para minimizar/maximizar esta coluna';
+
+            header.addEventListener('click', function() {
+                const coluna = this.closest('.kanban-col');
+                coluna.classList.toggle('minimized');
+                
+                // Salva a preferência no LocalStorage (memória do navegador)
+                // Assim, se ele atualizar a página, a coluna continua minimizada
+                const idColuna = coluna.querySelector('.kanban-cards').id;
+                const isMinimized = coluna.classList.contains('minimized');
+                localStorage.setItem(`kanban_min_${idColuna}`, isMinimized);
+            });
+        });
+
+        // Restaura as colunas minimizadas ao carregar a página
+        const colunas = document.querySelectorAll('.kanban-col');
+        colunas.forEach(col => {
+            const idColuna = col.querySelector('.kanban-cards').id;
+            if (localStorage.getItem(`kanban_min_${idColuna}`) === 'true') {
+                col.classList.add('minimized');
+            }
+        });
+    },
+
+    /**
+     * Sistema Customizado de Notificações Flutuantes (Toasts)
+     * Muito mais leve e rápido que injetar via biblioteca externa.
+     * * @param {string} titulo - O título da notificação
+     * @param {string} mensagem - O texto explicativo
+     * @param {string} tipo - 'success', 'danger', 'warning', 'info'
+     */
+    mostrarToast: function(titulo, mensagem, tipo = 'info') {
+        const container = document.getElementById('toast-container');
+        if (!container) return;
+
+        // Mapeamento de Ícones e Cores com base no tipo
+        const temas = {
+            'success': { icon: 'bi-check-circle-fill', bg: 'bg-success', text: 'text-white' },
+            'danger': { icon: 'bi-exclamation-triangle-fill', bg: 'bg-danger', text: 'text-white' },
+            'warning': { icon: 'bi-exclamation-circle-fill', bg: 'bg-warning', text: 'text-dark' },
+            'info': { icon: 'bi-info-circle-fill', bg: 'bg-info', text: 'text-dark' }
+        };
+
+        const tema = temas[tipo] || temas['info'];
+        
+        // Criação dinâmica do elemento HTML do Toast
+        const toastEl = document.createElement('div');
+        toastEl.className = `toast align-items-center ${tema.text} ${tema.bg} border-0 mb-2 show`;
+        toastEl.setAttribute('role', 'alert');
+        toastEl.setAttribute('aria-live', 'assertive');
+        toastEl.setAttribute('aria-atomic', 'true');
+        toastEl.style.opacity = '0'; // Começa invisível para animar
+        toastEl.style.transition = 'opacity 0.3s ease-in-out';
+
+        toastEl.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body d-flex align-items-start gap-2">
+                    <i class="bi ${tema.icon} fs-5"></i>
+                    <div>
+                        <strong class="d-block">${titulo}</strong>
+                        <span class="small">${mensagem}</span>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" onclick="this.closest('.toast').remove()"></button>
+            </div>
+        `;
+
+        container.appendChild(toastEl);
+
+        // Dispara a animação de Fade In
+        setTimeout(() => { toastEl.style.opacity = '1'; }, 10);
+
+        // Autodestruição após 4 segundos
+        setTimeout(() => {
+            toastEl.style.opacity = '0'; // Fade Out
+            setTimeout(() => {
+                if (container.contains(toastEl)) {
+                    container.removeChild(toastEl);
+                }
+            }, 300); // Tempo do fade out
+        }, 4000);
+    },
+
+    /**
+     * Filtro Global Básico (Oculta cartões e linhas que não batem com a busca)
+     * Será expandido nos outros módulos para buscar no Firebase se necessário.
+     */
+    filtrarGlobal: function() {
+        const termo = document.getElementById('busca-global').value.toLowerCase().trim();
+        
+        // 1. Filtrar no Kanban (Oculta os cartões que não contém o termo)
+        const cartoesOS = document.querySelectorAll('.os-card');
+        cartoesOS.forEach(cartao => {
+            const texto = cartao.innerText.toLowerCase();
+            if (texto.includes(termo)) {
+                cartao.style.display = 'block';
+            } else {
+                cartao.style.display = 'none';
+            }
+        });
+
+        // 2. Filtrar na Tabela de Clientes
+        const linhasClientes = document.querySelectorAll('#tb-clientes-corpo tr');
+        linhasClientes.forEach(linha => {
+            const texto = linha.innerText.toLowerCase();
+            if (texto.includes(termo)) {
+                linha.style.display = '';
+            } else {
+                linha.style.display = 'none';
+            }
+        });
+    }
 };
-
-// Atalhos
-window.toastOk   = msg => toast(msg, 'success');
-window.toastErr  = msg => toast(msg, 'error', 'Erro');
-window.toastWarn = msg => toast(msg, 'warn');
-window.toastInfo = msg => toast(msg, 'info');
-
-// ============================================================
-// MODAL SYSTEM
-// ============================================================
-window.openModal = function(id) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.classList.add('open');
-  document.body.style.overflow = 'hidden';
-  // Focus no primeiro input
-  setTimeout(() => {
-    const first = el.querySelector('input:not([type=hidden]), select, textarea');
-    if (first) first.focus();
-  }, 100);
-};
-
-window.closeModal = function(id) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.classList.remove('open');
-  document.body.style.overflow = '';
-};
-
-window.closeAllModals = function() {
-  document.querySelectorAll('.overlay.open').forEach(el => {
-    el.classList.remove('open');
-  });
-  document.body.style.overflow = '';
-};
-
-// Fechar clicando no overlay
-document.addEventListener('click', e => {
-  if (e.target.classList.contains('overlay')) {
-    e.target.classList.remove('open');
-    document.body.style.overflow = '';
-  }
-});
-
-// Fechar com ESC
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') closeAllModals();
-});
-
-// ============================================================
-// TABS SYSTEM
-// ============================================================
-window.switchTab = function(tabEl, paneId, ...otherPaneIds) {
-  // Desativa todos os tabs do mesmo pai
-  tabEl.parentElement.querySelectorAll('.mtab').forEach(t => t.classList.remove('active'));
-  tabEl.classList.add('active');
-
-  // Ativa o pane correto
-  const pane = document.getElementById(paneId);
-  if (pane) pane.classList.add('active');
-
-  otherPaneIds.forEach(id => {
-    const p = document.getElementById(id);
-    if (p) p.classList.remove('active');
-  });
-};
-
-// ============================================================
-// PAGE NAVIGATION (sidebar)
-// ============================================================
-const _sectionCache = {};
-
-window.irSecao = function(key, navEl) {
-  const sectionMap = window.SECTION_MAP || {};
-  const titleMap   = window.TITLE_MAP   || {};
-
-  // Esconde todas as seções
-  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-
-  // Desativa nav items
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-
-  // Ativa seção
-  const secId = sectionMap[key];
-  if (secId) {
-    const sec = document.getElementById(secId);
-    if (sec) sec.classList.add('active');
-  }
-
-  // Ativa nav item
-  if (navEl) navEl.classList.add('active');
-
-  // Atualiza título
-  const titleEl = document.getElementById('pageTitle');
-  if (titleEl) titleEl.textContent = titleMap[key] || key.toUpperCase();
-
-  // Hook para seção ativada
-  if (window.onSectionChange) onSectionChange(key);
-};
-
-// ============================================================
-// LOADER STATES
-// ============================================================
-window.setLoading = function(btnId, loading, originalText) {
-  const btn = document.getElementById(btnId);
-  if (!btn) return;
-  if (loading) {
-    btn._origText = btn.innerHTML;
-    btn.innerHTML = `<div class="spinner"></div> ${originalText || 'Aguarde...'}`;
-    btn.disabled = true;
-    btn.classList.add('btn-loading');
-  } else {
-    btn.innerHTML = btn._origText || originalText || 'Salvar';
-    btn.disabled = false;
-    btn.classList.remove('btn-loading');
-  }
-};
-
-window.showPageLoader = function(show) {
-  const loader = document.getElementById('page-loader');
-  if (!loader) return;
-  if (show) {
-    loader.classList.remove('hidden', 'fade-out');
-  } else {
-    loader.classList.add('fade-out');
-    setTimeout(() => loader.classList.add('hidden'), 450);
-  }
-};
-
-// ============================================================
-// EMPTY STATE HELPER
-// ============================================================
-window.emptyState = function(icon, title, sub) {
-  return `
-    <div class="empty-state">
-      <div class="empty-state-icon">${icon}</div>
-      <div class="empty-state-title">${title}</div>
-      ${sub ? `<div class="empty-state-sub">${sub}</div>` : ''}
-    </div>
-  `;
-};
-
-window.tableEmpty = function(cols, icon, msg) {
-  return `<tr><td colspan="${cols}" class="table-empty">${icon} ${msg}</td></tr>`;
-};
-
-// ============================================================
-// CONFIRM DIALOG (melhorado vs. window.confirm nativo)
-// ============================================================
-window.confirmar = function(msg, titulo = 'Confirmação') {
-  return new Promise(resolve => {
-    // Usa confirm nativo por agora (pode-se customizar com modal)
-    resolve(window.confirm(`${titulo}\n\n${msg}`));
-  });
-};
-
-// ============================================================
-// SEARCH BAR HELPER
-// ============================================================
-window.setupSearch = function(inputId, onSearch) {
-  const el = document.getElementById(inputId);
-  if (!el) return;
-  let debounce;
-  el.addEventListener('input', () => {
-    clearTimeout(debounce);
-    debounce = setTimeout(() => onSearch(el.value.toLowerCase().trim()), 180);
-  });
-};
-
-// ============================================================
-// BADGE COUNTER
-// ============================================================
-window.setBadge = function(id, count) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.textContent = count;
-  el.classList.toggle('show', count > 0);
-};
-
-// ============================================================
-// FORMATTERS (para tabelas)
-// ============================================================
-window.badgeStatus = function(status) {
-  const map = {
-    'Aguardando': 'badge-neutral',
-    'Orcamento':  'badge-warn',
-    'Aprovado':   'badge-brand',
-    'Andamento':  'badge-warn',
-    'Concluido':  'badge-success',
-    'Cancelado':  'badge-danger',
-    'Pago':       'badge-success',
-    'Pendente':   'badge-warn',
-    'Online':     'badge-success',
-    'Trial':      'badge-warn',
-    'Bloqueado':  'badge-danger'
-  };
-  return `<span class="badge ${map[status] || 'badge-neutral'}">${status}</span>`;
-};
-
-window.badgeTipo = function(tipo) {
-  const map = {
-    carro:     ['badge-brand',   '🚗 Carro'],
-    moto:      ['badge-warn',    '🏍️ Moto'],
-    bicicleta: ['badge-success', '🚲 Bicicleta']
-  };
-  const [cls, lbl] = map[tipo] || ['badge-neutral', tipo];
-  return `<span class="badge ${cls}">${lbl}</span>`;
-};
-
-window.badgeEntradaSaida = function(tipo) {
-  return tipo === 'Entrada'
-    ? `<span class="badge badge-success">${tipo}</span>`
-    : `<span class="badge badge-danger">${tipo}</span>`;
-};
-
-// ============================================================
-// KEYBOARD SHORTCUTS
-// ============================================================
-document.addEventListener('keydown', e => {
-  // Enter em inputs mono não submete formulário acidentalmente
-  if (e.key === 'Enter' && e.target.tagName === 'INPUT' && e.target.classList.contains('input-mono')) {
-    e.preventDefault();
-  }
-});
