@@ -1,159 +1,258 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <title>JARVIS ERP — Acesso</title>
-  <link rel="stylesheet" href="css/design.css">
-  <style>
-    body::after {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background-image: linear-gradient(rgba(255,255,255,.02) 1px, transparent 1px),
-                        linear-gradient(90deg, rgba(255,255,255,.02) 1px, transparent 1px);
-      background-size: 48px 48px;
-      pointer-events: none;
-      z-index: 0;
-      animation: gridDrift 30s linear infinite;
-    }
-    .login-page {
-      position: relative;
-      z-index: 1;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SaaS Office - Login</title>
+    <style>
+        :root { --primary: #2563eb; --bg: #f3f4f6; --card: #ffffff; --text: #1f2937; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; color: var(--text); }
+        .login-container { background: var(--card); padding: 2.5rem; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+        h2 { text-align: center; margin-top: 0; color: var(--primary); }
+        .tabs { display: flex; margin-bottom: 1.5rem; border-bottom: 2px solid #e5e7eb; }
+        .tab { flex: 1; text-align: center; padding: 0.75rem; cursor: pointer; font-weight: 600; color: #6b7280; transition: all 0.2s; }
+        .tab.active { color: var(--primary); border-bottom: 2px solid var(--primary); margin-bottom: -2px; }
+        .form-group { margin-bottom: 1.25rem; }
+        label { display: block; margin-bottom: 0.5rem; font-weight: 500; font-size: 0.9rem; }
+        input { width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 6px; box-sizing: border-box; font-size: 1rem; transition: border-color 0.2s; }
+        input:focus { outline: none; border-color: var(--primary); ring: 2px solid var(--primary); }
+        button { width: 100%; padding: 0.875rem; background: var(--primary); color: white; border: none; border-radius: 6px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+        button:hover { background: #1d4ed8; }
+        button:disabled { background: #9ca3af; cursor: not-allowed; }
+        .error-msg { color: #dc2626; font-size: 0.875rem; margin-top: 0.5rem; text-align: center; display: none; }
+        #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 9999; display: none; justify-content: center; align-items: center; flex-direction: column; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #e5e7eb; border-top: 4px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .hidden { display: none; }
+    </style>
 </head>
 <body>
-  <div id="toast-container"></div>
 
-  <div class="login-page">
-    <div class="login-card" style="animation: modal-in .3s ease">
-      <!-- LOGO -->
-      <div class="login-logo-wrap">
-        <div class="login-logo-mark brand-logo-mark">J</div>
-        <div class="login-title brand-name">JARVIS ERP</div>
-        <div class="login-sub brand-tagline">Gestão Automotiva Inteligente</div>
-      </div>
-
-      <!-- TABS -->
-      <div style="display: flex; gap: 8px; margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 12px;">
-        <button class="btn btn-ghost" id="tabMaster" onclick="switchTab('master')" style="flex:1;border-radius:0;border-bottom:2px solid var(--brand);background:transparent">Master</button>
-        <button class="btn btn-ghost" id="tabEquipe" onclick="switchTab('equipe')" style="flex:1;border-radius:0;border-bottom:2px solid transparent;background:transparent">Equipe</button>
-        <button class="btn btn-ghost" id="tabPin"    onclick="switchTab('pin')"    style="flex:1;border-radius:0;border-bottom:2px solid transparent;background:transparent">PIN</button>
-      </div>
-
-      <!-- MASTER LOGIN -->
-      <div id="masterTab" class="login-tab">
-        <div id="loginErr" class="login-err">Usuário ou senha incorretos.</div>
-        <div class="form-group">
-          <label class="form-label">Usuário de acesso</label>
-          <input class="input input-mono" id="usr" type="text" placeholder="seu.usuario" autocomplete="off" spellcheck="false">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Senha</label>
-          <div class="pwd-wrap">
-            <input class="input" id="pwd" type="password" placeholder="••••••••">
-            <button class="pwd-toggle" type="button" onclick="_togglePwd()" id="pwdToggle" title="Ver senha">👁</button>
-          </div>
-        </div>
-        <button class="btn btn-brand btn-xl btn-full" id="btnLogin" onclick="autenticar()" style="margin-top:8px">
-          Entrar no Sistema
-        </button>
-      </div>
-
-      <!-- EQUIPE LOGIN -->
-      <div id="equipeTab" class="login-tab" style="display:none">
-        <div id="loginErrEquipe" class="login-err">Usuário ou senha incorretos.</div>
-        <div class="form-group">
-          <label class="form-label">Usuário</label>
-          <input class="input input-mono" id="usrEquipe" type="text" placeholder="seu.usuario" autocomplete="off" spellcheck="false">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Senha</label>
-          <div class="pwd-wrap">
-            <input class="input" id="pwdEquipe" type="password" placeholder="••••••••">
-            <button class="pwd-toggle" type="button" onclick="_togglePwdEquipe()" id="pwdToggleEquipe" title="Ver senha">👁</button>
-          </div>
-        </div>
-        <button class="btn btn-brand btn-xl btn-full" id="btnLoginEquipe" onclick="autenticarEquipe()" style="margin-top:8px">
-          Entrar como Equipe
-        </button>
-      </div>
-
-      <!-- PIN LOGIN -->
-      <div id="pinTab" class="login-tab" style="display:none">
-        <div id="loginErrPin" class="login-err">Usuário ou PIN incorreto.</div>
-        <div class="form-group">
-          <label class="form-label">Usuário</label>
-          <input class="input input-mono" id="usrPin" type="text" placeholder="seu.usuario" autocomplete="off" spellcheck="false">
-        </div>
-        <div class="form-group">
-          <label class="form-label">PIN (4 dígitos)</label>
-          <input class="input" id="pinInput" type="password" placeholder="0000" maxlength="4" style="text-align:center;font-size:1.5rem;letter-spacing:0.2em">
-        </div>
-        <button class="btn btn-brand btn-xl btn-full" id="btnLoginPin" onclick="autenticarComPIN()" style="margin-top:8px">
-          Entrar com PIN
-        </button>
-      </div>
-
-      <!-- FOOTER -->
-      <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
-        <div class="status-dot online"></div>
-        <span style="font-family:var(--ff-mono);font-size:.62rem;color:var(--text-muted)">SISTEMA OPERACIONAL</span>
-      </div>
-      <div style="position:absolute;bottom:20px;left:0;right:0;text-align:center;font-family:var(--ff-mono);font-size:.6rem;color:var(--text-disabled)">
-        <span class="brand-footer">Powered by thIAguinho Soluções · 2026</span>
-      </div>
+    <div id="loading-overlay">
+        <div class="spinner"></div>
+        <p style="margin-top: 1rem; font-weight: 500;">Conectando ao Sistema...</p>
     </div>
-  </div>
 
-  <!-- FIREBASE -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <div class="login-container">
+        <h2>Acesso ao Sistema</h2>
+        
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('master')" id="tab-master">Master</div>
+            <div class="tab" onclick="switchTab('equipe')" id="tab-equipe">Equipe</div>
+            <div class="tab" onclick="switchTab('pin')" id="tab-pin">PIN Rápido</div>
+        </div>
 
-  <!-- SCRIPTS -->
-  <script src="js/config.js"></script>
-  <script src="js/core.js"></script>
-  <script src="js/auth.js"></script>
+        <form id="loginForm" onsubmit="handleLogin(event)">
+            <input type="hidden" id="login-type" value="master">
+            
+            <div class="form-group">
+                <label for="login-user" id="label-user">Usuário ou E-mail</label>
+                <input type="text" id="login-user" required placeholder="Digite seu usuário ou e-mail">
+            </div>
+            
+            <div class="form-group" id="group-pass">
+                <label for="login-pass" id="label-pass">Senha</label>
+                <input type="password" id="login-pass" placeholder="Digite sua senha">
+            </div>
 
-  <script>
-    /**
-     * Helpers de UI exclusivos do index.html.
-     * Funções de autenticação (autenticar, autenticarEquipe, autenticarComPIN)
-     * e todos os listeners de teclado estão em js/auth.js.
-     * NÃO adicionar lógica de autenticação ou listeners duplicados aqui.
-     */
+            <div class="form-group hidden" id="group-pin">
+                <label for="login-pin">Código PIN</label>
+                <input type="password" id="login-pin" maxlength="6" placeholder="****" style="text-align: center; letter-spacing: 5px; font-size: 1.2rem;">
+            </div>
 
-    // Troca de abas
-    function switchTab(tab) {
-      document.querySelectorAll('.login-tab').forEach(el => el.style.display = 'none');
-      document.querySelectorAll('[id$="Tab"]').forEach(el => el.style.borderBottomColor = 'transparent');
+            <div id="error-display" class="error-msg"></div>
 
-      document.getElementById(tab + 'Tab').style.display = 'block';
-      document.getElementById('tab' + (tab === 'master' ? 'Master' : tab === 'equipe' ? 'Equipe' : 'Pin')).style.borderBottomColor = 'var(--brand)';
+            <button type="submit" id="btn-login">Entrar</button>
+        </form>
+    </div>
 
-      if (tab === 'master')       document.getElementById('usr')?.focus();
-      else if (tab === 'equipe')  document.getElementById('usrEquipe')?.focus();
-      else                        document.getElementById('usrPin')?.focus();
-    }
+    <!-- FIREBASE SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 
-    // Toggle visibilidade senha — aba Master
-    function _togglePwd() {
-      const pwd = document.getElementById('pwd');
-      const btn = document.getElementById('pwdToggle');
-      if (!pwd || !btn) return;
-      pwd.type = pwd.type === 'password' ? 'text' : 'password';
-      btn.textContent = pwd.type === 'password' ? '👁' : '🙈';
-    }
+    <!-- CONFIGURAÇÃO -->
+    <script src="js/config.js"></script>
 
-    // Toggle visibilidade senha — aba Equipe
-    function _togglePwdEquipe() {
-      const pwd = document.getElementById('pwdEquipe');
-      const btn = document.getElementById('pwdToggleEquipe');
-      if (!pwd || !btn) return;
-      pwd.type = pwd.type === 'password' ? 'text' : 'password';
-      btn.textContent = pwd.type === 'password' ? '👁' : '🙈';
-    }
-  </script>
+    <!-- LÓGICA DE LOGIN -->
+    <script>
+        // Inicializa Firebase
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.firestore();
+
+        // Controle de Abas
+        function switchTab(type) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(`tab-${type}`).classList.add('active');
+            
+            const typeInput = document.getElementById('login-type');
+            const groupPass = document.getElementById('group-pass');
+            const groupPin = document.getElementById('group-pin');
+            const labelUser = document.getElementById('label-user');
+            const inputUser = document.getElementById('login-user');
+            const inputPass = document.getElementById('login-pass');
+            const inputPin = document.getElementById('login-pin');
+
+            typeInput.value = type;
+
+            if (type === 'pin') {
+                groupPass.classList.add('hidden');
+                groupPin.classList.remove('hidden');
+                inputUser.required = true;
+                inputPass.required = false;
+                labelUser.innerText = "Usuário";
+                inputUser.placeholder = "Seu usuário";
+                inputPin.required = true;
+            } else {
+                groupPass.classList.remove('hidden');
+                groupPin.classList.add('hidden');
+                inputUser.required = true;
+                inputPass.required = true;
+                labelUser.innerText = type === 'master' ? "Usuário ou E-mail" : "Usuário";
+                inputUser.placeholder = type === 'master' ? "admin@oficina.com ou admin" : "usuario";
+                inputPin.required = false;
+            }
+            
+            document.getElementById('error-display').style.display = 'none';
+            inputUser.focus();
+        }
+
+        function mostrarLoading(show) {
+            document.getElementById('loading-overlay').style.display = show ? 'flex' : 'none';
+            document.getElementById('btn-login').disabled = show;
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            await autenticar();
+        }
+
+        // FUNÇÃO PRINCIPAL DE AUTENTICAÇÃO (CORRIGIDA)
+        async function autenticar() {
+            const userVal = document.getElementById('login-user').value.trim();
+            const passVal = document.getElementById('login-pass').value.trim();
+            const pinVal = document.getElementById('login-pin').value.trim();
+            const tipo = document.getElementById('login-type').value;
+
+            if (!userVal || (!passVal && tipo !== 'pin')) {
+                showError("Preencha todos os campos obrigatórios.");
+                return;
+            }
+            if (tipo === 'pin' && !pinVal) {
+                showError("Digite o código PIN.");
+                return;
+            }
+
+            mostrarLoading(true);
+            showError(""); // Limpa erros
+
+            try {
+                let docSnap;
+                let dados = null;
+                let colecao = '';
+
+                // --- LÓGICA MASTER ---
+                if (tipo === 'master') {
+                    // Tenta buscar por 'usuario'
+                    const q1 = db.collection('oficinas').where('usuario', '==', userVal);
+                    docSnap = await q1.get();
+
+                    // Se não achar, tenta por 'email' (CORREÇÃO CRÍTICA)
+                    if (docSnap.empty && userVal.includes('@')) {
+                        const q2 = db.collection('oficinas').where('email', '==', userVal);
+                        docSnap = await q2.get();
+                    }
+
+                    if (!docSnap.empty) {
+                        const doc = docSnap.docs[0];
+                        dados = doc.data();
+                        dados.id = doc.id;
+                        colecao = 'oficinas';
+
+                        if (dados.senha !== passVal) {
+                            mostrarLoading(false);
+                            showError("Senha incorreta.");
+                            return;
+                        }
+                        if (dados.status && (dados.status.toLowerCase() === 'bloqueado' || dados.status.toLowerCase() === 'inativo')) {
+                            mostrarLoading(false);
+                            showError("Conta bloqueada. Contate o suporte.");
+                            return;
+                        }
+                    }
+                } 
+                // --- LÓGICA EQUIPE ---
+                else if (tipo === 'equipe') {
+                    const q1 = db.collection('funcionarios').where('usuario', '==', userVal);
+                    docSnap = await q1.get();
+                    
+                    if (docSnap.empty && userVal.includes('@')) {
+                        const q2 = db.collection('funcionarios').where('email', '==', userVal);
+                        docSnap = await q2.get();
+                    }
+
+                    if (!docSnap.empty) {
+                        const doc = docSnap.docs[0];
+                        dados = doc.data();
+                        dados.id = doc.id;
+                        colecao = 'funcionarios';
+
+                        if (dados.senha !== passVal) {
+                            mostrarLoading(false);
+                            showError("Senha incorreta.");
+                            return;
+                        }
+                    }
+                }
+                // --- LÓGICA PIN ---
+                else if (tipo === 'pin') {
+                    const q1 = db.collection('funcionarios').where('usuario', '==', userVal);
+                    docSnap = await q1.get();
+
+                    if (!docSnap.empty) {
+                        const doc = docSnap.docs[0];
+                        dados = doc.data();
+                        dados.id = doc.id;
+                        colecao = 'funcionarios';
+
+                        if (dados.pin !== pinVal) {
+                            mostrarLoading(false);
+                            showError("PIN incorreto.");
+                            return;
+                        }
+                    }
+                }
+
+                // --- SUCESSO ---
+                if (dados) {
+                    sessionStorage.setItem('J.tid', dados.id);
+                    sessionStorage.setItem('J.user', JSON.stringify(dados));
+                    sessionStorage.setItem('J.tipo', tipo);
+                    sessionStorage.setItem('J.colecao', colecao);
+                    
+                    // Pequeno delay para UX
+                    setTimeout(() => {
+                        window.location.href = "jarvis.html";
+                    }, 500);
+                } else {
+                    mostrarLoading(false);
+                    showError("Usuário não encontrado.");
+                }
+
+            } catch (err) {
+                console.error("Erro login:", err);
+                mostrarLoading(false);
+                showError("Erro de conexão: " + err.message);
+            }
+        }
+
+        function showError(msg) {
+            const el = document.getElementById('error-display');
+            el.innerText = msg;
+            el.style.display = msg ? 'block' : 'none';
+        }
+    </script>
 </body>
 </html>
