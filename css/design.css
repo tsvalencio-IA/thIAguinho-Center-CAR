@@ -1,324 +1,121 @@
+@charset "UTF-8";
+@import url('https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css');
+
 /* ==========================================================================
-   1. VARIÁVEIS GLOBAIS E TEMA BASE (DARK MODE CHEVRON)
+   TEMA MASTER (DARK MODE CHEVRON)
+   Garante compatibilidade total com as classes do jarvis.html original
    ========================================================================== */
 :root {
-    /* Paleta de Cores Principais - Tons Sombrios e Profissionais */
-    --bg-darker: #0f172a;      /* Fundo Geral da Tela */
-    --bg-card: #1e293b;        /* Fundo dos Modais e Sidebar */
-    --bg-black: #020617;       /* Fundo de inputs e tabelas profundas */
-    
-    /* Bordas e Divisórias */
-    --border-color: #334155;   
-    --border-dashed: rgba(100, 116, 139, 0.3);
+  /* 1. Cores de Fundo (Superfícies) - Tons escuros profissionais */
+  --surf-0: #020617; /* Fundo absoluto do sistema (Pátio e Fundo Geral) */
+  --surf-1: #0f172a; /* Fundo dos cartões, tabelas e painéis principais */
+  --surf-2: #1e293b; /* Fundo de inputs, abas e hover de linhas */
+  --surf-3: #334155; /* Fundo de botões secundários e badges */
 
-    /* Cores de Status (Kanban e O.S) */
-    --status-patio: #64748b;     /* Cinza/Neutro */
-    --status-orcamento: #3b82f6; /* Azul */
-    --status-aprovacao: #f59e0b; /* Amarelo/Laranja */
-    --status-box: #0ea5e9;       /* Ciano/Info */
-    --status-pronto: #10b981;    /* Verde */
-    
-    /* Fontes e Tamanhos */
-    --font-family: 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif;
-    --transition-speed: 0.3s;
+  /* 2. Cores de Bordas */
+  --border: #1e293b;
+  --border-med: #334155;
+  --border-hi: #475569;
+
+  /* 3. Identidade Visual (Marca) e Destaques */
+  --brand: #0ea5e9; /* Azul Premium (Chevron) */
+  --brand-dim: rgba(14, 165, 233, 0.15); /* Fundo translúcido para botões da marca */
+  --brand-dark: #0284c7;
+  --brand-glow: rgba(14, 165, 233, 0.4); /* Sombra brilhante para botões principais */
+
+  /* 4. Cores de Status Financeiro e Kanban */
+  --success: #10b981; /* Verde (Entregue / Lucro) */
+  --warn: #f59e0b;    /* Laranja/Amarelo (Orçamento / Atenção) */
+  --danger: #ef4444;  /* Vermelho (Atrasado / Despesa / Exclusão) */
+
+  /* 5. Tipografia (Cores do Texto) */
+  --text-primary: #f8fafc;   /* Branco forte (Títulos e dados importantes) */
+  --text-secondary: #cbd5e1; /* Cinzento claro (Subtítulos) */
+  --text-muted: #64748b;     /* Cinzento escuro (Dicas e placeholders) */
+  --text-disabled: #475569;  /* Texto inativo */
+
+  /* 6. Famílias de Fontes (As mesmas requisitadas no head do seu jarvis.html) */
+  --ff-display: 'Sora', sans-serif;
+  --ff-body: 'DM Sans', sans-serif;
+  --ff-mono: 'DM Mono', monospace;
+
+  /* 7. Arredondamentos (Bordas modernas) */
+  --r-md: 8px;
+  --r-lg: 12px;
+  --r-xl: 16px;
+  --r-2xl: 24px;
+}
+
+/* ==========================================================================
+   RESET E CONFIGURAÇÕES GLOBAIS
+   ========================================================================== */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 body {
-    font-family: var(--font-family);
-    background-color: var(--bg-darker) !important;
-    color: #f8fafc;
-    overflow: hidden; /* Evita rolagem geral da página, focando nas áreas internas */
+  background-color: var(--surf-0);
+  color: var(--text-primary);
+  font-family: var(--ff-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Utilitários de Cor de Fundo Forçados */
-.bg-darker { background-color: var(--bg-darker) !important; }
-.bg-card { background-color: var(--bg-card) !important; }
-.bg-black { background-color: var(--bg-black) !important; }
-.border-secondary { border-color: var(--border-color) !important; }
-.border-dashed { border-style: dashed !important; border-width: 2px !important; border-color: var(--border-dashed) !important; }
-
 /* ==========================================================================
-   2. SCROLLBARS CUSTOMIZADAS (Rolagem Moderna e Fina)
+   SCROLLBARS PREMIUM (Rolar sem poluir a tela)
    ========================================================================== */
 ::-webkit-scrollbar {
-    width: 6px;
-    height: 8px; /* Altura um pouco maior para a rolagem horizontal do Kanban */
+  width: 6px;
+  height: 6px;
 }
+
 ::-webkit-scrollbar-track {
-    background: var(--bg-darker);
+  background: var(--surf-0);
 }
+
 ::-webkit-scrollbar-thumb {
-    background: #475569;
-    border-radius: 10px;
+  background: var(--surf-3);
+  border-radius: 10px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
-    background: #64748b;
+  background: var(--border-hi);
+}
+
+/* Scrollbar invisível no Kanban para não atrapalhar no Celular */
+.kanban::-webkit-scrollbar {
+  height: 4px;
+}
+
+.m-tabs::-webkit-scrollbar {
+  height: 0px; /* Esconde rolagem visual das abas nos modais */
 }
 
 /* ==========================================================================
-   3. SIDEBAR E NAVEGAÇÃO SUPERIOR
+   AJUSTES FINOS VISUAIS PARA ELEMENTOS NATIVOS
    ========================================================================== */
-.sidebar {
-    box-shadow: 4px 0 15px rgba(0, 0, 0, 0.4);
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator,
+input[type="month"]::-webkit-calendar-picker-indicator {
+  filter: invert(1); /* Faz o ícone do calendário ficar branco no modo escuro */
+  cursor: pointer;
+  opacity: 0.6;
 }
 
-.nav-btn {
-    width: 100%;
-    text-align: left;
-    background: transparent;
-    border: none;
-    color: #94a3b8;
-    padding: 12px 16px;
-    margin-bottom: 4px;
-    border-radius: 8px;
-    font-weight: 500;
-    transition: all var(--transition-speed);
-    display: flex;
-    align-items: center;
-    gap: 10px;
+input[type="date"]::-webkit-calendar-picker-indicator:hover,
+input[type="time"]::-webkit-calendar-picker-indicator:hover,
+input[type="month"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
 }
 
-.nav-btn:hover {
-    background-color: rgba(255, 255, 255, 0.05);
-    color: #f8fafc;
-}
-
-.nav-btn.active {
-    background-color: rgba(14, 165, 233, 0.15); /* Fundo Info suave */
-    color: #0ea5e9;
-    border-left: 4px solid #0ea5e9;
-    font-weight: bold;
-}
-
-/* Ocultar elementos baseados no perfil de acesso (RBAC) */
-.gestao-only.d-none, .admin-only.d-none {
-    display: none !important;
-}
-
-/* ==========================================================================
-   4. KANBAN E CARTÕES DE O.S.
-   ========================================================================== */
-.kanban-container {
-    padding-bottom: 10px;
-}
-
-.kanban-col {
-    transition: width var(--transition-speed), min-width var(--transition-speed);
-    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.2);
-}
-
-/* Lógica de Minimizar Coluna do Kanban */
-.kanban-col.minimized {
-    min-width: 60px !important;
-    width: 60px !important;
-    overflow: hidden;
-    cursor: pointer;
-    align-items: center;
-}
-
-.kanban-col.minimized .kanban-cards, 
-.kanban-col.minimized h6 span.badge {
-    display: none !important;
-}
-
-.kanban-col.minimized h6 {
-    writing-mode: vertical-rl;
-    text-orientation: mixed;
-    transform: rotate(180deg);
-    margin-top: 10px;
-    white-space: nowrap;
-    border-bottom: none !important;
-    border-left: 1px solid var(--border-color);
-    padding-left: 10px;
-}
-
-/* Cartão da O.S. (O Veículo) */
-.os-card {
-    background-color: var(--bg-black);
-    border: 1px solid var(--border-color);
-    border-left: 4px solid var(--status-patio); /* Cor padrão alterada via JS */
-    border-radius: 8px;
-    padding: 12px;
-    cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
-    position: relative;
-}
-
-.os-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-    border-color: #475569;
-}
-
-.os-card:active {
-    transform: scale(0.98);
-    cursor: grabbing;
-}
-
-/* Indicador de Urgência no Cartão */
-.priority-indicator {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-}
-.priority-verde { background-color: #10b981; }
-.priority-amarelo { background-color: #f59e0b; }
-.priority-vermelho { background-color: #ef4444; box-shadow: 0 0 8px #ef4444; }
-
-/* Botões de Mover Rápido dentro do Cartão */
-.btn-move-status {
-    background: transparent;
-    border: none;
-    color: #64748b;
-    padding: 4px;
-    border-radius: 4px;
-    transition: 0.2s;
-}
-.btn-move-status:hover {
-    background: rgba(255,255,255,0.1);
-    color: #f8fafc;
-}
-
-/* ==========================================================================
-   5. MODAIS E PRONTUÁRIO (TABS E INPUTS)
-   ========================================================================== */
-.modal-content {
-    box-shadow: 0 20px 50px rgba(0,0,0,0.8);
-}
-
-.form-control, .form-select {
-    transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.form-control:focus, .form-select:focus {
-    background-color: var(--bg-black);
-    color: #fff;
-    border-color: #0ea5e9;
-    box-shadow: 0 0 0 0.25rem rgba(14, 165, 233, 0.25);
-}
-
-.form-control::placeholder {
-    color: #475569;
-}
-
-/* Estilização das Abas do Prontuário */
-.nav-tabs .nav-link {
-    color: #94a3b8;
-    border: none;
-    border-bottom: 2px solid transparent;
-    margin-bottom: -2px; /* Alinha com a borda de baixo */
-}
-
-.nav-tabs .nav-link:hover {
-    border-color: transparent;
-    color: #f8fafc;
-}
-
-.nav-tabs .nav-link.active {
-    color: #0ea5e9;
-    background-color: transparent;
-    border-bottom: 2px solid #0ea5e9;
-}
-
-/* Galeria de Fotos no Prontuário */
-.min-h-150 { min-height: 150px; }
-.min-h-300 { min-height: 300px; }
-
-.foto-thumb {
-    width: 120px;
-    height: 120px;
-    object-fit: cover;
-    border-radius: 8px;
-    border: 2px solid var(--border-color);
-    cursor: pointer;
-    transition: 0.2s;
-}
-.foto-thumb:hover {
-    border-color: #0ea5e9;
-    transform: scale(1.05);
-}
-
-/* Timeline / Auditoria */
-.timeline li {
-    position: relative;
-    padding-bottom: 1.5rem;
-}
-.timeline li::before {
-    content: '';
-    position: absolute;
-    left: -21px; /* Posiciona na linha da borda */
-    top: 4px;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background-color: #0ea5e9;
-    border: 2px solid var(--bg-black);
-}
-.timeline li.timeline-danger::before { background-color: #ef4444; }
-.timeline li.timeline-success::before { background-color: #10b981; }
-.timeline li.timeline-warning::before { background-color: #f59e0b; }
-
-/* ==========================================================================
-   6. ANIMAÇÕES E EFEITOS (PAINEL DE ATENÇÃO / LEDs)
-   ========================================================================== */
-.attention-box {
-    border: 2px solid var(--border-color);
-    background: var(--bg-black);
-    border-radius: 8px;
-    padding: 8px;
-    text-align: center;
-    transition: all 0.3s;
-}
-
-/* Animação de Pulso (LED Piscando) para veículos parados/atrasados */
-.blinking-danger {
-    animation: pulse-danger 1.5s infinite;
-    border-color: rgba(239, 68, 68, 0.5);
-}
-
-.blinking-success {
-    animation: pulse-success 1.5s infinite;
-    border-color: rgba(16, 185, 129, 0.5);
-}
-
-@keyframes pulse-danger {
-    0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-    70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
-}
-
-@keyframes pulse-success {
-    0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
-    70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
-}
-
-/* ==========================================================================
-   7. RESPONSIVIDADE (MOBILE-FIRST)
-   ========================================================================== */
-@media (max-width: 991.98px) {
-    /* No celular, a sidebar fica escondida e desliza pela lateral (Offcanvas) */
-    .sidebar {
-        position: fixed;
-        left: -260px;
-        top: 0;
-        height: 100vh;
-    }
-    
-    .sidebar.show {
-        left: 0;
-    }
-
-    /* O Kanban no celular não pode ser tão largo, deve se adaptar melhor */
-    .kanban-col {
-        min-width: 280px !important;
-        width: 280px !important;
-    }
-
-    .modal-dialog {
-        margin: 0.5rem;
-    }
+/* Prevenção de Autofill (Evita que o navegador deixe o input com fundo branco) */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active{
+    -webkit-box-shadow: 0 0 0 30px var(--surf-2) inset !important;
+    -webkit-text-fill-color: var(--text-primary) !important;
+    transition: background-color 5000s ease-in-out 0s;
 }
