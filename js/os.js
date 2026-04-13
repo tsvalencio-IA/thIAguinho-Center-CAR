@@ -1,634 +1,478 @@
 /**
- * JARVIS ERP — os.js
- * Ordens de Serviço: CRUD, Kanban, Checklist, Pagamento, Baixa Estoque
+ * ERP MASTER - MÓDULO DE ORDEM DE SERVIÇO (O.S) E KANBAN
+ * Responsável por: Gestão do Pátio, Prontuário Médico do Veículo, Ditado por Voz e Auditoria.
  */
 
-'use strict';
+window.os = {
+    listenerKanban: null,
+    itensOSAtual: [], // Memória temporária das peças/serviços adicionados na OS aberta
+    idOsAtual: null,
 
-// ============================================================
-// KANBAN
-// ============================================================
-window.renderKanban = function() {
-  const busca       = (_v('searchOS') || '').toLowerCase();
-  const filtroNicho = _v('filtroNichoKanban');
-  const statuses    = ['Aguardando','Orcamento','Aprovado','Andamento','Concluido'];
-  const cols = {}, cnts = {};
-  statuses.forEach(s => { cols[s] = []; cnts[s] = 0; });
+    /**
+     * Inicializa o Kanban e começa a escutar o Firebase em Tempo Real
+     */
+    iniciarKanban: function(tenantId) {
+        console.log("[O.S.] Iniciando Motor do Kanban...");
 
-  J.os.filter(o => o.status !== 'Cancelado').forEach(o => {
-    const v = J.veiculos.find(x => x.id === o.veiculoId);
-    const c = J.clientes.find(x => x.id === o.clienteId);
-    if (busca && !v?.placa?.toLowerCase().includes(busca) && !c?.nome?.toLowerCase().includes(busca)) return;
-    if (filtroNicho && v?.tipo !== filtroNicho) return;
-    if (cols[o.status]) { cols[o.status].push({ os: o, v, c }); cnts[o.status]++; }
-  });
+        if (this.listenerKanban) {
+            this.listenerKanban(); // Desliga o listener antigo se existir
+        }
 
-  const statusClasses = {
-    Aguardando: 'card-triagem',
-    Orcamento:  'card-orcamento',
-    Aprovado:   'card-aprovado',
-    Andamento:  'card-servico',
-    Concluido:  'card-pronto'
-  };
+        const colunas = {
+            patio: document.getElementById('col-patio'),
+            orcamento: document.getElementById('col-orcamento'),
+            aprovacao: document.getElementById('col-aprovacao'),
+            box: document.getElementById('col-box'),
+            pronto: document.getElementById('col-pronto')
+        };
 
-  statuses.forEach(s => {
-    const cntEl = _$(`cnt-${s}`); if (cntEl) cntEl.textContent = cnts[s];
-    const colEl = _$(`kb-${s}`);  if (!colEl) return;
+        const contadores = {
+            patio: document.getElementById('count-patio'),
+            orcamento: document.getElementById('count-orcamento'),
+            aprovacao: document.getElementById('count-aprovacao'),
+            box: document.getElementById('count-box'),
+            pronto: document.getElementById('count-pronto')
+        };
 
-    if (!cols[s].length) {
-      colEl.innerHTML = `<div class="empty-state" style="padding:24px 12px">
-        <div style="font-size:1.5rem;margin-bottom:6px">📭</div>
-        <div style="font-size:0.72rem;color:var(--text-muted)">Nenhuma O.S.</div>
-      </div>`;
-      return;
-    }
+        // Escuta TODAS as O.S que NÃO ESTÃO ENTREGUES
+        this.listenerKanban = db.collection("tenants").doc(tenantId).collection("ordens_servico")
+            .where("status", "!=", "entregue")
+            .onSnapshot((snapshot) => {
+                
+                // Limpa as colunas visualmente
+                Object.values(colunas).forEach(col => { if(col) col.innerHTML = ''; });
+                
+                // Zera os contadores temporários
+                let counts = { patio: 0, orcamento: 0, aprovacao: 0, box: 0, pronto: 0 };
+                let carrosAtrasados = 0;
 
-    colEl.innerHTML = cols[s]
-      .sort((a, b) => new Date(b.os.updatedAt || 0) - new Date(a.os.updatedAt || 0))
-      .map(({ os, v, c }) => {
-        const cls = statusClasses[os.status] || '';
-        const mec = J.equipe.find(f => f.id === os.mecId);
-        return `
-          <div class="kanban-card ${cls}" onclick="prepOS('edit','${os.id}');openModal('modalOS')">
-            <div class="kanban-card-placa">${v?.placa || 'S/PLACA'}</div>
-            <div class="kanban-card-cliente">${c?.nome || '—'}</div>
-            <div class="kanban-card-desc">${os.desc || 'Sem descrição'}</div>
-            <div class="kanban-card-footer">
-              ${badgeTipo(v?.tipo || 'carro')}
-              <span class="t-caption">${dtBr(os.data)}</span>
-            </div>
-            ${os.total ? `<div style="text-align:right;margin-top:7px;font-family:var(--ff-mono);font-size:0.75rem;color:var(--success);font-weight:600">${moeda(os.total)}</div>` : ''}
-            ${mec ? `<div style="font-size:0.68rem;color:var(--text-muted);margin-top:3px">🔧 ${mec.nome}</div>` : ''}
-          </div>
-        `;
-      }).join('');
-  });
-};
+                snapshot.forEach((doc) => {
+                    const osData = doc.data();
+                    osData.id = doc.id;
+                    
+                    const status = osData.status || 'patio';
+                    counts[status]++;
 
-window.renderDashboard = function() {
-  const agora = new Date();
-  const mes = agora.getMonth(), ano = agora.getFullYear();
+                    // Identifica se é urgente/atrasado (Ex: Há mais de 3 dias no pátio)
+                    let dataCriacao = osData.dataCriacao ? osData.dataCriacao.toDate() : new Date();
+                    let diasParado = Math.floor((new Date() - dataCriacao) / (1000 * 60 * 60 * 24));
+                    let isUrgente = diasParado > 3;
+                    if(isUrgente && status !== 'pronto') carrosAtrasados++;
 
-  // Faturamento do mês
-  const fat = J.os
-    .filter(o => o.status === 'Concluido' && o.updatedAt)
-    .reduce((acc, o) => {
-      const d = new Date(o.updatedAt);
-      return (d.getMonth() === mes && d.getFullYear() === ano) ? acc + (o.total || 0) : acc;
-    }, 0);
+                    // Monta o Cartão HTML
+                    const cardHTML = `
+                        <div class="os-card" onclick="os.abrirModalOS('${osData.id}')" style="border-left-color: var(--status-${status});">
+                            ${isUrgente ? '<div class="priority-indicator priority-vermelho" title="Atrasado/Urgente"></div>' : ''}
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="fw-bold text-white mb-1">${osData.placa}</h6>
+                                    <p class="text-white-50 small mb-1 truncate" style="max-width: 180px;">${osData.veiculo}</p>
+                                    <p class="text-info small mb-0"><i class="bi bi-person"></i> ${osData.clienteNome || 'Desconhecido'}</p>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge bg-dark border border-secondary text-success">R$ ${(osData.valorTotal || 0).toFixed(2)}</span>
+                                    <div class="mt-2 text-white-50 small"><i class="bi bi-clock"></i> ${diasParado}d</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
 
-  _st('kFat',   moeda(fat));
-  _st('kPatio', J.os.filter(o => o.status !== 'Cancelado' && o.status !== 'Concluido').length);
-  _st('kStock', J.estoque.filter(p => (p.qtd || 0) <= (p.min || 0)).length);
-  const vencidos = J.financeiro.filter(f => f.status === 'Pendente' && f.venc && new Date(f.venc) < agora).length;
-  _st('kVenc', vencidos);
+                    if (colunas[status]) {
+                        colunas[status].insertAdjacentHTML('beforeend', cardHTML);
+                    }
+                });
 
-  // Últimas 6 OS
-  const recent = [...J.os].sort((a, b) => (b.updatedAt || '') > (a.updatedAt || '') ? 1 : -1).slice(0, 6);
-  _sh('dashRecentOS', recent.map(o => {
-    const v = J.veiculos.find(x => x.id === o.veiculoId);
-    const c = J.clientes.find(x => x.id === o.clienteId);
-    return `<tr>
-      <td><span class="placa">${v?.placa || '—'}</span></td>
-      <td>${c?.nome || '—'}</td>
-      <td>${badgeStatus(o.status)}</td>
-      <td style="font-family:var(--ff-mono);font-weight:700;color:var(--success)">${moeda(o.total)}</td>
-    </tr>`;
-  }).join('') || tableEmpty(4, '📋', 'Nenhuma O.S. registrada'));
+                // Atualiza os badges (contadores) nas colunas
+                Object.keys(counts).forEach(key => {
+                    if (contadores[key]) contadores[key].textContent = counts[key];
+                });
 
-  // Estoque crítico
-  const crit = J.estoque.filter(p => (p.qtd || 0) <= (p.min || 0)).slice(0, 5);
-  _sh('dashAlertStock', crit.map(p => `<tr class="row-critical">
-    <td>${p.desc || p.codigo}</td>
-    <td style="font-family:var(--ff-mono);font-weight:700;color:var(--danger)">${p.qtd || 0}</td>
-    <td style="font-family:var(--ff-mono);color:var(--text-muted)">${p.min || 0}</td>
-    <td>${badgeStatus('Pendente')}</td>
-  </tr>`).join('') || tableEmpty(4, '✅', 'Estoque em dia'));
+                // Atualiza o Painel Chevron de Atenção (LEDs)
+                this.atualizarPainelAtencao(carrosAtrasados, counts.aprovacao);
 
-  // Agenda do dia
-  const hoje = new Date().toISOString().split('T')[0];
-  const agendaHoje = J.agendamentos.filter(a => a.data === hoje && a.status !== 'Convertido');
-  _st('kAgenda', agendaHoje.length);
-};
+            }, (error) => {
+                console.error("[O.S.] Erro no Listener do Kanban:", error);
+            });
+    },
 
-// ============================================================
-// O.S. — PREP MODAL
-// ============================================================
-window.prepOS = function(mode, id = null) {
-  // Reset todos os campos
-  ['osId','osKm','osDiagnostico','osDescricao','osNotasInternas','chkObs',
-   'chkPneuDia','chkPneuTra','osMaoObra'].forEach(f => _sv(f, f === 'osMaoObra' ? '0' : ''));
+    /**
+     * Lógica Chevron: Painel de Atenção no topo do Kanban
+     */
+    atualizarPainelAtencao: function(atrasados, aguardando) {
+        const painel = document.getElementById('painel-atencao');
+        if (!painel) return;
 
-  ['chkPainel','chkPressao','chkCarroceria','chkDocumentos'].forEach(f => _ck(f, false));
+        let htmlAvisos = '';
 
-  _sv('osStatus', 'Aguardando');
-  _sv('osTipoVeiculo', 'carro');
-  _sv('osData', new Date().toISOString().split('T')[0]);
-  _sv('chkComb', 'N/A');
+        if (atrasados > 0) {
+            htmlAvisos += `<div class="attention-box blinking-danger text-danger fw-bold d-inline-block me-3 px-4 py-2"><i class="bi bi-exclamation-triangle-fill"></i> ${atrasados} Veículo(s) com SLA atrasado!</div>`;
+        }
+        if (aguardando > 0) {
+            htmlAvisos += `<div class="attention-box text-warning fw-bold d-inline-block px-4 py-2"><i class="bi bi-hourglass-split"></i> ${aguardando} O.S. Aguardando aprovação do cliente.</div>`;
+        }
 
-  _st('osTotalVal', '0,00');
-  _sv('osTotalHidden', '0');
-  _sh('containerPecasOS', '');
-  _sh('osMediaGrid', '');
-  _sv('osMediaArray', '[]');
-  _sh('osTimeline', '');
-  _sv('osTimelineData', '[]');
-  _st('osIdBadge', 'NOVA O.S.');
+        if (htmlAvisos !== '') {
+            painel.innerHTML = htmlAvisos;
+            painel.classList.remove('d-none');
+        } else {
+            painel.classList.add('d-none');
+        }
+    },
 
-  const btnPDF = _$('btnGerarPDFOS');
-  if (btnPDF) btnPDF.classList.add('hidden');
-  const areaPgto = _$('areaPgtoOS');
-  if (areaPgto) areaPgto.classList.add('hidden');
+    /**
+     * Abre a Ficha/Prontuário. Se for nova, limpa. Se tiver ID, carrega do Firebase.
+     */
+    abrirModalOS: async function(id = null) {
+        this.idOsAtual = id;
+        this.itensOSAtual = []; // Reseta a lista de peças em memória
+        
+        const form = document.getElementById('form-os');
+        form.reset();
+        document.getElementById('os-header-placa').textContent = id ? " - Carregando..." : " - NOVA RECEPÇÃO";
+        document.getElementById('tb-pecas-os').innerHTML = '';
+        document.getElementById('os-total-display').textContent = 'R$ 0,00';
+        document.getElementById('lista-auditoria-os').innerHTML = '';
 
-  popularSelects();
+        // Mostra a primeira aba sempre que abrir
+        const triggerEl = document.querySelector('button[data-bs-target="#tab-os-checklist"]');
+        bootstrap.Tab.getOrCreateInstance(triggerEl).show();
 
-  if (mode === 'edit' && id) {
-    const os = J.os.find(x => x.id === id);
-    if (!os) return;
+        if (id) {
+            // É edição: Busca os dados
+            try {
+                const tenantId = window.core.session.tenantId;
+                const doc = await db.collection("tenants").doc(tenantId).collection("ordens_servico").doc(id).get();
+                
+                if (doc.exists) {
+                    const os = doc.data();
+                    document.getElementById('os-header-placa').textContent = ` - ${os.placa}`;
+                    document.getElementById('os-id').value = id;
+                    document.getElementById('os-placa').value = os.placa || '';
+                    document.getElementById('os-veiculo').value = os.veiculo || '';
+                    
+                    // Busca atrelada ao Cliente
+                    document.getElementById('os-cliente-busca').value = os.clienteNome || '';
+                    document.getElementById('os-cliente-id').value = os.clienteId || '';
+                    
+                    // Checklist
+                    document.getElementById('os-queixa').value = os.queixa || '';
+                    document.getElementById('chk-combustivel').checked = os.chkCombustivel || false;
+                    document.getElementById('chk-arranhado').checked = os.chkArranhado || false;
+                    document.getElementById('chk-pertences').checked = os.chkPertences || false;
+                    
+                    // Diagnóstico
+                    document.getElementById('os-diagnostico').value = os.diagnostico || '';
+                    document.getElementById('os-status').value = os.status || 'patio';
+                    
+                    // Peças e Serviços (Array de objetos salvo no Firebase)
+                    if (os.itens && Array.isArray(os.itens)) {
+                        this.itensOSAtual = os.itens;
+                        this.renderizarItens();
+                    }
 
-    _sv('osId', os.id);
-    _st('osIdBadge', 'OS #' + os.id.slice(-6).toUpperCase());
-    _sv('osTipoVeiculo', os.tipoVeiculo || 'carro');
-    _sv('osStatus', os.status || 'Aguardando');
-    _sv('osCliente', os.clienteId || '');
+                    // Renderiza a Timeline da Auditoria
+                    if (os.auditoria && Array.isArray(os.auditoria)) {
+                        this.renderizarAuditoria(os.auditoria);
+                    }
 
-    filtrarVeiculosOS();
-    setTimeout(() => _sv('osVeiculo', os.veiculoId || ''), 80);
+                    // Exibe o botão de PDF se já estiver avançada
+                    const btnPdf = document.getElementById('btn-exportar-pdf');
+                    if (btnPdf) btnPdf.classList.remove('d-none');
+                }
+            } catch (error) {
+                console.error("[O.S.] Erro ao carregar Prontuário:", error);
+                window.ui.mostrarToast("Erro", "Não foi possível carregar o veículo.", "danger");
+            }
+        } else {
+            // Oculta botão PDF em OS Nova
+            const btnPdf = document.getElementById('btn-exportar-pdf');
+            if (btnPdf) btnPdf.classList.add('d-none');
+        }
 
-    _sv('osMec',           os.mecId       || '');
-    _sv('osData',          os.data        || '');
-    _sv('osKm',            os.km          || '');
-    _sv('osDescricao',     os.desc        || '');
-    _sv('osDiagnostico',   os.diagnostico || '');
-    _sv('osMaoObra',       os.maoObra     || 0);
-    _sv('chkComb',         os.chkComb     || 'N/A');
-    _sv('chkPneuDia',      os.chkPneuDia  || '');
-    _sv('chkPneuTra',      os.chkPneuTra  || '');
-    _sv('chkObs',          os.chkObs      || '');
+        const modal = new bootstrap.Modal(document.getElementById('modal-os'));
+        modal.show();
+    },
 
-    _ck('chkPainel',    os.chkPainel);
-    _ck('chkPressao',   os.chkPressao);
-    _ck('chkCarroceria',os.chkCarroceria);
-    _ck('chkDocumentos',os.chkDocumentos);
+    /**
+     * Valida a busca do cliente na O.S. contra o Datalist em memória (Impede cliente fantasma)
+     */
+    vincularClienteBusca: function() {
+        const inputTexto = document.getElementById('os-cliente-busca').value;
+        const datalist = document.getElementById('lista-clientes-dl');
+        const alertaErro = document.getElementById('alerta-cliente-invalido');
+        const hiddenId = document.getElementById('os-cliente-id');
+        
+        let clienteValido = false;
 
-    // Mídia
-    _sv('osMediaArray', JSON.stringify(os.media || []));
-    renderMediaOS();
+        // Varre as options do datalist para ver se o que foi digitado bate com algo real
+        for (let i = 0; i < datalist.options.length; i++) {
+            if (datalist.options[i].value === inputTexto) {
+                hiddenId.value = datalist.options[i].getAttribute('data-id');
+                clienteValido = true;
+                break;
+            }
+        }
 
-    // Timeline
-    _sv('osTimelineData', JSON.stringify(os.timeline || []));
-    renderTimelineOS();
+        if (!clienteValido && inputTexto.trim() !== '') {
+            alertaErro.classList.remove('d-none');
+            hiddenId.value = ''; // Zera o ID pra não salvar lixo
+        } else {
+            alertaErro.classList.add('d-none');
+        }
+    },
 
-    // Peças
-    if (os.pecas?.length) os.pecas.forEach(p => _renderPecaRow(p));
-    calcOS();
+    /**
+     * PUSH-TO-TALK (Reconhecimento de Voz Nativo do Navegador)
+     * Permite ao mecânico ditar o defeito sem sujar o teclado de graxa.
+     */
+    iniciarDitado: function() {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        
+        if (!SpeechRecognition) {
+            window.ui.mostrarToast("Não Suportado", "O seu navegador não suporta ditado por voz. Tente no Google Chrome.", "warning");
+            return;
+        }
 
-    verificarStatusOS();
+        const recognition = new SpeechRecognition();
+        recognition.lang = 'pt-BR';
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
 
-    if (btnPDF) btnPDF.classList.remove('hidden');
+        const btn = document.querySelector('button[onclick="os.iniciarDitado()"]');
+        const campoDiagnostico = document.getElementById('os-diagnostico');
+        
+        // Estilização do botão enquanto ouve
+        btn.classList.remove('btn-outline-info');
+        btn.classList.add('btn-danger');
+        btn.innerHTML = '<i class="bi bi-mic-fill"></i> Ouvindo... (Fale agora)';
 
-    // Preenche campos de pagamento se já concluída
-    if (os.status === 'Concluido' && os.pgtoForma) {
-      _sv('osPgtoForma', os.pgtoForma || 'Dinheiro');
-      _sv('osPgtoData',  os.pgtoData  || '');
-      checkPgtoOS();
-    }
-  }
-};
+        recognition.start();
 
-// ============================================================
-// PEÇAS
-// ============================================================
-window.adicionarPecaOS = function() {
-  const div = document.createElement('div');
-  div.className = 'peca-row';
-  const opts = '<option value="">Selecionar peça...</option>' +
-    J.estoque.filter(p => (p.qtd || 0) > 0).map(p =>
-      `<option value="${p.id}" data-venda="${p.venda || 0}" data-custo="${p.custo || 0}" data-desc="${_esc(p.desc)}">[${p.qtd}un] ${p.desc} — ${moeda(p.venda)}</option>`
-    ).join('');
+        recognition.onresult = function(event) {
+            const textoFalado = event.results[0][0].transcript;
+            // Concatena o texto falado ao que já existe na caixa de texto
+            const atual = campoDiagnostico.value;
+            campoDiagnostico.value = atual ? atual + " " + textoFalado : textoFalado;
+            window.ui.mostrarToast("Ditado Concluído", "Texto inserido no diagnóstico.", "success");
+        };
 
-  div.innerHTML = `
-    <select class="select peca-sel" onchange="_selecionarPeca(this)">${opts}</select>
-    <input type="number" class="input peca-qtd"   value="1"   min="1"    oninput="calcOS()">
-    <input type="number" class="input peca-custo" value="0"   step="0.01" oninput="calcOS()" placeholder="Custo">
-    <input type="number" class="input peca-venda" value="0"   step="0.01" oninput="calcOS()" placeholder="Venda">
-    <button type="button" class="btn btn-danger btn-icon" onclick="this.closest('.peca-row').remove();calcOS()" title="Remover">✕</button>
-  `;
-  _$('containerPecasOS').appendChild(div);
-  calcOS();
-};
+        recognition.onspeechend = function() {
+            recognition.stop();
+        };
 
-function _renderPecaRow(p) {
-  const div = document.createElement('div');
-  div.className = 'peca-row';
-  const opts = `<option value="${p.estoqueId || ''}">${_esc(p.desc || '')}</option>` +
-    J.estoque.filter(x => ((x.qtd || 0) > 0 || x.id === p.estoqueId)).map(x =>
-      `<option value="${x.id}" data-venda="${x.venda || 0}" data-custo="${x.custo || 0}" data-desc="${_esc(x.desc)}" ${x.id === p.estoqueId ? 'selected' : ''}>[${x.qtd}un] ${x.desc}</option>`
-    ).join('');
+        recognition.onerror = function(event) {
+            console.error("Erro no reconhecimento de voz:", event.error);
+            window.ui.mostrarToast("Erro no Microfone", "Não consegui ouvir. Verifique as permissões.", "danger");
+            restaurarBotao();
+        };
 
-  div.innerHTML = `
-    <select class="select peca-sel" onchange="_selecionarPeca(this)">${opts}</select>
-    <input type="number" class="input peca-qtd"   value="${p.qtd   || 1}" min="1"    oninput="calcOS()">
-    <input type="number" class="input peca-custo" value="${p.custo || 0}" step="0.01" oninput="calcOS()">
-    <input type="number" class="input peca-venda" value="${p.venda || 0}" step="0.01" oninput="calcOS()">
-    <button type="button" class="btn btn-danger btn-icon" onclick="this.closest('.peca-row').remove();calcOS()" title="Remover">✕</button>
-  `;
-  _$('containerPecasOS').appendChild(div);
-}
+        recognition.onend = function() {
+            restaurarBotao();
+        };
 
-window._selecionarPeca = function(sel) {
-  const opt = sel.options[sel.selectedIndex];
-  const row = sel.closest('.peca-row');
-  if (!row) return;
-  const vendaEl = row.querySelector('.peca-venda');
-  const custoEl = row.querySelector('.peca-custo');
-  if (vendaEl) vendaEl.value = opt.dataset.venda || 0;
-  if (custoEl) custoEl.value = opt.dataset.custo || 0;
-  calcOS();
-};
+        function restaurarBotao() {
+            btn.classList.remove('btn-danger');
+            btn.classList.add('btn-outline-info');
+            btn.innerHTML = '<i class="bi bi-mic-fill"></i> Ditar Diagnóstico';
+        }
+    },
 
-window.calcOS = function() {
-  let total = parseFloat(_v('osMaoObra')) || 0;
-  document.querySelectorAll('#containerPecasOS .peca-row').forEach(row => {
-    const qtd   = parseFloat(row.querySelector('.peca-qtd')?.value   || 0);
-    const venda = parseFloat(row.querySelector('.peca-venda')?.value || 0);
-    total += qtd * venda;
-  });
-  _st('osTotalVal', total.toFixed(2).replace('.', ','));
-  _sv('osTotalHidden', total);
-};
+    /**
+     * ================= LÓGICA MATEMÁTICA DE PEÇAS =================
+     */
 
-window.verificarStatusOS = function() {
-  const s = _v('osStatus');
-  const area = _$('areaPgtoOS');
-  if (area) area.classList.toggle('hidden', s !== 'Concluido');
-};
-
-window.checkPgtoOS = function() {
-  const f = _v('osPgtoForma');
-  const parDiv = _$('divParcelasOS');
-  if (parDiv) parDiv.classList.toggle('hidden', !['Crédito Parcelado', 'Boleto'].includes(f));
-};
-
-// ============================================================
-// CLOUDINARY MÍDIA
-// ============================================================
-window.uploadOsMedia = async function() {
-  const file = _$('osFileInput')?.files[0];
-  if (!file) { toastWarn('Selecione um arquivo'); return; }
-
-  const btn = _$('btnUploadMedia');
-  setLoading('btnUploadMedia', true, 'Enviando...');
-
-  try {
-    const fd = new FormData();
-    fd.append('file', file);
-    fd.append('upload_preset', J.cloudPreset);
-
-    const res  = await fetch(`https://api.cloudinary.com/v1_1/${J.cloudName}/auto/upload`, { method: 'POST', body: fd });
-    const data = await res.json();
-
-    if (!data.secure_url) throw new Error(data.error?.message || 'Falha no upload');
-
-    const media = JSON.parse(_v('osMediaArray') || '[]');
-    media.push({ url: data.secure_url, type: data.resource_type, name: file.name });
-    _sv('osMediaArray', JSON.stringify(media));
-    renderMediaOS();
-    toastOk('Arquivo enviado com sucesso!');
-  } catch (e) {
-    toastErr('Upload falhou: ' + e.message);
-  } finally {
-    setLoading('btnUploadMedia', false, 'UPLOAD');
-    const fileEl = _$('osFileInput');
-    if (fileEl) fileEl.value = '';
-  }
-};
-
-window.renderMediaOS = function() {
-  const media = JSON.parse(_v('osMediaArray') || '[]');
-  if (!media.length) {
-    _sh('osMediaGrid', `<div style="color:var(--text-muted);font-size:0.78rem;padding:16px 0">Nenhum arquivo anexado</div>`);
-    return;
-  }
-  _sh('osMediaGrid', media.map((m, i) => `
-    <div class="media-item" title="${m.name || ''}">
-      ${m.type === 'video'
-        ? `<video src="${m.url}" controls></video>`
-        : `<img src="${m.url}" alt="foto" onclick="window.open('${m.url}','_blank')" style="cursor:zoom-in">`
-      }
-      <button class="media-del" onclick="_rmMedia(${i})" title="Remover">✕</button>
-    </div>
-  `).join(''));
-};
-
-window._rmMedia = function(idx) {
-  const media = JSON.parse(_v('osMediaArray') || '[]');
-  media.splice(idx, 1);
-  _sv('osMediaArray', JSON.stringify(media));
-  renderMediaOS();
-};
-
-window.renderTimelineOS = function() {
-  const tl = JSON.parse(_v('osTimelineData') || '[]');
-  if (!tl.length) {
-    _sh('osTimeline', `<div style="color:var(--text-muted);font-size:0.78rem;padding:8px 0">Sem registros ainda</div>`);
-    return;
-  }
-  _sh('osTimeline', [...tl].reverse().map(e => `
-    <div class="tl-item">
-      <div class="tl-date">${dtHrBr(e.dt)}</div>
-      <div class="tl-user">${e.user}</div>
-      <div class="tl-action">${e.acao}</div>
-    </div>
-  `).join(''));
-};
-
-// ============================================================
-// SALVAR O.S.
-// ============================================================
-window.salvarOS = async function() {
-  const osId = _v('osId');
-  if (!_v('osCliente') || !_v('osVeiculo')) {
-    toastWarn('Selecione cliente e veículo');
-    return;
-  }
-
-  setLoading('btnSalvarOS', true);
-
-  // Coletar peças
-  const pecas = [];
-  document.querySelectorAll('#containerPecasOS .peca-row').forEach(row => {
-    const sel = row.querySelector('.peca-sel');
-    const opt = sel?.options[sel.selectedIndex];
-    const qtd   = parseFloat(row.querySelector('.peca-qtd')?.value   || 0);
-    const custo = parseFloat(row.querySelector('.peca-custo')?.value || 0);
-    const venda = parseFloat(row.querySelector('.peca-venda')?.value || 0);
-    if (qtd > 0) {
-      pecas.push({
-        estoqueId: sel?.value || null,
-        desc:  opt?.dataset.desc || opt?.text || '',
-        qtd, custo, venda
-      });
-    }
-  });
-
-  // Timeline entry
-  const tl = JSON.parse(_v('osTimelineData') || '[]');
-  tl.push({
-    dt:   new Date().toISOString(),
-    user: J.nome,
-    acao: `${osId ? 'Editou' : 'Abriu'} O.S. — Status: ${_v('osStatus')}`
-  });
-
-  const payload = {
-    tenantId:    J.tid,
-    tipoVeiculo: _v('osTipoVeiculo'),
-    clienteId:   _v('osCliente'),
-    veiculoId:   _v('osVeiculo'),
-    mecId:       _v('osMec') || null,
-    mecNome:     J.equipe.find(f => f.id === _v('osMec'))?.nome || null,
-    data:        _v('osData'),
-    km:          _v('osKm'),
-    desc:        _v('osDescricao'),
-    diagnostico: _v('osDiagnostico'),
-    status:      _v('osStatus'),
-    maoObra:     parseFloat(_v('osMaoObra') || 0),
-    total:       parseFloat(_v('osTotalHidden') || 0),
-    pecas,
-    media:       JSON.parse(_v('osMediaArray') || '[]'),
-    chkComb:     _v('chkComb'),
-    chkPneuDia:  _v('chkPneuDia'),
-    chkPneuTra:  _v('chkPneuTra'),
-    chkObs:      _v('chkObs'),
-    chkPainel:    _chk('chkPainel'),
-    chkPressao:   _chk('chkPressao'),
-    chkCarroceria:_chk('chkCarroceria'),
-    chkDocumentos:_chk('chkDocumentos'),
-    timeline:    tl,
-    updatedAt:   new Date().toISOString()
-  };
-
-  try {
-    // Ações ao concluir
-    if (_v('osStatus') === 'Concluido' && _v('osPgtoForma')) {
-      await _processarConclusao(payload, osId);
-    }
-
-    // Agendar revisão
-    if (_v('osProxRev') || _v('osProxKm')) {
-      await J.db.collection('agendamentos').add({
-        tenantId:  J.tid,
-        clienteId: payload.clienteId,
-        veiculoId: payload.veiculoId,
-        data:      _v('osProxRev') || '',
-        km:        _v('osProxKm')  || '',
-        servico:   'Revisão Programada',
-        status:    'Agendado',
-        createdAt: new Date().toISOString()
-      });
-    }
-
-    if (osId) {
-      await J.db.collection('ordens_servico').doc(osId).update(payload);
-      toastOk('O.S. atualizada com sucesso!');
-      audit('OS', 'Editou O.S. ' + osId.slice(-6).toUpperCase());
-    } else {
-      payload.createdAt = new Date().toISOString();
-      const ref = await J.db.collection('ordens_servico').add(payload);
-      toastOk('O.S. criada — #' + ref.id.slice(-6).toUpperCase());
-      audit('OS', 'Criou O.S. para ' + (J.clientes.find(c => c.id === payload.clienteId)?.nome || '?'));
-    }
-
-    closeModal('modalOS');
-  } catch (e) {
-    toastErr('Erro ao salvar O.S.: ' + e.message);
-  } finally {
-    setLoading('btnSalvarOS', false, 'SALVAR O.S.');
-  }
-};
-
-async function _processarConclusao(payload, osId) {
-  const formasPagas = ['Dinheiro', 'PIX', 'Débito', 'Crédito à Vista', 'Transferência'];
-  payload.pgtoForma = _v('osPgtoForma');
-  payload.pgtoData  = _v('osPgtoData') || new Date().toISOString().split('T')[0];
-  const statusFin   = formasPagas.includes(payload.pgtoForma) ? 'Pago' : 'Pendente';
-  const parcelas    = parseInt(_v('osPgtoParcelas') || 1);
-  const valorParc   = payload.total / parcelas;
-
-  const veiculo = J.veiculos.find(v => v.id === payload.veiculoId);
-  const cliente = J.clientes.find(c => c.id === payload.clienteId);
-
-  const batch = J.db.batch();
-
-  // Gera títulos financeiros
-  for (let i = 0; i < parcelas; i++) {
-    const d = new Date(payload.pgtoData);
-    d.setMonth(d.getMonth() + i);
-    batch.set(J.db.collection('financeiro').doc(), {
-      tenantId:  J.tid,
-      tipo:      'Entrada',
-      status:    statusFin,
-      desc:      `O.S. ${veiculo?.placa || ''} — ${cliente?.nome || ''} ${parcelas > 1 ? `(${i+1}/${parcelas})` : ''}`,
-      valor:     valorParc,
-      pgto:      payload.pgtoForma,
-      venc:      d.toISOString().split('T')[0],
-      osId:      osId || null,
-      createdAt: new Date().toISOString()
-    });
-  }
-
-  // Baixa estoque
-  for (const p of payload.pecas) {
-    if (p.estoqueId) {
-      const item = J.estoque.find(x => x.id === p.estoqueId);
-      if (item) {
-        batch.update(J.db.collection('estoqueItems').doc(p.estoqueId), {
-          qtd: Math.max(0, (item.qtd || 0) - p.qtd),
-          updatedAt: new Date().toISOString()
+    addLinhaPeca: function(descricao = '', qtd = 1, custo = 0, venda = 0) {
+        // Gera um ID único e aleatório para a linha na memória
+        const uid = 'item_' + Math.random().toString(36).substr(2, 9);
+        this.itensOSAtual.push({
+            uid: uid,
+            descricao: descricao,
+            qtd: qtd,
+            custo: parseFloat(custo),
+            venda: parseFloat(venda)
         });
-      }
+        this.renderizarItens();
+    },
+
+    removerLinhaPeca: function(uid) {
+        this.itensOSAtual = this.itensOSAtual.filter(item => item.uid !== uid);
+        this.renderizarItens();
+    },
+
+    atualizarItemMemoria: function(uid, campo, valorElemento) {
+        const item = this.itensOSAtual.find(i => i.uid === uid);
+        if (item) {
+            if (campo === 'descricao') {
+                item.descricao = valorElemento.value;
+            } else {
+                item[campo] = parseFloat(valorElemento.value) || 0;
+            }
+            this.calcularTotalOS(); // Recalcula totais instantaneamente
+        }
+    },
+
+    renderizarItens: function() {
+        const tbody = document.getElementById('tb-pecas-os');
+        tbody.innerHTML = '';
+
+        this.itensOSAtual.forEach(item => {
+            const tr = document.createElement('tr');
+            
+            // Oculta campo de Custo se o usuário for mecânico
+            const dNoneCusto = window.core.session.role === 'mecanico' ? 'd-none' : '';
+
+            tr.innerHTML = `
+                <td class="ps-2"><input type="text" class="form-control form-control-sm bg-dark text-white border-secondary" value="${item.descricao}" onchange="os.atualizarItemMemoria('${item.uid}', 'descricao', this)" placeholder="Filtro de óleo, Mão de Obra..."></td>
+                <td><input type="number" class="form-control form-control-sm bg-dark text-white border-secondary text-center" value="${item.qtd}" min="1" onchange="os.atualizarItemMemoria('${item.uid}', 'qtd', this)"></td>
+                <td class="${dNoneCusto}"><input type="number" class="form-control form-control-sm bg-dark text-warning border-secondary" value="${item.custo.toFixed(2)}" onchange="os.atualizarItemMemoria('${item.uid}', 'custo', this)"></td>
+                <td><input type="number" class="form-control form-control-sm bg-dark text-success border-secondary fw-bold" value="${item.venda.toFixed(2)}" onchange="os.atualizarItemMemoria('${item.uid}', 'venda', this)"></td>
+                <td class="text-white align-middle text-end fw-bold" id="tot_${item.uid}">R$ ${(item.qtd * item.venda).toFixed(2)}</td>
+                <td class="text-end"><button type="button" class="btn btn-sm btn-outline-danger border-0" onclick="os.removerLinhaPeca('${item.uid}')"><i class="bi bi-trash"></i></button></td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        this.calcularTotalOS();
+    },
+
+    calcularTotalOS: function() {
+        let totalGeral = 0;
+        this.itensOSAtual.forEach(item => {
+            const subtotal = item.qtd * item.venda;
+            totalGeral += subtotal;
+            
+            // Atualiza o subtotal da linha HTML (se o elemento existir)
+            const tdTotal = document.getElementById(`tot_${item.uid}`);
+            if (tdTotal) tdTotal.textContent = `R$ ${subtotal.toFixed(2)}`;
+        });
+
+        document.getElementById('os-total-display').textContent = `R$ ${totalGeral.toFixed(2)}`;
+        return totalGeral;
+    },
+
+    /**
+     * SALVAR O.S. (A grande transação atômica do Firebase)
+     */
+    salvarOS: async function() {
+        const tenantId = window.core.session.tenantId;
+        const idOriginal = document.getElementById('os-id').value;
+        const clienteId = document.getElementById('os-cliente-id').value;
+        const placa = document.getElementById('os-placa').value.toUpperCase().trim();
+
+        if (!clienteId) {
+            window.ui.mostrarToast("Erro Crítico", "É obrigatório selecionar ou cadastrar um cliente válido.", "danger");
+            return;
+        }
+
+        if (!placa) {
+            window.ui.mostrarToast("Atenção", "A Placa do veículo é obrigatória.", "warning");
+            return;
+        }
+
+        // Prepara os dados
+        const dadosOS = {
+            placa: placa,
+            veiculo: document.getElementById('os-veiculo').value.trim(),
+            clienteId: clienteId,
+            clienteNome: document.getElementById('os-cliente-busca').value.split('|')[0].trim(),
+            queixa: document.getElementById('os-queixa').value.trim(),
+            chkCombustivel: document.getElementById('chk-combustivel').checked,
+            chkArranhado: document.getElementById('chk-arranhado').checked,
+            chkPertences: document.getElementById('chk-pertences').checked,
+            diagnostico: document.getElementById('os-diagnostico').value.trim(),
+            status: document.getElementById('os-status').value,
+            valorTotal: this.calcularTotalOS(),
+            itens: this.itensOSAtual,
+            dataAtualizacao: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        // LÓGICA DE AUDITORIA: Criação de um registro de LOG imutável
+        const logEntry = {
+            usuario: window.core.session.nome,
+            dataHora: new Date(),
+            acao: idOriginal ? "Atualizou Prontuário" : "Criou Prontuário de Recepção",
+            statusAtual: dadosOS.status,
+            valorRegistrado: dadosOS.valorTotal
+        };
+
+        try {
+            const osRefBase = db.collection("tenants").doc(tenantId).collection("ordens_servico");
+
+            if (idOriginal) {
+                // É atualização
+                // Pega os dados atuais para a Auditoria não apagar o passado
+                const docAtual = await osRefBase.doc(idOriginal).get();
+                let arrayAuditoria = docAtual.exists && docAtual.data().auditoria ? docAtual.data().auditoria : [];
+                
+                // Grava log apenas se algo importante mudou (ex: Status alterado)
+                if(!docAtual.exists || docAtual.data().status !== dadosOS.status) {
+                    logEntry.acao = `Mudou Status para: ${dadosOS.status.toUpperCase()}`;
+                    arrayAuditoria.push(logEntry);
+                    dadosOS.auditoria = arrayAuditoria;
+                }
+
+                await osRefBase.doc(idOriginal).update(dadosOS);
+                window.ui.mostrarToast("Sucesso", `O.S da placa ${placa} atualizada.`, "success");
+
+            } else {
+                // É uma Nova OS
+                dadosOS.dataCriacao = firebase.firestore.FieldValue.serverTimestamp();
+                dadosOS.auditoria = [logEntry]; // Primeiro log
+
+                await osRefBase.add(dadosOS);
+                window.ui.mostrarToast("Sucesso", "Veículo rececionado com sucesso no Pátio!", "success");
+            }
+
+            // Lógica Pós-Salvar: Se mudou para ENTREGUE, dispara Financeiro
+            if (dadosOS.status === 'pronto') {
+                // Fica vermelho, esperando a faturação no front-end futuro
+                window.ui.mostrarToast("Veículo Pronto", "O veículo está pronto. Não esqueça de faturar no Financeiro.", "info");
+            }
+
+            // Fecha Modal
+            const modalEl = document.getElementById('modal-os');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
+
+        } catch (error) {
+            console.error("[O.S.] Erro Crítico ao Salvar:", error);
+            window.ui.mostrarToast("Erro Base de Dados", "Falha ao gravar O.S. Verifique sua conexão.", "danger");
+        }
+    },
+
+    /**
+     * Renderiza a aba de Auditoria Visual
+     */
+    renderizarAuditoria: function(logs) {
+        const ul = document.getElementById('lista-auditoria-os');
+        ul.innerHTML = '';
+
+        // Inverte a ordem para os mais recentes ficarem no topo
+        const logsInvertidos = [...logs].reverse();
+
+        logsInvertidos.forEach(log => {
+            // Verifica o tipo de status para colorir a bolinha da timeline no CSS
+            let classColor = 'timeline-success';
+            if(log.acao.includes("Criou")) classColor = '';
+            if(log.acao.includes("CANCELOU")) classColor = 'timeline-danger';
+            if(log.acao.includes("Orçamento")) classColor = 'timeline-warning';
+
+            // Conversão segura de Timestamp do Firestore
+            let dataFormato = "Data Desconhecida";
+            if (log.dataHora && log.dataHora.toDate) {
+                dataFormato = log.dataHora.toDate().toLocaleString('pt-BR');
+            } else if (log.dataHora instanceof Date) {
+                dataFormato = log.dataHora.toLocaleString('pt-BR');
+            }
+
+            ul.innerHTML += `
+                <li class="${classColor} mb-3">
+                    <div class="fw-bold text-white">${log.usuario}</div>
+                    <div class="small text-info">${log.acao}</div>
+                    <div class="small text-white-50"><i class="bi bi-clock"></i> ${dataFormato}</div>
+                    ${log.valorRegistrado > 0 ? `<div class="small text-success mt-1 fw-bold">R$ ${log.valorRegistrado.toFixed(2)}</div>` : ''}
+                </li>
+            `;
+        });
     }
-  }
-
-  // Comissão do mecânico
-  if (payload.mecId) {
-    const mec = J.equipe.find(f => f.id === payload.mecId);
-    if (mec && mec.comissao > 0) {
-      const valCom = payload.total * (mec.comissao / 100);
-      batch.set(J.db.collection('financeiro').doc(), {
-        tenantId:  J.tid,
-        tipo:      'Saída',
-        status:    'Pendente',
-        desc:      `Comissão ${mec.nome} — O.S. ${veiculo?.placa || ''}`,
-        valor:     valCom,
-        pgto:      'A Combinar',
-        venc:      payload.pgtoData,
-        isComissao: true,
-        mecId:     payload.mecId,
-        createdAt: new Date().toISOString()
-      });
-    }
-  }
-
-  await batch.commit();
-
-  // Notificação WhatsApp ao cliente
-  if (cliente?.wpp && window.JARVIS_CONST) {
-    const msg = JARVIS_CONST.WPP_MSGS.pronto(cliente.nome, veiculo?.modelo || veiculo?.placa || 'veículo', J.tnome);
-    // Abre WhatsApp (não-blocking)
-    setTimeout(() => {
-      if (confirm(`Enviar notificação WhatsApp para ${cliente.nome}?\n\n"${msg.substring(0,100)}..."`)) {
-        abrirWpp(cliente.wpp, msg);
-      }
-    }, 500);
-  }
-}
-
-// ============================================================
-// AGENDA
-// ============================================================
-window.renderAgenda = function() {
-  const lista = [...J.agendamentos].sort((a, b) => a.data > b.data ? 1 : -1);
-  const hoje  = new Date().toISOString().split('T')[0];
-
-  _sh('tbAgenda', lista.map(a => {
-    const c   = J.clientes.find(x => x.id === a.clienteId);
-    const v   = J.veiculos.find(x => x.id === a.veiculoId);
-    const mec = J.equipe.find(x => x.id === a.mecId);
-    const atrasado = a.data < hoje && a.status === 'Agendado';
-    const convertido = a.status === 'Convertido';
-    return `<tr style="${atrasado ? 'background:rgba(244,63,94,0.03)' : ''}">
-      <td style="font-family:var(--ff-mono);font-size:0.8rem">${dtBr(a.data)} ${a.hora || ''}</td>
-      <td>${c?.nome || '—'}</td>
-      <td>${v ? `<span class="placa">${v.placa}</span> ${v.modelo}` : '—'}</td>
-      <td>${a.servico || '—'}</td>
-      <td>${mec?.nome || '—'}</td>
-      <td>${atrasado ? badgeStatus('Cancelado') : convertido ? badgeStatus('Concluido') : badgeStatus('Aguardando')}</td>
-      <td style="white-space:nowrap">
-        <button class="btn btn-ghost btn-sm" onclick="prepAgenda('edit','${a.id}');openModal('modalAgenda')">✏</button>
-        ${!convertido ? `<button class="btn btn-brand btn-sm" onclick="converterAgendaOS('${a.id}')" style="margin-left:4px">→ O.S.</button>` : ''}
-      </td>
-    </tr>`;
-  }).join('') || tableEmpty(7, '📅', 'Nenhum agendamento'));
 };
-
-window.prepAgenda = function(mode, id = null) {
-  ['agdId','agdServico'].forEach(f => _sv(f, ''));
-  _sv('agdData', new Date().toISOString().split('T')[0]);
-  _sv('agdHora', '09:00');
-  popularSelects();
-
-  if (mode === 'edit' && id) {
-    const a = J.agendamentos.find(x => x.id === id);
-    if (!a) return;
-    _sv('agdId',      a.id);
-    _sv('agdCliente', a.clienteId || '');
-    filtrarVeicsAgenda();
-    setTimeout(() => _sv('agdVeiculo', a.veiculoId || ''), 80);
-    _sv('agdData',    a.data    || '');
-    _sv('agdHora',    a.hora    || '');
-    _sv('agdServico', a.servico || '');
-    _sv('agdMec',     a.mecId   || '');
-  }
-};
-
-window.salvarAgenda = async function() {
-  if (!_v('agdCliente') || !_v('agdData')) {
-    toastWarn('Cliente e data são obrigatórios');
-    return;
-  }
-  const p = {
-    tenantId:  J.tid,
-    clienteId: _v('agdCliente'),
-    veiculoId: _v('agdVeiculo'),
-    data:      _v('agdData'),
-    hora:      _v('agdHora'),
-    servico:   _v('agdServico'),
-    mecId:     _v('agdMec') || null,
-    status:    'Agendado',
-    updatedAt: new Date().toISOString()
-  };
-  const id = _v('agdId');
-  if (id) await J.db.collection('agendamentos').doc(id).update(p);
-  else { p.createdAt = new Date().toISOString(); await J.db.collection('agendamentos').add(p); }
-
-  toastOk('Agendamento salvo!');
-  closeModal('modalAgenda');
-  audit('AGENDA', `Agendou "${p.servico}" para ${dtBr(p.data)}`);
-};
-
-window.converterAgendaOS = async function(agdId) {
-  const a = J.agendamentos.find(x => x.id === agdId);
-  if (!a) return;
-  await J.db.collection('agendamentos').doc(agdId).update({ status: 'Convertido', updatedAt: new Date().toISOString() });
-  prepOS('add');
-  setTimeout(() => {
-    _sv('osCliente', a.clienteId || '');
-    filtrarVeiculosOS();
-    setTimeout(() => _sv('osVeiculo', a.veiculoId || ''), 80);
-    _sv('osDescricao', a.servico || '');
-    _sv('osData', a.data || new Date().toISOString().split('T')[0]);
-    openModal('modalOS');
-  }, 80);
-};
-
-// ============================================================
-// AUDITORIA
-// ============================================================
-window.renderAuditoria = function() {
-  _sh('tbAuditoria', J.auditoria.slice(0, 150).map(a => `
-    <tr>
-      <td style="font-family:var(--ff-mono);font-size:0.72rem;color:var(--text-muted)">${dtHrBr(a.ts)}</td>
-      <td><span class="badge badge-brand">${a.modulo || '—'}</span></td>
-      <td style="font-family:var(--ff-mono);color:var(--brand);font-size:0.75rem">${a.usuario || '—'}</td>
-      <td>${a.acao || '—'}</td>
-    </tr>
-  `).join('') || tableEmpty(4, '🔒', 'Sem registros de auditoria'));
-};
-
-// ============================================================
-// HELPER ESCAPING
-// ============================================================
-function _esc(str) {
-  return (str || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-}
