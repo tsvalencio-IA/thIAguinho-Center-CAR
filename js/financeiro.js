@@ -1,12 +1,12 @@
 /**
- * JARVIS ERP V2 — financeiro.js
- * DRE, Fluxo de Caixa, NF Entrada, Parcelamento, Comissões
+ * JARVIS ERP — financeiro.js
+ * DRE, Fluxo de Caixa, NF Entrada, Comissões
  */
 
 'use strict';
 
 // ============================================================
-// RENDERIZAR FINANCEIRO (DRE + TABELA)
+// DRE + TABELA CAIXA
 // ============================================================
 window.renderFinanceiro = function() {
   const filTipo   = _v('filtroFinTipo')   || '';
@@ -34,39 +34,27 @@ window.renderFinanceiro = function() {
   if (saldoEl) saldoEl.style.color = saldo >= 0 ? 'var(--success)' : 'var(--danger)';
 
   // Tabela
-  const html = base.map(f => {
+  _sh('tbFinanceiro', base.map(f => {
     const atrasado = f.status === 'Pendente' && f.venc && new Date(f.venc) < new Date();
-    const bgAtrasado = atrasado ? 'background:rgba(244,63,94,0.03)' : '';
-    
-    return `
-      <tr style="${bgAtrasado}">
-        <td style="font-family:var(--ff-mono);font-size:0.78rem">${dtBr(f.venc)}</td>
-        <td><span style="background-color:${f.tipo === 'Entrada' ? '#22D3A020' : '#F4633E20'};color:${f.tipo === 'Entrada' ? '#22D3A0' : '#F4633E'};padding:4px 8px;border-radius:4px;font-size:0.8rem">${f.tipo}</span></td>
-        <td>${f.desc || '—'}</td>
-        <td style="font-family:var(--ff-mono);font-size:0.75rem">${f.pgto || '—'}</td>
-        <td style="font-family:var(--ff-mono);font-weight:700;color:${f.tipo === 'Entrada' ? 'var(--success)' : 'var(--danger)'}">${moeda(f.valor)}</td>
-        <td><span style="background-color:${f.status === 'Pago' ? '#22D3A020' : '#F59E0B20'};color:${f.status === 'Pago' ? '#22D3A0' : '#F59E0B'};padding:4px 8px;border-radius:4px;font-size:0.8rem">${f.status}</span></td>
-        <td style="white-space:nowrap">
-          <button class="btn btn-ghost btn-sm" onclick="prepFin('${f.id}');openModal('modalFin')" style="margin-right:4px">✏</button>
-          <button class="btn btn-sm ${f.status === 'Pago' ? 'btn-warn' : 'btn-success'}" onclick="toggleStatusFin('${f.id}','${f.status}')" title="${f.status === 'Pago' ? 'Marcar pendente' : 'Marcar pago'}">
-            ${f.status === 'Pago' ? '⌛' : '✓'}
-          </button>
-        </td>
-      </tr>
-    `;
-  }).join('') || '<tr><td colspan="7" style="text-align:center;padding:20px">Nenhum lançamento</td></tr>';
-
-  _sh('tbFinanceiro', html);
+    return `<tr ${atrasado ? 'style="background:rgba(244,63,94,0.03)"' : ''}>
+      <td style="font-family:var(--ff-mono);font-size:0.78rem">${dtBr(f.venc)}</td>
+      <td>${badgeEntradaSaida(f.tipo)}</td>
+      <td>${f.desc || '—'}</td>
+      <td style="font-family:var(--ff-mono);font-size:0.75rem">${f.pgto || '—'}</td>
+      <td style="font-family:var(--ff-mono);font-weight:700;color:${f.tipo === 'Entrada' ? 'var(--success)' : 'var(--danger)'}">${moeda(f.valor)}</td>
+      <td>${badgeStatus(f.status)}</td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-ghost btn-sm" onclick="prepFin('${f.id}');openModal('modalFin')" style="margin-right:4px">✏</button>
+        <button class="btn btn-sm ${f.status === 'Pago' ? 'btn-warn' : 'btn-success'}" onclick="toggleStatusFin('${f.id}','${f.status}')" title="${f.status === 'Pago' ? 'Marcar pendente' : 'Marcar pago'}">
+          ${f.status === 'Pago' ? '⌛' : '✓'}
+        </button>
+      </td>
+    </tr>`;
+  }).join('') || tableEmpty(7, '💰', 'Nenhum lançamento'));
 };
 
-// ============================================================
-// PREPARAR FORMULÁRIO FINANCEIRO
-// ============================================================
 window.prepFin = function(id = null) {
-  _sv('finId','');
-  _sv('finDesc','');
-  _sv('finValor','');
-  _sv('finNota','');
+  ['finId','finDesc','finValor','finNota'].forEach(f => _sv(f, ''));
   _sv('finTipo',   'Entrada');
   _sv('finStatus', 'Pago');
   _sv('finPgto',   'PIX');
@@ -84,89 +72,54 @@ window.prepFin = function(id = null) {
     _sv('finVenc',   f.venc   || '');
     _sv('finNota',   f.nota   || '');
   }
-
-  openModal('modalFin');
 };
 
-// ============================================================
-// SALVAR LANÇAMENTO FINANCEIRO
-// ============================================================
 window.salvarFin = async function() {
   if (!_v('finDesc') || !_v('finValor')) {
     toastWarn('Preencha descrição e valor');
     return;
   }
+  const p = {
+    tenantId:  J.tid,
+    tipo:      _v('finTipo'),
+    desc:      _v('finDesc'),
+    valor:     parseFloat(_v('finValor') || 0),
+    pgto:      _v('finPgto'),
+    venc:      _v('finVenc'),
+    status:    _v('finStatus'),
+    nota:      _v('finNota'),
+    updatedAt: new Date().toISOString()
+  };
+  const id = _v('finId');
+  if (id) await J.db.collection('financeiro').doc(id).update(p);
+  else { p.createdAt = new Date().toISOString(); await J.db.collection('financeiro').add(p); }
 
-  setLoading('btnSalvarFin', true);
-
-  try {
-    const p = {
-      tenantId:  J.tid,
-      tipo:      _v('finTipo'),
-      desc:      _v('finDesc'),
-      valor:     parseFloat(_v('finValor') || 0),
-      pgto:      _v('finPgto'),
-      venc:      _v('finVenc'),
-      status:    _v('finStatus'),
-      nota:      _v('finNota'),
-      updatedAt: new Date().toISOString()
-    };
-
-    const id = _v('finId');
-    if (id) {
-      await J.db.collection('financeiro').doc(id).update(p);
-      toastOk('Lançamento atualizado!');
-    } else {
-      p.createdAt = new Date().toISOString();
-      await J.db.collection('financeiro').add(p);
-      toastOk('Lançamento registrado!');
-    }
-
-    closeModal('modalFin');
-    audit('FINANCEIRO', `Lançou ${p.tipo}: ${p.desc} — ${moeda(p.valor)}`);
-  } catch (e) {
-    toastErr('Erro ao salvar: ' + e.message);
-  } finally {
-    setLoading('btnSalvarFin', false, 'Salvar');
-  }
+  toastOk('Lançamento registrado!');
+  closeModal('modalFin');
+  audit('FINANCEIRO', `Lançou ${p.tipo}: ${p.desc} — ${moeda(p.valor)}`);
 };
 
-// ============================================================
-// TOGGLE STATUS FINANCEIRO
-// ============================================================
 window.toggleStatusFin = async function(id, status) {
-  try {
-    const novo = status === 'Pago' ? 'Pendente' : 'Pago';
-    await J.db.collection('financeiro').doc(id).update({
-      status: novo,
-      updatedAt: new Date().toISOString()
-    });
-    toastOk(`Status atualizado → ${novo}`);
-  } catch (e) {
-    toastErr('Erro ao atualizar: ' + e.message);
-  }
+  const novo = status === 'Pago' ? 'Pendente' : 'Pago';
+  await J.db.collection('financeiro').doc(id).update({ status: novo, updatedAt: new Date().toISOString() });
+  toastOk(`Status atualizado → ${novo}`);
 };
 
 // ============================================================
-// NF ENTRADA (COM PARCELAMENTO)
+// NF ENTRADA
 // ============================================================
 window.prepNF = function() {
   _sv('nfData',   new Date().toISOString().split('T')[0]);
   _sv('nfNumero', '');
   _sv('nfPgtoForma', 'Dinheiro');
   _sv('nfVenc', new Date().toISOString().split('T')[0]);
-  _sv('nfParcelas', '1');
   _sh('containerItensNF', '');
   _st('nfTotal', '0,00');
   _sh('divParcelasNF', '');
   popularSelects();
   adicionarItemNF();
-  openModal('modalNF');
 };
 
-// ============================================================
-// ADICIONAR ITEM NF
-// ============================================================
 window.adicionarItemNF = function() {
   const div = document.createElement('div');
   div.style.cssText = 'display:grid;grid-template-columns:1fr 70px 90px 90px 32px;gap:8px;align-items:center;margin-bottom:8px;';
@@ -180,9 +133,7 @@ window.adicionarItemNF = function() {
   _$('containerItensNF').appendChild(div);
 };
 
-// ============================================================
-// SUGERIR PEÇA NF
-// ============================================================
+// Autocompletar descrição se peça já existe
 window._sugerirPecaNF = function(input) {
   const val = input.value.toLowerCase().trim();
   if (val.length < 3) return;
@@ -197,9 +148,6 @@ window._sugerirPecaNF = function(input) {
   }
 };
 
-// ============================================================
-// CALCULAR TOTAL NF
-// ============================================================
 window.calcNFTotal = function() {
   let t = 0;
   _$('containerItensNF')?.querySelectorAll(':scope > div').forEach(r => {
@@ -210,18 +158,12 @@ window.calcNFTotal = function() {
   _st('nfTotal', t.toFixed(2).replace('.', ','));
 };
 
-// ============================================================
-// VERIFICAR PARCELAMENTO NF
-// ============================================================
 window.checkPgtoNF = function() {
   const show = ['Parcelado', 'Boleto'].includes(_v('nfPgtoForma'));
   const el   = _$('divParcelasNF');
   if (el) el.classList.toggle('hidden', !show);
 };
 
-// ============================================================
-// SALVAR NF (COM PARCELAMENTO AUTOMÁTICO)
-// ============================================================
 window.salvarNF = async function() {
   const itens = [];
   _$('containerItensNF')?.querySelectorAll(':scope > div').forEach(r => {
@@ -235,25 +177,18 @@ window.salvarNF = async function() {
     });
   });
 
-  if (!itens.length) {
-    toastWarn('Adicione pelo menos um item');
-    return;
-  }
+  if (!itens.length) { toastWarn('Adicione pelo menos um item'); return; }
 
   setLoading('btnSalvarNF', true);
-
   try {
     const batch   = J.db.batch();
     let totalNF   = 0;
     const nfNum   = _v('nfNumero') || 's/n';
     const fornec  = J.fornecedores.find(f => f.id === _v('nfFornec'));
-    const nPar    = parseInt(_v('nfParcelas') || 1);
 
-    // Processar itens de estoque
     for (const item of itens) {
       totalNF += item.qtd * item.custo;
       const existente = J.estoque.find(p => p.desc.toLowerCase() === item.desc.toLowerCase());
-      
       if (existente) {
         batch.update(J.db.collection('estoqueItems').doc(existente.id), {
           qtd:       (existente.qtd || 0) + item.qtd,
@@ -275,14 +210,14 @@ window.salvarNF = async function() {
       }
     }
 
-    // PARCELAMENTO: Criar N documentos financeiros
+    // Despesa financeira
     const formasPagas = ['Dinheiro', 'PIX'];
     const stFin       = formasPagas.includes(_v('nfPgtoForma')) ? 'Pago' : 'Pendente';
+    const nPar        = parseInt(_v('nfParcelas') || 1);
 
     for (let i = 0; i < nPar; i++) {
       const d = new Date(_v('nfVenc') || new Date());
       d.setMonth(d.getMonth() + i);
-      
       batch.set(J.db.collection('financeiro').doc(), {
         tenantId:  J.tid,
         tipo:      'Saída',
@@ -298,9 +233,9 @@ window.salvarNF = async function() {
     }
 
     await batch.commit();
-    toastOk(`NF processada — ${itens.length} itens + ${nPar} parcela(s)!`);
+    toastOk(`NF processada — ${itens.length} itens adicionados ao estoque!`);
     closeModal('modalNF');
-    audit('ESTOQUE/NF', `Entrada NF ${nfNum} — ${moeda(totalNF)} em ${nPar}x`);
+    audit('ESTOQUE/NF', `Entrada NF ${nfNum} — ${moeda(totalNF)}`);
   } catch (e) {
     toastErr('Erro ao processar NF: ' + e.message);
   } finally {
@@ -313,15 +248,10 @@ window.salvarNF = async function() {
 // ============================================================
 window.calcComissoes = function() {
   const comissoes = {};
-  J.equipe.forEach(f => {
-    comissoes[f.id] = { nome: f.nome, cargo: f.cargo, val: 0 };
-  });
-
+  J.equipe.forEach(f => { comissoes[f.id] = { nome: f.nome, cargo: f.cargo, val: 0 }; });
   J.financeiro
     .filter(f => f.isComissao && f.mecId && f.status === 'Pendente')
-    .forEach(f => {
-      if (comissoes[f.mecId]) comissoes[f.mecId].val += f.valor || 0;
-    });
+    .forEach(f => { if (comissoes[f.mecId]) comissoes[f.mecId].val += f.valor || 0; });
 
   const lista = Object.values(comissoes).filter(c => c.val > 0);
   const el    = _$('boxComissoes');
@@ -341,9 +271,7 @@ window.calcComissoes = function() {
     </div>`;
 };
 
-// ============================================================
-// RENDERIZAR COMISSÕES (painel equipe)
-// ============================================================
+// Painel do mecânico (equipe.html)
 window.renderComissoes = function(fins) {
   const total = fins.filter(f => f.status === 'Pendente').reduce((a, f) => a + (f.valor || 0), 0);
   const pago  = fins.filter(f => f.status === 'Pago').reduce((a, f) => a + (f.valor || 0), 0);
@@ -377,7 +305,7 @@ window.renderComissoes = function(fins) {
         </div>
         <div style="text-align:right">
           <div class="com-value" style="font-size:1rem;color:${f.status === 'Pago' ? 'var(--text-muted)' : 'var(--success)'}">${moeda(f.valor)}</div>
-          <span style="background-color:${f.status === 'Pago' ? '#22D3A020' : '#F59E0B20'};color:${f.status === 'Pago' ? '#22D3A0' : '#F59E0B'};padding:2px 6px;border-radius:3px;font-size:0.7rem">${f.status}</span>
+          ${badgeStatus(f.status)}
         </div>
       </div>
     `).join('') : `<div class="empty-state"><div class="empty-state-icon">💰</div><div class="empty-state-sub">Nenhuma comissão registrada</div></div>`}
