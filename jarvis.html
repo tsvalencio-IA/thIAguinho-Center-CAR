@@ -450,7 +450,14 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
         </button>
       </div>
       
-      <div class="kanban-wrap" id="kanbanBoard">
+<div class="kanban-wrap" id="kanbanBoard">
+        <div class="k-col" data-status="Triagem"><div class="k-col-head"><span class="k-col-label">TRIAGEM</span><span class="k-col-count" id="cnt-Triagem">0</span></div><div class="k-col-body" id="kb-Triagem"></div></div>
+        <div class="k-col" data-status="Orcamento"><div class="k-col-head"><span class="k-col-label">ORÇAMENTO</span><span class="k-col-count" id="cnt-Orcamento">0</span></div><div class="k-col-body" id="kb-Orcamento"></div></div>
+        <div class="k-col" data-status="Orcamento_Enviado"><div class="k-col-head"><span class="k-col-label">ORÇ. ENVIADO</span><span class="k-col-count" id="cnt-Orcamento_Enviado">0</span></div><div class="k-col-body" id="kb-Orcamento_Enviado"></div></div>
+        <div class="k-col" data-status="Aprovado"><div class="k-col-head"><span class="k-col-label">APROVADO</span><span class="k-col-count" id="cnt-Aprovado">0</span></div><div class="k-col-body" id="kb-Aprovado"></div></div>
+        <div class="k-col" data-status="Andamento"><div class="k-col-head"><span class="k-col-label">EM SERVIÇO</span><span class="k-col-count" id="cnt-Andamento">0</span></div><div class="k-col-body" id="kb-Andamento"></div></div>
+        <div class="k-col" data-status="Pronto"><div class="k-col-head"><span class="k-col-label">PRONTO/CAIXA</span><span class="k-col-count" id="cnt-Pronto">0</span></div><div class="k-col-body" id="kb-Pronto"></div></div>
+        <div class="k-col" data-status="Entregue"><div class="k-col-head"><span class="k-col-label">ENTREGUES</span><span class="k-col-count" id="cnt-Entregue">0</span></div><div class="k-col-body" id="kb-Entregue"></div></div>
       </div>
     </section>
 
@@ -639,15 +646,15 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
       </div>
       <div class="form-group">
         <label class="j-label">Status Kanban</label>
-        <select class="j-select" id="osStatus" onchange="window.verificarStatusOS()">
-          <option value="patio">1. Pátio</option>
-          <option value="orcamento">2. Orçamento</option>
-          <option value="aprovacao">3. Aguard. Cliente</option>
-          <option value="box">4. Em Serviço</option>
-          <option value="pronto">5. Pronto / Retirada</option>
-          <option value="faturado">6. Faturado (Caixa)</option>
-          <option value="entregue">7. Veículo Entregue</option>
-          <option value="cancelado">Cancelado</option>
+<select class="j-select" id="osStatus" onchange="window.verificarStatusOS()">
+          <option value="Triagem">Triagem / Avaliação</option>
+          <option value="Orcamento">Em Orçamento</option>
+          <option value="Orcamento_Enviado">Orçamento Enviado (Aguard. Aprovação)</option>
+          <option value="Aprovado">Aprovado (Fila de Serviço)</option>
+          <option value="Andamento">Em Serviço / Execução</option>
+          <option value="Pronto">Pronto para Retirada / Caixa</option>
+          <option value="Entregue">Veículo Entregue (Concluído)</option>
+          <option value="Cancelado">Cancelado</option>
         </select>
       </div>
     </div>
