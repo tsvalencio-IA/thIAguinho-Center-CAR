@@ -1,13 +1,10 @@
 /**
- * JARVIS ERP — financeiro.js (Repositório oficina1)
+ * JARVIS ERP — financeiro.js
  * DRE, Fluxo de Caixa, NF Entrada com Importação XML, Comissões, Exportação
  */
 
 'use strict';
 
-// ============================================================
-// 1. DRE E FLUXO DE CAIXA
-// ============================================================
 window.renderFinanceiro = function() {
     const buscaTipo = $v('filtroFinTipo');
     const buscaStatus = $v('filtroFinStatus');
@@ -20,7 +17,6 @@ window.renderFinanceiro = function() {
 
     base.sort((a, b) => (b.venc || '') > (a.venc || '') ? 1 : -1);
 
-    // DRE (Calculado sobre TUDO que está Pago)
     let entradas = 0, saidas = 0;
     J.financeiro.filter(f => f.status === 'Pago').forEach(f => {
         if (f.tipo === 'Entrada') entradas += (f.valor || 0);
@@ -36,17 +32,15 @@ window.renderFinanceiro = function() {
         $('dreSaldo').style.color = saldo >= 0 ? 'var(--cyan)' : 'var(--danger)';
     }
 
-    // Botão de Exportação e Renderização da Tabela
     const tb = $('tbFinanceiro');
     if (!tb) return;
     
-    // Injetar o botão de exportar CSV ao lado do filtro se não existir
     if(!$('btnExportCSV') && $('filtroFinMes')) {
         const btnCsv = document.createElement('button');
         btnCsv.id = 'btnExportCSV';
         btnCsv.className = 'btn-outline';
         btnCsv.innerHTML = '📄 EXPORTAR CSV';
-        btnCsv.onclick = exportarFinanceiro;
+        btnCsv.onclick = window.exportarFinanceiro;
         $('filtroFinMes').parentElement.appendChild(btnCsv);
     }
 
@@ -55,11 +49,22 @@ window.renderFinanceiro = function() {
         const tipCls = f.tipo === 'Entrada' ? 'pill-green' : 'pill-danger';
         const atrasado = f.status === 'Pendente' && f.venc && new Date(f.venc) < new Date();
         const corValor = f.tipo === 'Entrada' ? 'var(--success)' : 'var(--danger)';
+        
+        let vinculoNome = '';
+        if(f.vinculo) {
+            if(f.vinculo.startsWith('F_')) {
+                const forn = J.fornecedores.find(x => x.id === f.vinculo.replace('F_',''));
+                if(forn) vinculoNome = `<br><small style="color:var(--cyan)">Fornecedor: ${forn.nome}</small>`;
+            } else if(f.vinculo.startsWith('E_')) {
+                const eq = J.equipe.find(x => x.id === f.vinculo.replace('E_',''));
+                if(eq) vinculoNome = `<br><small style="color:var(--purple)">Colaborador: ${eq.nome}</small>`;
+            }
+        }
 
         return `<tr style="${atrasado ? 'background:rgba(255,59,59,0.05);' : ''}">
             <td style="font-family:var(--fm);font-size:0.75rem">${dtBr(f.venc)}</td>
             <td><span class="pill ${tipCls}">${f.tipo}</span></td>
-            <td>${f.desc}</td>
+            <td>${f.desc} ${vinculoNome}</td>
             <td style="font-family:var(--fm);font-size:0.75rem">${f.pgto || '-'}</td>
             <td style="font-family:var(--fm);font-weight:700;color:${corValor}">${moeda(f.valor)}</td>
             <td><span class="pill ${stCls}">${f.status}</span></td>
@@ -80,11 +85,11 @@ window.prepFin = function(id = null) {
     if ($('finStatus')) $('finStatus').value = 'Pago'; 
     if ($('finPgto')) $('finPgto').value = 'PIX'; 
     if ($('finVenc')) $('finVenc').value = new Date().toISOString().split('T')[0];
+    if ($('finVinculo')) $('finVinculo').value = '';
 
     if (id) {
         const f = J.financeiro.find(x => x.id === id); 
         if (!f) return;
-        
         if ($('finId')) $('finId').value = f.id; 
         if ($('finDesc')) $('finDesc').value = f.desc || ''; 
         if ($('finValor')) $('finValor').value = f.valor || 0;
@@ -93,11 +98,12 @@ window.prepFin = function(id = null) {
         if ($('finPgto')) $('finPgto').value = f.pgto || 'PIX'; 
         if ($('finVenc')) $('finVenc').value = f.venc || ''; 
         if ($('finNota')) $('finNota').value = f.nota || '';
+        if ($('finVinculo')) $('finVinculo').value = f.vinculo || '';
     }
 };
 
 window.salvarFin = async function() {
-    if (!$v('finDesc') || !$v('finValor')) { toast('⚠ Preencha descrição e valor', 'warn'); return; }
+    if (!$v('finDesc') || !$v('finValor')) { window.toast('⚠ Preencha descrição e valor', 'warn'); return; }
     
     const payload = {
         tenantId: J.tid, 
@@ -108,61 +114,41 @@ window.salvarFin = async function() {
         venc: $v('finVenc'), 
         status: $v('finStatus'), 
         nota: $v('finNota'), 
+        vinculo: $v('finVinculo') || '',
         updatedAt: new Date().toISOString()
     };
     
     const id = $v('finId');
     if (id) {
         await db.collection('financeiro').doc(id).update(payload);
-        toast('✓ LANÇAMENTO ATUALIZADO'); 
+        window.toast('✓ LANÇAMENTO ATUALIZADO'); 
         audit('FINANCEIRO', 'Editou ' + payload.tipo + ': ' + payload.desc);
     } else { 
         payload.createdAt = new Date().toISOString(); 
         await db.collection('financeiro').add(payload); 
-        toast('✓ LANÇAMENTO REGISTRADO'); 
+        window.toast('✓ LANÇAMENTO REGISTRADO'); 
         audit('FINANCEIRO', 'Lançou ' + payload.tipo + ': ' + payload.desc);
     }
-    
     fecharModal('modalFin');
 };
 
 window.toggleStatusFin = async function(id, status) {
     const novoStatus = status === 'Pago' ? 'Pendente' : 'Pago';
     await db.collection('financeiro').doc(id).update({ status: novoStatus, updatedAt: new Date().toISOString() }); 
-    toast(`✓ STATUS ALTERADO PARA ${novoStatus.toUpperCase()}`);
+    window.toast(`✓ STATUS ALTERADO PARA ${novoStatus.toUpperCase()}`);
 };
 
-// ============================================================
-// 2. ENTRADA DE NF (XML + MANUAL) E INTEGRAÇÃO DE ESTOQUE
-// ============================================================
 window.prepNF = function() {
     if ($('nfData')) $('nfData').value = new Date().toISOString().split('T')[0]; 
     if ($('nfNumero')) $('nfNumero').value = ''; 
     if ($('containerItensNF')) $('containerItensNF').innerHTML = '';
     if ($('nfTotal')) $('nfTotal').innerText = '0,00'; 
     if ($('nfPgtoForma')) $('nfPgtoForma').value = 'Dinheiro'; 
-    
-    if (typeof popularSelects === 'function') popularSelects(); 
-    adicionarItemNF();
-    checkPgtoNF();
-
-    // Injeta Botão de XML NFe e o Input File (Invisível) no modal, caso não exista
-    if (!$('btnLoadXmlNfe') && $('containerItensNF')) {
-        const container = $('containerItensNF').parentElement;
-        const btnHtml = `
-        <div style="display:flex;gap:10px;margin-bottom:14px;background:rgba(255,184,0,0.05);padding:10px;border:1px dashed var(--warn);border-radius:3px;">
-            <input type="file" id="xmlInputFile" accept=".xml" style="display:none" onchange="if(window.lerXMLNFe) window.lerXMLNFe(event); else alert('Função lerXMLNFe não encontrada.')">
-            <button type="button" id="btnLoadXmlNfe" class="btn-warn" onclick="document.getElementById('xmlInputFile').click()">
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" style="vertical-align:middle;margin-right:4px;"><path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z"/></svg>
-                IMPORTAR NOTA FISCAL (XML)
-            </button>
-            <span style="font-family:var(--fm);font-size:0.6rem;color:var(--muted);align-self:center;">Extrai automaticamente Produtos, NF e Data</span>
-        </div>`;
-        container.insertAdjacentHTML('beforebegin', btnHtml);
-    }
+    if (typeof window.popularSelects === 'function') window.popularSelects(); 
+    window.adicionarItemNF();
+    window.checkPgtoNF();
 };
 
-// NOVO LEITOR DE XML (SUPORTA NAMESPACES DA NFe BRASILEIRA)
 window.lerXMLNFe = function(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -171,9 +157,8 @@ window.lerXMLNFe = function(event) {
     reader.onload = function(e) {
         try {
             const parser = new DOMParser();
-            const xmlDoc = parser.parseDocument(e.target.result, "text/xml");
+            const xmlDoc = parser.parseFromString(e.target.result, "text/xml");
 
-            // Helper para ler tag ignorando Namespace (ex: <nfe:det> ou <det>)
             const getTag = (node, tag) => {
                 const el = node.getElementsByTagName(tag)[0] || node.getElementsByTagNameNS("*", tag)[0];
                 return el ? el.textContent : '';
@@ -185,21 +170,23 @@ window.lerXMLNFe = function(event) {
             if (dhEmi && $('nfData')) $('nfData').value = dhEmi.split('T')[0];
 
             const nomeEmit = getTag(xmlDoc, "xNome");
+            if (nomeEmit && $('nfFornec')) {
+                let f = J.fornecedores.find(x => x.nome.toLowerCase() === nomeEmit.toLowerCase());
+                if(f) $('nfFornec').value = f.id;
+            }
 
-            // Pega os itens da nota
             const detNodes = xmlDoc.getElementsByTagName("det").length > 0 
                 ? xmlDoc.getElementsByTagName("det") 
                 : xmlDoc.getElementsByTagNameNS("*", "det");
 
             if (detNodes.length > 0 && $('containerItensNF')) {
-                $('containerItensNF').innerHTML = ''; // Limpa os manuais
+                $('containerItensNF').innerHTML = ''; 
                 
                 Array.from(detNodes).forEach(det => {
                     const xProd = getTag(det, "xProd");
                     const qCom = parseFloat(getTag(det, "qCom") || 1);
                     const vUnCom = parseFloat(getTag(det, "vUnCom") || 0);
 
-                    // Busca no estoque se a peça já existe para sugerir valor de venda (Margem Padrão 50% se não achar)
                     const pecaExistente = J.estoque.find(p => p.desc.toLowerCase() === xProd.toLowerCase());
                     const vVenda = pecaExistente ? (pecaExistente.venda || 0) : (vUnCom * 1.5);
 
@@ -207,22 +194,22 @@ window.lerXMLNFe = function(event) {
                     div.style.cssText = 'display:grid;grid-template-columns:1fr 80px 90px 90px 32px;gap:8px;align-items:center;margin-bottom:8px;';
                     div.innerHTML = `
                         <input class="j-input nf-desc" value="${xProd}" placeholder="Descrição do item">
-                        <input type="number" class="j-input nf-qtd" value="${qCom}" min="1" oninput="calcNFTotal()">
-                        <input type="number" class="j-input nf-custo" value="${vUnCom.toFixed(2)}" step="0.01" placeholder="Custo" oninput="calcNFTotal()">
-                        <input type="number" class="j-input nf-venda" value="${vVenda.toFixed(2)}" step="0.01" placeholder="Venda" oninput="calcNFTotal()">
-                        <button type="button" onclick="this.parentElement.remove();calcNFTotal()" style="background:rgba(255,59,59,0.1);border:1px solid rgba(255,59,59,0.3);border-radius:2px;color:var(--danger);cursor:pointer;width:32px;height:32px;">✕</button>
+                        <input type="number" class="j-input nf-qtd" value="${qCom}" min="1" oninput="window.calcNFTotal()">
+                        <input type="number" class="j-input nf-custo" value="${vUnCom.toFixed(2)}" step="0.01" placeholder="Custo" oninput="window.calcNFTotal()">
+                        <input type="number" class="j-input nf-venda" value="${vVenda.toFixed(2)}" step="0.01" placeholder="Venda" oninput="window.calcNFTotal()">
+                        <button type="button" onclick="this.parentElement.remove();window.calcNFTotal()" style="background:rgba(255,59,59,0.1);border:1px solid rgba(255,59,59,0.3);border-radius:2px;color:var(--danger);cursor:pointer;width:32px;height:32px;">✕</button>
                     `;
                     $('containerItensNF').appendChild(div);
                 });
                 
-                calcNFTotal();
-                toast('✓ XML IMPORTADO COM SUCESSO');
+                window.calcNFTotal();
+                window.toast('✓ XML IMPORTADO COM SUCESSO');
                 audit('ESTOQUE/NF', `Importou XML da NFe ${nNF} de ${nomeEmit}`);
             } else {
-                toast('⚠ Nenhum produto encontrado no XML', 'warn');
+                window.toast('⚠ Nenhum produto encontrado no XML', 'warn');
             }
         } catch(err) {
-            toast('✕ Arquivo XML inválido ou corrompido', 'err');
+            window.toast('✕ Arquivo XML inválido ou corrompido', 'err');
             console.error(err);
         }
         
@@ -235,11 +222,11 @@ window.adicionarItemNF = function() {
     const div = document.createElement('div');
     div.style.cssText = 'display:grid;grid-template-columns:1fr 80px 90px 90px 32px;gap:8px;align-items:center;margin-bottom:8px;';
     div.innerHTML = `
-        <input class="j-input nf-desc" placeholder="Descrição do item" oninput="sugerirItemEstoqueNF(this)">
-        <input type="number" class="j-input nf-qtd" value="1" min="1" oninput="calcNFTotal()">
-        <input type="number" class="j-input nf-custo" value="0" step="0.01" placeholder="Custo" oninput="calcNFTotal()">
-        <input type="number" class="j-input nf-venda" value="0" step="0.01" placeholder="Venda" oninput="calcNFTotal()">
-        <button type="button" onclick="this.parentElement.remove();calcNFTotal()" style="background:rgba(255,59,59,0.1);border:1px solid rgba(255,59,59,0.3);border-radius:2px;color:var(--danger);cursor:pointer;width:32px;height:32px;">✕</button>
+        <input class="j-input nf-desc" placeholder="Descrição do item" oninput="window.sugerirItemEstoqueNF(this)">
+        <input type="number" class="j-input nf-qtd" value="1" min="1" oninput="window.calcNFTotal()">
+        <input type="number" class="j-input nf-custo" value="0" step="0.01" placeholder="Custo" oninput="window.calcNFTotal()">
+        <input type="number" class="j-input nf-venda" value="0" step="0.01" placeholder="Venda" oninput="window.calcNFTotal()">
+        <button type="button" onclick="this.parentElement.remove();window.calcNFTotal()" style="background:rgba(255,59,59,0.1);border:1px solid rgba(255,59,59,0.3);border-radius:2px;color:var(--danger);cursor:pointer;width:32px;height:32px;">✕</button>
     `;
     if ($('containerItensNF')) $('containerItensNF').appendChild(div);
 };
@@ -254,7 +241,7 @@ window.sugerirItemEstoqueNF = function(input) {
         const vendaInp = row.querySelector('.nf-venda');
         if (custoInp && parseFloat(custoInp.value) === 0) custoInp.value = existente.custo || 0;
         if (vendaInp && parseFloat(vendaInp.value) === 0) vendaInp.value = existente.venda || 0;
-        calcNFTotal();
+        window.calcNFTotal();
     }
 };
 
@@ -286,72 +273,51 @@ window.salvarNF = async function() {
         });
     });
     
-    if (!itens.length) { toast('⚠ Adicione ao menos um item', 'warn'); return; }
+    if (!itens.length) { window.toast('⚠ Adicione ao menos um item', 'warn'); return; }
     
     const batch = db.batch(); 
     let totalNF = 0;
     
-    // 1. Processar Estoque (Soma as quantidades se existir, cria se não existir)
     for (const item of itens) {
         totalNF += item.qtd * item.custo;
-        
         const existente = J.estoque.find(p => p.desc.toLowerCase() === item.desc.toLowerCase());
         if (existente) { 
             batch.update(db.collection('estoqueItems').doc(existente.id), {
                 qtd: (existente.qtd || 0) + item.qtd,
-                custo: item.custo,      // Atualiza o custo do lote mais recente
-                venda: item.venda,      // Atualiza o valor de venda praticado
+                custo: item.custo,
+                venda: item.venda,
                 updatedAt: new Date().toISOString()
             }); 
         } else { 
             batch.set(db.collection('estoqueItems').doc(), {
-                tenantId: J.tid,
-                desc: item.desc,
-                qtd: item.qtd,
-                custo: item.custo,
-                venda: item.venda,
-                min: 1,
-                und: 'UN',
-                createdAt: new Date().toISOString()
+                tenantId: J.tid, desc: item.desc, qtd: item.qtd, custo: item.custo, venda: item.venda, min: 1, und: 'UN', createdAt: new Date().toISOString()
             }); 
         }
     }
     
-    // 2. Processar Contas a Pagar (Financeiro gerado a partir da NF)
     const formas = ['Dinheiro', 'PIX']; 
     const st = formas.includes($v('nfPgtoForma')) ? 'Pago' : 'Pendente';
     const nPar = parseInt($v('nfParcelas') || 1);
     
     for (let i = 0; i < nPar; i++) {
-        const d = new Date($v('nfVenc') || new Date()); 
-        d.setMonth(d.getMonth() + i);
-        
+        const d = new Date($v('nfVenc') || new Date()); d.setMonth(d.getMonth() + i);
         batch.set(db.collection('financeiro').doc(), {
-            tenantId: J.tid,
-            tipo: 'Saída',
-            status: st,
+            tenantId: J.tid, tipo: 'Saída', status: st,
             desc: `NF ${$v('nfNumero') || 's/n'} — ${J.fornecedores.find(f => f.id === $v('nfFornec'))?.nome || 'Fornecedor'} ${nPar > 1 ? `(${i + 1}/${nPar})` : ''}`,
-            valor: totalNF / nPar,
-            pgto: $v('nfPgtoForma'),
-            venc: d.toISOString().split('T')[0],
-            createdAt: new Date().toISOString()
+            valor: totalNF / nPar, pgto: $v('nfPgtoForma'), venc: d.toISOString().split('T')[0], createdAt: new Date().toISOString()
         });
     }
     
     await batch.commit(); 
-    toast('✓ NF LANÇADA, TÍTULOS GERADOS E ESTOQUE SOMADO'); 
+    window.toast('✓ NF LANÇADA E ESTOQUE SOMADO'); 
     fecharModal('modalNF'); 
-    audit('ESTOQUE/NF', 'Entrada NF ' + ($v('nfNumero') || 's/n') + ' | R$ ' + totalNF.toFixed(2));
+    audit('ESTOQUE/NF', 'Entrada NF ' + ($v('nfNumero') || 's/n'));
 };
 
-// ============================================================
-// 3. COMISSÕES (Painel Gestor de RH/Equipe)
-// ============================================================
 window.calcComissoes = function() {
     const comissoes = {}; 
     J.equipe.forEach(f => { comissoes[f.id] = { nome: f.nome, val: 0 }; });
     
-    // Filtra pelo que foi gerado em `os.js` e está pendente
     J.financeiro.filter(f => f.isComissao && f.mecId && f.status === 'Pendente').forEach(f => { 
         if (comissoes[f.mecId]) comissoes[f.mecId].val += f.valor || 0; 
     });
@@ -361,19 +327,71 @@ window.calcComissoes = function() {
             <div class="com-card">
                 <div>
                     <div class="com-nome">${c.nome}</div>
-                    <div style="font-family:var(--fm);font-size:0.6rem;color:var(--muted)">A PAGAR (PEÇAS + MÃO DE OBRA)</div>
+                    <div style="font-family:var(--fm);font-size:0.6rem;color:var(--muted)">A PAGAR</div>
                 </div>
                 <div class="com-val">${moeda(c.val)}</div>
             </div>
-        `).join('') || '<div style="text-align:center;color:var(--muted);padding:20px;">Sem comissões pendentes no momento</div>';
+        `).join('') || '<div style="text-align:center;color:var(--muted);padding:20px;">Sem pendências</div>';
     }
 };
 
-// ============================================================
-// 4. EXPORTAÇÃO FINANCEIRA (CSV)
-// ============================================================
+window.prepPgtoRH = function() {
+    ['rhPgtoValor','rhPgtoObs'].forEach(f=>{if($(f)) $(f).value='';});
+    if($('rhPgtoData')) $('rhPgtoData').value = new Date().toISOString().split('T')[0];
+    if($('rhPgtoTipo')) $('rhPgtoTipo').value = 'Vale / Adiantamento';
+    if($('rhPgtoForma')) $('rhPgtoForma').value = 'PIX';
+    if($('rhPgtoFunc')) $('rhPgtoFunc').innerHTML = '<option value="">Selecione...</option>' + J.equipe.map(f=>`<option value="${f.id}">${f.nome} (${f.cargo})</option>`).join('');
+};
+
+window.salvarPgtoRH = async function() {
+    if(!$v('rhPgtoFunc') || !$v('rhPgtoValor')) { window.toast('⚠ Selecione o colaborador e informe o valor','warn'); return; }
+    const func = J.equipe.find(f=>f.id===$v('rhPgtoFunc'));
+    const valor = parseFloat($v('rhPgtoValor'));
+    const tipo = $v('rhPgtoTipo');
+    const obs = $v('rhPgtoObs');
+
+    const payload = {
+        tenantId: J.tid,
+        tipo: 'Saída',
+        status: 'Pago',
+        desc: `RH: ${tipo} - ${func.nome}` + (obs ? ` (${obs})` : ''),
+        valor: valor,
+        pgto: $v('rhPgtoForma'),
+        venc: $v('rhPgtoData'),
+        isRH: true,
+        mecId: func.id,
+        vinculo: `E_${func.id}`,
+        createdAt: new Date().toISOString()
+    };
+
+    const batch = db.batch();
+    
+    if(tipo === 'Pagamento Comissão') {
+        let restante = valor;
+        const comissoesPendentes = J.financeiro.filter(f => f.isComissao && f.mecId === func.id && f.status === 'Pendente').sort((a,b)=> a.venc > b.venc ? 1 : -1);
+        for(let c of comissoesPendentes) {
+            if(restante <= 0) break;
+            if(c.valor <= restante) {
+                batch.update(db.collection('financeiro').doc(c.id), {status: 'Pago', updatedAt: new Date().toISOString()});
+                restante -= c.valor;
+            } else {
+                batch.update(db.collection('financeiro').doc(c.id), {valor: c.valor - restante, updatedAt: new Date().toISOString()});
+                restante = 0;
+            }
+        }
+    }
+
+    batch.set(db.collection('financeiro').doc(), payload);
+    await batch.commit();
+
+    window.toast('✓ LANÇAMENTO DE RH REGISTRADO NO CAIXA');
+    audit('RH/EQUIPE', `Registrou ${tipo} de ${moeda(valor)} para ${func.nome}`);
+    fecharModal('modalPgtoRH');
+    if(typeof window.calcComissoes === 'function') window.calcComissoes();
+};
+
 window.exportarFinanceiro = function() {
-    if (J.financeiro.length === 0) { toast('⚠ Nenhum dado para exportar', 'warn'); return; }
+    if (J.financeiro.length === 0) { window.toast('⚠ Nenhum dado para exportar', 'warn'); return; }
     
     const buscaTipo = $v('filtroFinTipo');
     const buscaStatus = $v('filtroFinStatus');
@@ -411,6 +429,6 @@ window.exportarFinanceiro = function() {
     link.click();
     document.body.removeChild(link);
     
-    toast('✓ RELATÓRIO EXPORTADO EM CSV');
+    window.toast('✓ RELATÓRIO EXPORTADO EM CSV');
     audit('FINANCEIRO', 'Exportou relatório CSV do caixa');
 };
