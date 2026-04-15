@@ -9,220 +9,504 @@
 // ============================================================
 // 1. ESCUTA E RENDERIZAÇÃO DO KANBAN CHEVRON
 // ============================================================
-const KANBAN_STATUSES = ['patio', 'orcamento', 'aprovacao', 'box', 'pronto', 'faturado', 'entregue'];
-const STATUS_LABELS = {
-    patio: '1. PÁTIO',
-    orcamento: '2. ORÇAMENTO',
-    aprovacao: '3. AGUARD. CLIENTE',
-    box: '4. EM SERVIÇO',
-    pronto: '5. PRONTO',
-    faturado: '6. FATURAMENTO',
-    entregue: '7. ENTREGUE'
-};
+const KANBAN_STATUSES = ['Triagem', 'Orcamento', 'Orcamento_Enviado', 'Aprovado', 'Andamento', 'Pronto', 'Entregue'];
+const STATUS_MAP_LEGACY = { 'Aguardando': 'Triagem', 'Concluido': 'Entregue' }; 
 
-function escutarOS() {
+window.escutarOS = function() {
   db.collection('ordens_servico').where('tenantId', '==', J.tid).onSnapshot(snap => {
     J.os = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    renderKanban(); 
-    if(typeof renderDashboard === 'function') renderDashboard(); 
-    if(typeof calcComissoes === 'function') calcComissoes();
+    if(typeof window.renderKanban === 'function') window.renderKanban(); 
+    if(typeof window.renderDashboard === 'function') window.renderDashboard(); 
+    if(typeof window.calcComissoes === 'function') window.calcComissoes();
   });
 }
 
-function renderKanban() {
-  const board = $('kanbanBoard');
-  if (!board) return;
-
+window.renderKanban = function() {
   const busca = ($v('searchOS') || '').toLowerCase();
-  
-  board.innerHTML = KANBAN_STATUSES.map(s => {
-    const osEtapa = J.os.filter(o => o.status === s);
+  const filtroNicho = $v('filtroNichoKanban');
+  const cols = {}; const cnts = {};
+  KANBAN_STATUSES.forEach(s => { cols[s] = []; cnts[s] = 0; });
+
+  J.os.filter(o => o.status !== 'Cancelado').forEach(o => {
+    const st = STATUS_MAP_LEGACY[o.status] || o.status; 
+    const v = J.veiculos.find(x => x.id === o.veiculoId);
+    const c = J.clientes.find(x => x.id === o.clienteId);
     
-    return `<div class="kanban-col" ondragover="event.preventDefault()" ondrop="dropOS(event, '${s}')">
-        <div class="col-header">
-            <span>${STATUS_LABELS[s]}</span>
-            <span class="col-count">${osEtapa.length}</span>
+    if (busca && !v?.placa?.toLowerCase().includes(busca) && !c?.nome?.toLowerCase().includes(busca)) return;
+    if (filtroNicho && v?.tipo !== filtroNicho) return;
+    
+    if (cols[st]) { cols[st].push({ os: o, v, c }); cnts[st]++; }
+  });
+
+  KANBAN_STATUSES.forEach(s => {
+    const cntEl = $('cnt-' + s); if (cntEl) cntEl.innerText = cnts[s];
+    const colEl = $('kb-' + s); if (!colEl) return;
+    
+    colEl.innerHTML = cols[s].sort((a, b) => new Date(b.os.updatedAt || 0) - new Date(a.os.updatedAt || 0)).map(({ os, v, c }) => {
+      const tipoCls = v?.tipo || 'carro';
+      const tipoLabel = { carro: '🚗 CARRO', moto: '🏍️ MOTO', bicicleta: '🚲 BICICLETA' }[tipoCls] || 'VEÍCULO';
+      const cor = { Triagem: 'var(--muted)', Orcamento: 'var(--warn)', Orcamento_Enviado: 'var(--purple)', Aprovado: 'var(--cyan)', Andamento: '#FF8C00', Pronto: 'var(--success)', Entregue: 'var(--green2)' }[s];
+      
+      const idx = KANBAN_STATUSES.indexOf(s);
+      const sPrev = idx > 0 ? KANBAN_STATUSES[idx - 1] : null;
+      const sNext = idx < KANBAN_STATUSES.length - 1 ? KANBAN_STATUSES[idx + 1] : null;
+      
+      const btnPrev = sPrev ? `<button onclick="event.stopPropagation(); moverStatusOS('${os.id}', '${sPrev}')" title="Mover para ${sPrev}" style="background:transparent;border:none;color:var(--muted2);cursor:pointer;padding:4px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M15 18l-6-6 6-6"/></svg></button>` : '<div></div>';
+      const btnNext = sNext ? `<button onclick="event.stopPropagation(); moverStatusOS('${os.id}', '${sNext}')" title="Mover para ${sNext}" style="background:transparent;border:none;color:var(--muted2);cursor:pointer;padding:4px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M9 18l6-6-6-6"/></svg></button>` : '<div></div>';
+
+      return `<div class="k-card" style="border-left-color:${cor}" onclick="prepOS('edit','${os.id}');abrirModal('modalOS')">
+        <div class="k-placa" style="color:${cor}">${v?.placa || 'S/PLACA'}</div>
+        <div class="k-cliente">${c?.nome || 'Cliente não encontrado'}</div>
+        <div class="k-desc">${os.desc || 'Sem descrição'}</div>
+        <div class="k-footer">
+          <span class="k-tipo ${tipoCls}">${tipoLabel}</span>
+          <span style="font-family:var(--fm);font-size:0.75rem;color:var(--success);font-weight:700;">${moeda(os.total)}</span>
         </div>
-        <div class="kanban-cards">
-            ${osEtapa.filter(o => {
-                if (!busca) return true;
-                return o.placa?.toLowerCase().includes(busca) || o.cliente?.toLowerCase().includes(busca);
-            }).map(o => `
-                <div class="os-card" draggable="true" ondragstart="dragOS(event, '${o.id}')" onclick="prepOS('edit', '${o.id}');abrirModal('modalOS')">
-                    <div class="os-placa">${o.placa || 'S/PLACA'}</div>
-                    <div class="os-veiculo">${o.veiculo || ''}</div>
-                    <div class="os-cliente">${o.cliente || 'Consumidor'}</div>
-                    <div class="os-footer">
-                        <span class="os-price">${moeda(o.total || 0)}</span>
-                        <button class="btn-success btn-sm" onclick="event.stopPropagation();enviarWppB2C('${o.id}')" title="Enviar WhatsApp" style="padding:2px 6px; font-size:10px; border-radius:3px;">💬 WPP</button>
-                    </div>
-                </div>
-            `).join('')}
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;border-top:1px solid rgba(255,255,255,0.05);padding-top:4px;">
+          ${btnPrev}
+          <span class="k-date">${dtBr(os.data)}</span>
+          ${btnNext}
         </div>
-    </div>`;
-  }).join('');
+      </div>`;
+    }).join('');
+  });
 }
 
-window.dragOS = function(ev, id) {
-    ev.dataTransfer.setData('osId', id);
-};
-
-window.dropOS = async function(ev, novoStatus) {
-    const id = ev.dataTransfer.getData('osId');
-    if (!id) return;
+window.moverStatusOS = async function(id, novoStatus) {
+    await db.collection('ordens_servico').doc(id).update({ status: novoStatus, updatedAt: new Date().toISOString() });
+    toast('✓ Movido para ' + novoStatus.replace('_', ' '));
+    audit('KANBAN', `Moveu OS ${id.slice(-6)} para ${novoStatus}`);
     
-    await db.collection('ordens_servico').doc(id).update({ 
-        status: novoStatus, 
-        updatedAt: new Date().toISOString() 
-    });
-    
-    toast(`✓ VEÍCULO MOVIDO PARA ${novoStatus.toUpperCase()}`);
-    audit('OS', `Moveu ${id} para ${novoStatus}`);
-};
+    if (novoStatus === 'Orcamento_Enviado') {
+        window.enviarWppB2C(id);
+    }
+}
 
 // ============================================================
 // 2. COMUNICAÇÃO B2C (WHATSAPP + PORTAL DO CLIENTE)
 // ============================================================
-window.enviarWhatsAppOS = function(id) {
-    const os = J.os.find(x => x.id === id); 
-    if (!os) return;
-    if (!os.celular) { toast('⚠ Cliente sem WhatsApp cadastrado', 'warn'); return; }
+window.enviarWppB2C = function(id) {
+    const os = J.os.find(x => x.id === id); if (!os) return;
+    const c = J.clientes.find(x => x.id === os.clienteId);
+    const v = J.veiculos.find(x => x.id === os.veiculoId);
+    if (!c || !c.wpp) { toast('⚠ Cliente sem WhatsApp cadastrado', 'warn'); return; }
     
-    const fone = os.celular.replace(/\D/g, '');
+    const fone = c.wpp.replace(/\D/g, '');
     const link = window.location.origin + '/cliente.html';
-    const login = os.cpf || os.placa;
-    const pin = os.pin || '1234';
+    const pin = c.pin || Math.random().toString(36).slice(-6); 
     
-    const msg = `Olá ${os.cliente || 'Cliente'}, seu veículo ${os.veiculo} (${os.placa}) já foi avaliado!\n\n` +
-                `Acesse seu Prontuário Digital para ver fotos e valores:\n` +
-                `${link}\n\n` +
-                `Usuário: ${login}\n` +
-                `Senha (PIN): ${pin}\n\n` +
-                `Aguardamos sua aprovação pelo portal!`;
+    let msg = `Olá ${c.nome.split(' ')[0]}! O orçamento do seu ${v?.modelo || 'Veículo'} está pronto na ${J.tnome}.\n\n💰 Total: R$ ${os.total.toFixed(2).replace('.', ',')}\n\nAcesse seu portal para aprovar:\n🔗 ${link}\n🔑 PIN: ${pin}`;
+    try {
+        if (window.JARVIS_CONST && window.JARVIS_CONST.WPP_MSGS) {
+            msg = window.JARVIS_CONST.WPP_MSGS.orcamento(c.nome.split(' ')[0], v?.modelo || 'Veículo', J.tnome, os.total.toFixed(2).replace('.', ','), link, pin);
+        }
+    } catch(e) { console.warn('Usando msg fallback', e); }
     
     window.open(`https://wa.me/55${fone}?text=${encodeURIComponent(msg)}`, '_blank');
     toast('✓ Redirecionando WhatsApp B2C');
-    audit('WHATSAPP', `Enviou Link/PIN para ${os.placa}`);
 }
 
 // ============================================================
 // 3. FICHA TÉCNICA E PREPARAÇÃO DO MODAL
 // ============================================================
+let mediaOSAtual = []; 
+let timelineOSAtual = [];
+
 window.prepOS = function(mode, id = null) {
-  ['osId', 'osPlaca', 'osVeiculo', 'osCliente', 'osCelular', 'osCpf', 'osDiagnostico', 'osRelato'].forEach(f => { if ($(f)) $(f).value = ''; });
+  ['osId', 'osKm', 'osDiagnostico', 'osDescricao', 'chkObs'].forEach(f => { if ($(f)) $(f).value = ''; });
+  ['chkPainel', 'chkPressao', 'chkCarroceria', 'chkDocumentos'].forEach(f => { if ($(f)) $(f).checked = false; });
   
-  if ($('osStatus')) $('osStatus').value = 'patio';
-  if ($('containerItensOS')) $('containerItensOS').innerHTML = '';
-  if ($('osTotalVal')) $('osTotalVal').innerText = '0,00';
+  $('osStatus').value = 'Triagem'; 
+  $('osTipoVeiculo').value = 'carro';
+  $('osData').value = new Date().toISOString().split('T')[0];
+  $('osTotalVal').innerText = '0,00'; 
+  $('osTotalHidden').value = '0';
+  $('containerServicosOS').innerHTML = ''; 
+  $('containerPecasOS').innerHTML = '';
+  $('osMediaGrid').innerHTML = ''; 
+  $('osMediaArray').value = '[]';
+  $('osTimeline').innerHTML = ''; 
+  $('osTimelineData').value = '[]';
+  $('osIdBadge').innerText = 'NOVA O.S.';
+  $('btnGerarPDFOS').style.display = 'none'; 
+  $('areaPgtoOS').style.display = 'none'; 
+  $('btnEnviarWppOS').style.display = 'none';
   
-  window.osPecas = [];
-  window.osFotos = [];
+  mediaOSAtual = []; 
+  timelineOSAtual = [];
+  if(typeof window.popularSelects === 'function') window.popularSelects();
+  
+  if (mode === 'add') { 
+      window.adicionarServicoOS(); 
+  }
 
   if (mode === 'edit' && id) {
-    const o = J.os.find(x => x.id === id);
-    if (!o) return;
-
-    if ($('osId')) $('osId').value = o.id;
-    if ($('osPlaca')) $('osPlaca').value = o.placa || '';
-    if ($('osVeiculo')) $('osVeiculo').value = o.veiculo || '';
-    if ($('osCliente')) $('osCliente').value = o.cliente || '';
-    if ($('osCelular')) $('osCelular').value = o.celular || '';
-    if ($('osCpf')) $('osCpf').value = o.cpf || '';
-    if ($('osStatus')) $('osStatus').value = o.status || 'patio';
-    if ($('osDiagnostico')) $('osDiagnostico').value = o.diagnostico || '';
-    if ($('osRelato')) $('osRelato').value = o.relato || '';
+    const os = J.os.find(x => x.id === id); if (!os) return;
+    $('osId').value = os.id; 
+    $('osIdBadge').innerText = 'OS #' + os.id.slice(-6).toUpperCase();
+    $('osTipoVeiculo').value = os.tipoVeiculo || 'carro';
+    $('osStatus').value = STATUS_MAP_LEGACY[os.status] || os.status || 'Triagem';
+    $('osCliente').value = os.clienteId || '';
     
-    window.osPecas = o.pecas || [];
-    window.osFotos = o.fotos || [];
+    if(typeof window.filtrarVeiculosOS === 'function') window.filtrarVeiculosOS(); 
+    setTimeout(() => { $('osVeiculo').value = os.veiculoId || ''; }, 100);
     
-    renderItensOS();
+    $('osMec').value = os.mecId || ''; 
+    $('osData').value = os.data || ''; 
+    $('osKm').value = os.km || '';
+    $('osDescricao').value = os.desc || ''; 
+    $('osDiagnostico').value = os.diagnostico || '';
     
-    if ($('btnWppOS')) {
-        $('btnWppOS').style.display = 'block';
-        $('btnWppOS').onclick = () => enviarWhatsAppOS(o.id);
+    if (os.servicos && os.servicos.length > 0) {
+        os.servicos.forEach(s => window.renderServicoOSRow(s));
+    } else if (os.maoObra > 0) {
+        window.renderServicoOSRow({ desc: 'Mão de Obra Geral', valor: os.maoObra });
+    } else {
+        window.adicionarServicoOS();
     }
-  } else {
-    if ($('btnWppOS')) $('btnWppOS').style.display = 'none';
-    adicionarItemOS();
+
+    if (os.pecas) { os.pecas.forEach(p => window.renderPecaOSRow(p)); }
+
+    $('chkComb').value = os.chkComb || 'N/A'; 
+    $('chkPneuDia').value = os.chkPneuDia || ''; 
+    $('chkPneuTra').value = os.chkPneuTra || ''; 
+    $('chkObs').value = os.chkObs || '';
+    
+    if (os.chkPainel) $('chkPainel').checked = true; 
+    if (os.chkPressao) $('chkPressao').checked = true;
+    if (os.chkCarroceria) $('chkCarroceria').checked = true; 
+    if (os.chkDocumentos) $('chkDocumentos').checked = true;
+    
+    mediaOSAtual = os.media || []; window.renderMediaOS();
+    timelineOSAtual = os.timeline || []; window.renderTimelineOS();
+    
+    window.calcOS(); 
+    window.verificarStatusOS();
+    $('btnGerarPDFOS').style.display = 'block';
   }
 }
 
 // ============================================================
 // 4. MÚLTIPLOS SERVIÇOS E PEÇAS
 // ============================================================
-window.adicionarItemOS = function(item = null) {
-    const div = document.createElement('div');
-    div.style.cssText = 'display:grid;grid-template-columns:1fr 60px 80px 80px 32px;gap:8px;align-items:center;margin-bottom:8px;';
-    div.innerHTML = `
-        <input class="j-input os-item-desc" value="${item ? item.desc : ''}" placeholder="Descrição">
-        <input type="number" class="j-input os-item-qtd" value="${item ? item.q : 1}" min="1" oninput="calcOSTotal()">
-        <input type="number" class="j-input os-item-venda" value="${item ? item.v : 0}" step="0.01" oninput="calcOSTotal()">
-        <select class="j-select os-item-tipo" onchange="calcOSTotal()">
-            <option value="peca" ${item && item.t === 'peca' ? 'selected' : ''}>Peça</option>
-            <option value="servico" ${item && item.t === 'servico' ? 'selected' : ''}>M.O.</option>
-        </select>
-        <button type="button" onclick="this.parentElement.remove();calcOSTotal()" style="background:rgba(255,59,59,0.1);border:1px solid rgba(255,59,59,0.3);border-radius:2px;color:var(--danger);cursor:pointer;width:32px;height:32px;">✕</button>
-    `;
-    $('containerItensOS').appendChild(div);
-};
+window.adicionarServicoOS = function() {
+  const sel = document.createElement('div');
+  sel.style.cssText = 'display:grid;grid-template-columns:1fr 100px 32px;gap:8px;align-items:center;margin-bottom:8px;';
+  sel.innerHTML = `
+    <input type="text" class="j-input serv-desc" placeholder="Ex: Alinhamento, Troca de Freio..." oninput="calcOS()">
+    <input type="number" class="j-input serv-valor" value="0" step="0.01" placeholder="R$ 0,00" oninput="calcOS()">
+    <button type="button" onclick="this.parentElement.remove();calcOS()" style="background:rgba(255,59,59,0.1);border:1px solid rgba(255,59,59,0.3);border-radius:2px;color:var(--danger);cursor:pointer;width:32px;height:32px;">✕</button>
+  `;
+  $('containerServicosOS').appendChild(sel);
+}
 
-window.renderItensOS = function() {
-    if (!$('containerItensOS')) return;
-    $('containerItensOS').innerHTML = '';
-    window.osPecas.forEach(p => adicionarItemOS(p));
-    calcOSTotal();
-};
+window.renderServicoOSRow = function(s) {
+  const div = document.createElement('div');
+  div.style.cssText = 'display:grid;grid-template-columns:1fr 100px 32px;gap:8px;align-items:center;margin-bottom:8px;';
+  div.innerHTML = `
+    <input type="text" class="j-input serv-desc" value="${s.desc || ''}" placeholder="Descrição do Serviço" oninput="calcOS()">
+    <input type="number" class="j-input serv-valor" value="${s.valor || 0}" step="0.01" placeholder="R$ 0,00" oninput="calcOS()">
+    <button type="button" onclick="this.parentElement.remove();calcOS()" style="background:rgba(255,59,59,0.1);border:1px solid rgba(255,59,59,0.3);border-radius:2px;color:var(--danger);cursor:pointer;width:32px;height:32px;">✕</button>
+  `;
+  $('containerServicosOS').appendChild(div);
+}
 
-window.calcOSTotal = function() {
-    let total = 0;
-    document.querySelectorAll('#containerItensOS > div').forEach(div => {
-        const q = parseFloat(div.querySelector('.os-item-qtd').value || 0);
-        const v = parseFloat(div.querySelector('.os-item-venda').value || 0);
-        total += (q * v);
-    });
-    if ($('osTotalVal')) $('osTotalVal').innerText = total.toFixed(2).replace('.', ',');
-};
+window.adicionarPecaOS = function() {
+  const sel = document.createElement('div');
+  sel.style.cssText = 'display:grid;grid-template-columns:1fr 80px 90px 90px 32px;gap:8px;align-items:center;';
+  const opts = '<option value="">Selecionar peça...</option>' + J.estoque.filter(p => (p.qtd || 0) > 0).map(p => `<option value="${p.id}" data-venda="${p.venda || 0}" data-desc="${p.desc || ''}">[${p.qtd}un] ${p.desc} — ${moeda(p.venda)}</option>`).join('');
+  sel.innerHTML = `
+    <select class="j-select peca-sel" onchange="selecionarPecaOS(this)">${opts}</select>
+    <input type="number" class="j-input peca-qtd" value="1" min="1" placeholder="Qtd" oninput="calcOS()">
+    <input type="number" class="j-input peca-custo" value="0" step="0.01" placeholder="Custo" oninput="calcOS()">
+    <input type="number" class="j-input peca-venda" value="0" step="0.01" placeholder="Venda" oninput="calcOS()">
+    <button type="button" onclick="this.parentElement.remove();calcOS()" style="background:rgba(255,59,59,0.1);border:1px solid rgba(255,59,59,0.3);border-radius:2px;color:var(--danger);cursor:pointer;width:32px;height:32px;">✕</button>
+  `;
+  $('containerPecasOS').appendChild(sel); window.calcOS();
+}
 
-async function salvarOS() {
+window.renderPecaOSRow = function(p) {
+  const div = document.createElement('div');
+  div.style.cssText = 'display:grid;grid-template-columns:1fr 80px 90px 90px 32px;gap:8px;align-items:center;';
+  const opts = '<option value="">' + p.desc + '</option>' + J.estoque.filter(x => (x.qtd || 0) > 0 || x.id === p.estoqueId).map(x => `<option value="${x.id}" data-venda="${x.venda || 0}" data-desc="${x.desc || ''}" ${x.id === p.estoqueId ? 'selected' : ''}>[${x.qtd}un] ${x.desc}</option>`).join('');
+  div.innerHTML = `
+    <select class="j-select peca-sel" onchange="selecionarPecaOS(this)">${opts}</select>
+    <input type="number" class="j-input peca-qtd" value="${p.qtd || 1}" min="1" oninput="calcOS()">
+    <input type="number" class="j-input peca-custo" value="${p.custo || 0}" step="0.01" oninput="calcOS()">
+    <input type="number" class="j-input peca-venda" value="${p.venda || 0}" step="0.01" oninput="calcOS()">
+    <button type="button" onclick="this.parentElement.remove();calcOS()" style="background:rgba(255,59,59,0.1);border:1px solid rgba(255,59,59,0.3);border-radius:2px;color:var(--danger);cursor:pointer;width:32px;height:32px;">✕</button>
+  `;
+  $('containerPecasOS').appendChild(div);
+}
+
+window.selecionarPecaOS = function(sel) {
+  const opt = sel.options[sel.selectedIndex];
+  sel.parentElement.querySelector('.peca-venda').value = opt.dataset.venda || 0;
+  window.calcOS();
+}
+
+window.calcOS = function() {
+  let total = 0;
+  
+  document.querySelectorAll('#containerServicosOS > div').forEach(row => {
+    total += parseFloat(row.querySelector('.serv-valor')?.value || 0);
+  });
+  
+  document.querySelectorAll('#containerPecasOS > div').forEach(row => {
+    const qtd = parseFloat(row.querySelector('.peca-qtd')?.value || 0);
+    const venda = parseFloat(row.querySelector('.peca-venda')?.value || 0);
+    total += qtd * venda;
+  });
+  
+  $('osTotalVal').innerText = total.toFixed(2).replace('.', ',');
+  $('osTotalHidden').value = total;
+}
+
+window.verificarStatusOS = function() {
+  const s = $v('osStatus');
+  $('areaPgtoOS').style.display = (s === 'Pronto' || s === 'Entregue') ? 'block' : 'none';
+  $('btnEnviarWppOS').style.display = (s === 'Orcamento_Enviado' && $v('osId')) ? 'flex' : 'none';
+}
+
+window.checkPgtoOS = function() {
+  const f = $v('osPgtoForma');
+  $('divParcelasOS').style.display = (f === 'Crédito Parcelado' || f === 'Boleto') ? 'block' : 'none';
+}
+
+// ============================================================
+// 5. SALVAR O.S. E CÁLCULO DE COMISSÃO SEPARADA
+// ============================================================
+window.salvarOS = async function() {
   const osId = $v('osId');
-  if (!$v('osPlaca') || !$v('osVeiculo')) { toast('⚠ Preencha Placa e Veículo', 'warn'); return; }
+  if (!$v('osCliente') || !$v('osVeiculo')) { toast('⚠ Selecione cliente e veículo', 'warn'); return; }
 
-  const itens = [];
-  document.querySelectorAll('#containerItensOS > div').forEach(div => {
-    const desc = div.querySelector('.os-item-desc').value.trim();
-    const q = parseFloat(div.querySelector('.os-item-qtd').value || 0);
-    const v = parseFloat(div.querySelector('.os-item-venda').value || 0);
-    const t = div.querySelector('.os-item-tipo').value;
-    if (desc && q > 0) itens.push({ desc, q, v, t });
+  const servicos = []; 
+  let totalMaoObra = 0;
+  document.querySelectorAll('#containerServicosOS > div').forEach(row => {
+    const desc = row.querySelector('.serv-desc')?.value || '';
+    const valor = parseFloat(row.querySelector('.serv-valor')?.value || 0);
+    if (desc || valor > 0) { servicos.push({ desc, valor }); totalMaoObra += valor; }
   });
 
-  const total = parseFloat($('osTotalVal').innerText.replace(',', '.'));
-  
+  const pecas = [];
+  let totalPecas = 0;
+  document.querySelectorAll('#containerPecasOS > div').forEach(row => {
+    const sel = row.querySelector('.peca-sel'); 
+    const opt = sel?.options[sel.selectedIndex];
+    const qtd = parseFloat(row.querySelector('.peca-qtd')?.value || 1);
+    const venda = parseFloat(row.querySelector('.peca-venda')?.value || 0);
+    const custo = parseFloat(row.querySelector('.peca-custo')?.value || 0);
+    totalPecas += (qtd * venda);
+    
+    pecas.push({
+      estoqueId: sel?.value, 
+      desc: opt?.dataset.desc || opt?.text || '',
+      qtd: qtd, custo: custo, venda: venda
+    });
+  });
+
+  const tl = JSON.parse($('osTimelineData').value || '[]');
+  tl.push({ dt: new Date().toISOString(), user: J.nome, acao: `${osId ? 'Editou' : 'Abriu'} O.S. — Status: ${$v('osStatus')}` });
+
   const payload = {
-    tenantId: J.tid,
-    placa: $v('osPlaca').toUpperCase(),
-    veiculo: $v('osVeiculo'),
-    cliente: $v('osCliente'),
-    celular: $v('osCelular'),
-    cpf: $v('osCpf'),
-    status: $v('osStatus'),
+    tenantId: J.tid, 
+    tipoVeiculo: $v('osTipoVeiculo'),
+    clienteId: $v('osCliente'), 
+    veiculoId: $v('osVeiculo'), 
+    mecId: $v('osMec'),
+    data: $v('osData'), 
+    km: $v('osKm'), 
+    desc: $v('osDescricao'), 
     diagnostico: $v('osDiagnostico'),
-    relato: $v('osRelato'),
-    pecas: itens,
-    fotos: window.osFotos || [],
-    total: total,
+    status: $v('osStatus'), 
+    maoObra: totalMaoObra, 
+    servicos, 
+    pecas,
+    total: parseFloat($v('osTotalHidden') || 0),
+    media: JSON.parse($('osMediaArray').value || '[]'),
+    chkComb: $v('chkComb'), 
+    chkPneuDia: $v('chkPneuDia'), 
+    chkPneuTra: $v('chkPneuTra'),
+    chkObs: $v('chkObs'), 
+    chkPainel: $('chkPainel')?.checked,
+    chkPressao: $('chkPressao')?.checked, 
+    chkCarroceria: $('chkCarroceria')?.checked,
+    chkDocumentos: $('chkDocumentos')?.checked,
+    timeline: tl, 
     updatedAt: new Date().toISOString()
   };
 
-  if (osId) {
-    await db.collection('ordens_servico').doc(osId).update(payload);
-    toast('✓ O.S. ATUALIZADA');
-  } else {
-    payload.createdAt = new Date().toISOString();
-    payload.pin = Math.floor(1000 + Math.random() * 9000).toString();
-    await db.collection('ordens_servico').add(payload);
-    toast('✓ O.S. CRIADA');
+  // Financeiro & Comissões (só quando Pronto ou Entregue)
+  if (($v('osStatus') === 'Pronto' || $v('osStatus') === 'Entregue') && $v('osPgtoForma')) {
+    const formasPagas = ['Dinheiro', 'PIX', 'Débito', 'Crédito à Vista'];
+    payload.pgtoForma = $v('osPgtoForma'); 
+    payload.pgtoData = $v('osPgtoData');
+    
+    const statusFin = formasPagas.includes(payload.pgtoForma) ? 'Pago' : 'Pendente';
+    const parcelas = parseInt($v('osPgtoParcelas') || 1);
+    const valorParc = payload.total / parcelas;
+    const batch = db.batch();
+    
+    // Gera Títulos no Caixa
+    for (let i = 0; i < parcelas; i++) {
+      const d = new Date(payload.pgtoData || new Date()); 
+      d.setMonth(d.getMonth() + i);
+      batch.set(db.collection('financeiro').doc(), {
+        tenantId: J.tid, tipo: 'Entrada', status: statusFin,
+        desc: `O.S. ${J.veiculos.find(v => v.id === payload.veiculoId)?.placa || ''} — ${J.clientes.find(c => c.id === payload.clienteId)?.nome || ''} ${parcelas > 1 ? `(${i + 1}/${parcelas})` : ''}`,
+        valor: valorParc, pgto: payload.pgtoForma, venc: d.toISOString().split('T')[0],
+        createdAt: new Date().toISOString()
+      });
+    }
+    
+    // Baixa Estoque Real
+    for (const p of pecas) {
+      if (p.estoqueId) {
+        const item = J.estoque.find(x => x.id === p.estoqueId);
+        if (item) batch.update(db.collection('estoqueItems').doc(p.estoqueId), { qtd: Math.max(0, (item.qtd || 0) - p.qtd) });
+      }
+    }
+    
+    // ==============================================================
+    // LÓGICA DE COMISSÃO EXIGIDA: Mão de Obra vs Peças
+    // ==============================================================
+    if (payload.mecId) {
+      const mec = J.equipe.find(f => f.id === payload.mecId);
+      if (mec) {
+        // Busca porcentagens do funcionário (se não tiver, usa 0)
+        const percServico = parseFloat(mec.comissaoServico || mec.comissao || 0);
+        const percPeca = parseFloat(mec.comissaoPeca || 0);
+        
+        const valComServico = totalMaoObra * (percServico / 100);
+        const valComPeca = totalPecas * (percPeca / 100);
+        const valComTotal = valComServico + valComPeca;
+
+        if (valComTotal > 0) {
+          batch.set(db.collection('financeiro').doc(), {
+            tenantId: J.tid, tipo: 'Saída', status: 'Pendente',
+            desc: `Comissão (Serv: ${moeda(valComServico)} | Peça: ${moeda(valComPeca)}) — O.S. ${J.veiculos.find(v => v.id === payload.veiculoId)?.placa || ''}`,
+            valor: valComTotal, pgto: 'A Combinar', venc: payload.pgtoData || new Date().toISOString().split('T')[0],
+            createdAt: new Date().toISOString(), isComissao: true, mecId: payload.mecId
+          });
+        }
+      }
+    }
+    
+    await batch.commit();
   }
 
-  fecharModal('modalOS');
+  if ($v('osProxRev') || $v('osProxKm')) {
+    await db.collection('agendamentos').add({
+      tenantId: J.tid, clienteId: payload.clienteId, veiculoId: payload.veiculoId,
+      data: $v('osProxRev'), km: $v('osProxKm'), servico: 'Revisão Programada', status: 'Agendado',
+      createdAt: new Date().toISOString()
+    });
+  }
+
+  if (osId) {
+    await db.collection('ordens_servico').doc(osId).update(payload);
+    toast('✓ O.S. ATUALIZADA'); audit('OS', 'Editou O.S. ' + osId.slice(-6));
+  } else {
+    payload.createdAt = new Date().toISOString();
+    const ref = await db.collection('ordens_servico').add(payload);
+    toast('✓ O.S. CRIADA — ' + ref.id.slice(-6).toUpperCase());
+    audit('OS', 'Criou nova O.S. para ' + J.clientes.find(c => c.id === payload.clienteId)?.nome);
+  }
+  
+  if(typeof window.fecharModal === 'function') window.fecharModal('modalOS');
+}
+
+// ============================================================
+// 6. UPLOADS (CLOUDINARY) E TIMELINE
+// ============================================================
+window.uploadOsMedia = async function() {
+  const f = $('osFileInput')?.files[0]; if (!f) return;
+  const btn = $('btnUploadMedia'); btn.innerText = 'ENVIANDO...'; btn.disabled = true;
+  try {
+    const fd = new FormData(); fd.append('file', f); fd.append('upload_preset', J.cloudPreset);
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${J.cloudName}/auto/upload`, { method: 'POST', body: fd });
+    const data = await res.json();
+    if (data.secure_url) {
+      const media = JSON.parse($('osMediaArray').value || '[]');
+      media.push({ url: data.secure_url, type: data.resource_type });
+      $('osMediaArray').value = JSON.stringify(media); window.renderMediaOS(); toast('✓ UPLOAD CONCLUÍDO');
+    }
+  } catch (e) { toast('✕ ERRO UPLOAD', 'err'); }
+  btn.innerText = 'UPLOAD'; btn.disabled = false;
+}
+
+window.renderMediaOS = function() {
+  const media = JSON.parse($('osMediaArray')?.value || '[]');
+  $('osMediaGrid').innerHTML = media.map((m, i) => `
+    <div class="media-item">
+      ${m.type === 'video' ? `<video src="${m.url}" controls></video>` : `<img src="${m.url}" onclick="window.open('${m.url}')" style="cursor:zoom-in">`}
+      <button class="media-del" onclick="removerMediaOS(${i})">✕</button>
+    </div>`).join('');
+}
+
+window.removerMediaOS = function(idx) {
+  const media = JSON.parse($('osMediaArray').value || '[]');
+  media.splice(idx, 1); $('osMediaArray').value = JSON.stringify(media); window.renderMediaOS();
+}
+
+window.renderTimelineOS = function() {
+  const tl = JSON.parse($('osTimelineData')?.value || '[]');
+  $('osTimeline').innerHTML = [...tl].reverse().map(e => `<div class="tl-item"><div class="tl-date">${dtHrBr(e.dt)}</div><div class="tl-user">${e.user}</div><div class="tl-action">${e.acao}</div></div>`).join('');
+}
+
+// ============================================================
+// 7. GERAÇÃO DE PDF (LAUDO)
+// ============================================================
+window.gerarPDFOS = async function() {
+  if (typeof window.jspdf === 'undefined') { toast('⚠ jsPDF não carregado', 'err'); return; }
+  const { jsPDF } = window.jspdf; const doc = new jsPDF('p', 'mm', 'a4');
+  const pw = doc.internal.pageSize.getWidth(); let y = 15;
+  
+  doc.setFillColor(6, 10, 20); doc.rect(0, 0, pw, 35, 'F');
+  doc.setTextColor(0, 212, 255); doc.setFont('helvetica', 'bold'); doc.setFontSize(22);
+  doc.text('J.A.R.V.I.S — LAUDO TÉCNICO', pw / 2, 18, { align: 'center' });
+  doc.setFontSize(9); doc.setTextColor(200, 200, 200);
+  doc.text(J.tnome + ' · ' + new Date().toLocaleDateString('pt-BR'), pw / 2, 27, { align: 'center' });
+  y = 45;
+
+  doc.setTextColor(0, 0, 0); doc.setFont('helvetica', 'bold'); doc.setFontSize(12);
+  doc.text('DADOS DO VEÍCULO E CLIENTE', 15, y); doc.line(15, y + 2, pw - 15, y + 2); y += 10;
+  
+  const v = J.veiculos.find(x => x.id === $v('osVeiculo'));
+  const c = J.clientes.find(x => x.id === $v('osCliente'));
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(10);
+  doc.text(`Cliente: ${c?.nome || '-'}  |  WhatsApp: ${c?.wpp || '-'}`, 15, y); y += 7;
+  doc.text(`Veículo: ${v?.modelo || '-'}  |  Placa: ${v?.placa || '-'}  |  KM: ${$v('osKm') || '-'}  |  Ano: ${v?.ano || '-'}`, 15, y); y += 12;
+  
+  doc.setFont('helvetica', 'bold'); doc.text('DEFEITO RECLAMADO / SERVIÇO', 15, y); doc.line(15, y + 2, pw - 15, y + 2); y += 10;
+  doc.setFont('helvetica', 'normal');
+  const descLines = doc.splitTextToSize($v('osDescricao') || '-', pw - 30);
+  doc.text(descLines, 15, y); y += descLines.length * 6 + 10;
+  
+  const relRows = [];
+  document.querySelectorAll('#containerServicosOS > div').forEach(row => {
+    const desc = row.querySelector('.serv-desc')?.value || 'Serviço';
+    const val = row.querySelector('.serv-valor')?.value || 0;
+    if (desc || val > 0) relRows.push([desc, '1 (Srv)', 'R$ ' + parseFloat(val).toFixed(2), 'R$ ' + parseFloat(val).toFixed(2)]);
+  });
+  
+  document.querySelectorAll('#containerPecasOS > div').forEach(row => {
+    const sel = row.querySelector('.peca-sel'); const opt = sel?.options[sel?.selectedIndex];
+    const qtd = row.querySelector('.peca-qtd')?.value || 0;
+    const val = row.querySelector('.peca-venda')?.value || 0;
+    relRows.push([opt?.dataset.desc || opt?.text || '-', qtd, 'R$ ' + parseFloat(val).toFixed(2), 'R$ ' + (parseFloat(qtd) * parseFloat(val)).toFixed(2)]);
+  });
+  
+  if (relRows.length) {
+    doc.setFont('helvetica', 'bold'); doc.text('ORÇAMENTO DETALHADO', 15, y); doc.line(15, y + 2, pw - 15, y + 2); y += 8;
+    doc.autoTable({ startY: y, head: [['Descrição', 'Qtd', 'Valor Unit.', 'Subtotal']], body: relRows, theme: 'grid', headStyles: { fillColor: [6, 10, 20], textColor: [0, 212, 255] }, margin: { left: 15, right: 15 } });
+    y = doc.lastAutoTable.finalY + 10;
+  }
+  
+  doc.setFillColor(230, 250, 230); doc.rect(pw - 80, y, 65, 16, 'F');
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(14); doc.setTextColor(0, 100, 0);
+  doc.text('TOTAL: R$ ' + $v('osTotalHidden'), pw - 15, y + 10, { align: 'right' });
+  
+  doc.save(`Laudo_${v?.placa || 'OS'}_${new Date().getTime()}.pdf`);
+  toast('✓ PDF GERADO');
 }
