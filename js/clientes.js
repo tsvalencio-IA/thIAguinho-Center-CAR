@@ -1,6 +1,7 @@
 /**
  * JARVIS ERP — clientes.js / estoque.js / equipe.js
  * CRM, Veículos, Estoque, NF, Fornecedores, Equipe, RH
+ * INCLUI: Comissões Duplas (% Peça e % M.O.) e Endereço Completo.
  */
 
 'use strict';
@@ -31,19 +32,24 @@ window.renderClientes = function() {
 };
 
 window.prepCliente = function(mode, id = null) {
-  ['cliId','cliNome','cliWpp','cliDoc','cliEmail','cliLogin','cliPin'].forEach(f => _sv(f, ''));
+  ['cliId','cliNome','cliWpp','cliDoc','cliEmail','cliLogin','cliPin','cliCep','cliRua','cliNum','cliBairro','cliCidade'].forEach(f => _sv(f, ''));
   _sv('cliPin', randId(6));
 
   if (mode === 'edit' && id) {
     const c = J.clientes.find(x => x.id === id);
     if (!c) return;
-    _sv('cliId',    c.id);
+    _sv('cliId',     c.id);
     _sv('cliNome',  c.nome  || '');
     _sv('cliWpp',   c.wpp   || '');
     _sv('cliDoc',   c.doc   || '');
     _sv('cliEmail', c.email || '');
     _sv('cliLogin', c.login || '');
     _sv('cliPin',   c.pin   || '');
+    _sv('cliCep',   c.cep   || '');
+    _sv('cliRua',   c.rua   || '');
+    _sv('cliNum',   c.num   || '');
+    _sv('cliBairro',c.bairro|| '');
+    _sv('cliCidade',c.cidade|| '');
   }
 };
 
@@ -57,6 +63,11 @@ window.salvarCliente = async function() {
     email:     _v('cliEmail'),
     login:     _v('cliLogin'),
     pin:       _v('cliPin'),
+    cep:       _v('cliCep'),
+    rua:       _v('cliRua'),
+    num:       _v('cliNum'),
+    bairro:    _v('cliBairro'),
+    cidade:    _v('cliCidade'),
     updatedAt: new Date().toISOString()
   };
   const id = _v('cliId');
@@ -323,7 +334,7 @@ window.renderEquipe = function() {
       <td style="font-family:var(--ff-mono);font-size:0.75rem;color:var(--text-secondary)">${f.usuario}</td>
       <td>
         <span style="font-family:var(--ff-mono);font-size:0.82rem;font-weight:700;color:var(--success)">
-          ${f.comissao || 0}%
+          ${f.comissaoPecas || 0}% / ${f.comissaoMO || 0}%
         </span>
       </td>
       <td style="white-space:nowrap">
@@ -335,7 +346,7 @@ window.renderEquipe = function() {
 };
 
 window.prepFunc = function(mode, id = null) {
-  ['funcId','funcNome','funcWpp','funcComissao','funcUser','funcPass'].forEach(f => _sv(f, ''));
+  ['funcId','funcNome','funcWpp','funcComissaoPecas','funcComissaoMO','funcUser','funcPass'].forEach(f => _sv(f, ''));
   _sv('funcCargo', 'mecanico');
   if (mode === 'edit' && id) {
     const f = J.equipe.find(x => x.id === id);
@@ -344,7 +355,8 @@ window.prepFunc = function(mode, id = null) {
     _sv('funcNome',     f.nome      || '');
     _sv('funcWpp',      f.wpp       || '');
     _sv('funcCargo',    f.cargo     || 'mecanico');
-    _sv('funcComissao', f.comissao  || 0);
+    _sv('funcComissaoPecas', f.comissaoPecas  || 0);
+    _sv('funcComissaoMO',    f.comissaoMO     || 0);
     _sv('funcUser',     f.usuario   || '');
     _sv('funcPass',     f.senha     || '');
   }
@@ -360,7 +372,8 @@ window.salvarFunc = async function() {
     nome:      _v('funcNome'),
     wpp:       _v('funcWpp'),
     cargo:     _v('funcCargo'),
-    comissao:  parseFloat(_v('funcComissao') || 0),
+    comissaoPecas:  parseFloat(_v('funcComissaoPecas') || 0),
+    comissaoMO:     parseFloat(_v('funcComissaoMO') || 0),
     usuario:   _v('funcUser'),
     senha:     _v('funcPass'),
     updatedAt: new Date().toISOString()

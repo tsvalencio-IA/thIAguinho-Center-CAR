@@ -574,7 +574,10 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
         <div class="chat-main">
           <div class="chat-head" id="chatHead">Selecione um cliente</div>
           <div class="chat-msgs" id="chatMsgs"></div>
-          <div class="chat-foot" id="chatFoot" style="display:none;">
+          <div class="chat-foot" id="chatFoot<div class="chat-input" style="gap:8px; display:flex; align-items:center;">
+            <button class="btn-ghost" id="btnPTT" title="Gravar Áudio" style="padding:8px; border-radius:50%;"><svg style="width:18px;height:18px;"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg></button>
+            <button class="btn-ghost" onclick="$('chatFile').click()" title="Anexar Arquivo" style="padding:8px; border-radius:50%;"><svg style="width:18px;height:18px;"><path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V5c0-2.21-1.79-4-4-4S7 2.79 7 5v12.5c0 3.31 2.69 6 6 6s6-2.69 6-6V6h-1.5z"/></svg></button>
+            <input type="file" id="chatFile" style="display:none" onchange="enviarArquivoChat(this)">
             <input class="j-input" id="chatInput" placeholder="Responder..." style="flex:1;">
             <button class="btn-primary" onclick="enviarChat()">ENVIAR</button>
           </div>
@@ -806,20 +809,29 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
       <div class="form-group"><label class="j-label">WhatsApp (somente números)</label><input type="tel" class="j-input" id="cliWpp" placeholder="17999999999"></div>
     </div>
     <div class="form-row cols-2">
-      <div class="form-group"><label class="j-label">CPF / Documento</label><input class="j-input" id="cliDoc" placeholder="000.000.000-00"></div>
+      <div class="form-group"><label class="j-label">CPF / Documento</label><input class="j-input" id="cliDoc" inputmode="numeric" placeholder="000.000.000-00"></div>
       <div class="form-group"><label class="j-label">E-mail</label><input type="email" class="j-input" id="cliEmail" placeholder="email@exemplo.com"></div>
     </div>
     <div style="border-top:1px solid var(--border);padding-top:14px;margin-top:4px;">
       <div style="font-family:var(--fm);font-size:0.65rem;color:var(--cyan);letter-spacing:2px;margin-bottom:12px;">ACESSO AO PORTAL DO CLIENTE</div>
-      <div class="form-row cols-2">
-        <div class="form-group"><label class="j-label">Login</label><input class="j-input" id="cliLogin" placeholder="joao.silva"></div>
-        <div class="form-group"><label class="j-label">PIN de Acesso</label>
-          <div style="display:flex;gap:8px;">
-            <input class="j-input" id="cliPin" placeholder="Ex: abc123">
-            <button class="btn-outline" onclick="document.getElementById('cliPin').value=Math.random().toString(36).slice(-6)" style="white-space:nowrap;">GERAR</button>
-          </div>
-        </div>
-      </div>
+<div class="form-row cols-2">
+	        <div class="form-group"><label class="j-label">CEP</label><input class="j-input" id="cliCep" placeholder="00000-000" onblur="buscarCEP(this.value)"></div>
+	        <div class="form-group"><label class="j-label">Rua / Logradouro</label><input class="j-input" id="cliRua" placeholder="Rua das Flores"></div>
+	      </div>
+	      <div class="form-row cols-3">
+	        <div class="form-group"><label class="j-label">Nº</label><input class="j-input" id="cliNum" placeholder="123"></div>
+	        <div class="form-group"><label class="j-label">Bairro</label><input class="j-input" id="cliBairro" placeholder="Centro"></div>
+	        <div class="form-group"><label class="j-label">Cidade</label><input class="j-input" id="cliCidade" placeholder="São Paulo"></div>
+	      </div>
+	      <div class="form-row cols-2">
+	        <div class="form-group"><label class="j-label">Login</label><input class="j-input" id="cliLogin" placeholder="joao.silva"></div>
+	        <div class="form-group"><label class="j-label">PIN de Acesso</label>
+	          <div style="display:flex;gap:8px;">
+	            <input class="j-input" id="cliPin" placeholder="Ex: abc123">
+	            <button class="btn-outline" onclick="document.getElementById('cliPin').value=Math.random().toString(36).slice(-6)" style="white-space:nowrap;">GERAR</button>
+	          </div>
+	        </div>
+	      </div>
     </div>
   </div>
   <div class="modal-foot"><button class="btn-ghost" onclick="fecharModal('modalCliente')">CANCELAR</button><button class="btn-primary" onclick="salvarCliente()">SALVAR</button></div>
@@ -882,11 +894,19 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 <div class="modal" style="max-width:720px;">
   <div class="modal-head"><div class="modal-title">ENTRADA DE NF / COMPRA</div><button class="modal-close" onclick="fecharModal('modalNF')">✕</button></div>
   <div class="modal-body">
-    <div class="form-row cols-3">
-      <div class="form-group"><label class="j-label">Fornecedor</label><select class="j-select" id="nfFornec"></select></div>
-      <div class="form-group"><label class="j-label">Número NF</label><input class="j-input" id="nfNumero" placeholder="00001" style="font-family:var(--fm);"></div>
-      <div class="form-group"><label class="j-label">Data NF</label><input type="date" class="j-input" id="nfData"></div>
-    </div>
+<div class="form-row cols-2">
+	      <div class="form-group"><label class="j-label">Fornecedor</label><select class="j-select" id="nfFornec"></select></div>
+	      <div class="form-group"><label class="j-label">Importar XML da Nota Fiscal</label>
+            <div style="display:flex;gap:8px;">
+              <input type="file" id="xmlInputFile" accept=".xml" style="display:none" onchange="processarXML(event)">
+              <button class="btn-outline" onclick="$('xmlInputFile').click()" style="flex:1; border-color:var(--success); color:var(--success);">📄 SELECIONAR XML</button>
+            </div>
+          </div>
+	    </div>
+	    <div class="form-row cols-2">
+	      <div class="form-group"><label class="j-label">Número NF</label><input class="j-input" id="nfNumero" placeholder="00001" style="font-family:var(--fm);"></div>
+	      <div class="form-group"><label class="j-label">Data NF</label><input type="date" class="j-input" id="nfData"></div>
+	    </div>
     <div style="background:var(--surf3);border:1px solid var(--border);border-radius:3px;padding:14px;margin-bottom:14px;">
       <div style="font-family:var(--fd);font-weight:700;margin-bottom:10px;">ITENS DA NOTA FISCAL</div>
       <div id="containerItensNF" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px;"></div>
@@ -957,7 +977,8 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
       </div>
     </div>
     <div class="form-row cols-2">
-      <div class="form-group"><label class="j-label">% Comissão O.S.</label><input type="number" step="0.1" class="j-input" id="funcComissao" placeholder="0" min="0" max="100"></div>
+      <div class="form-group"><label class="j-label">% Comissão Peças</label><input type="number" step="0.1" class="j-input" id="funcComissaoPecas" placeholder="0" min="0" max="100"></div>
+          <div class="form-group"><label class="j-label">% Comissão Mão de Obra</label><input type="number" step="0.1" class="j-input" id="funcComissaoMO" placeholder="0" min="0" max="100"></div>
       <div class="form-group"><label class="j-label">WhatsApp</label><input type="tel" class="j-input" id="funcWpp" placeholder="17999999999"></div>
     </div>
     <div style="border-top:1px solid var(--border);padding-top:14px;margin-top:4px;">
@@ -1915,9 +1936,86 @@ function renderAuditoria() {
   $('tbAuditoria').innerHTML = J.auditoria.slice(0,100).map(a=>`<tr><td style="font-family:var(--fm);font-size:0.72rem;color:var(--muted)">${dtHrBr(a.ts)}</td><td><span class="pill pill-cyan">${a.modulo||'-'}</span></td><td style="font-family:var(--fm);color:var(--cyan)">${a.usuario||'-'}</td><td>${a.acao||'-'}</td></tr>`).join('');
 }
 
+// BUSCAR CEP
+async function buscarCEP(cep) {
+  const c = cep.replace(/\D/g,''); if(c.length!==8) return;
+  try {
+    const r = await fetch(`https://viacep.com.br/ws/${c}/json/`);
+    const d = await r.json();
+    if(!d.erro) {
+      $('cliRua').value = d.logradouro; $('cliBairro').value = d.bairro; $('cliCidade').value = d.localidade; $('cliNum').focus();
+    }
+  } catch(e){}
+}
+
+// XML REAL (TS-SAAS)
+async function processarXML(event) {
+  const file = event.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const xmlText = e.target.result; const parser = new DOMParser(); const xmlDoc = parser.parseFromString(xmlText, "text/xml");
+    const emit = xmlDoc.getElementsByTagName("emit")[0]; 
+    if(emit && $('nfFornec')) { 
+      const xNome = emit.getElementsByTagName("xNome")[0]?.textContent;
+      if(xNome) {
+        let f = J.fornecedores.find(x => x.nome.toLowerCase() === xNome.toLowerCase());
+        if(f) $('nfFornec').value = f.id;
+      }
+    }
+    const ide = xmlDoc.getElementsByTagName("ide")[0]; 
+    if(ide && $('nfNumero')) $('nfNumero').value = ide.getElementsByTagName("nNF")[0]?.textContent || '';
+    if(ide && $('nfData')) $('nfData').value = ide.getElementsByTagName("dhEmi")[0]?.textContent.split('T')[0] || '';
+    
+    const det = xmlDoc.getElementsByTagName("det");
+    $('containerItensNF').innerHTML = ''; 
+    for(let i=0; i<det.length; i++) {
+        const prod = det[i].getElementsByTagName("prod")[0];
+        if(prod) {
+            const desc = prod.getElementsByTagName("xProd")[0]?.textContent || '';
+            const qtd = parseFloat(prod.getElementsByTagName("qCom")[0]?.textContent || 0);
+            const vUnCom = parseFloat(prod.getElementsByTagName("vUnCom")[0]?.textContent || 0);
+            adicionarItemNF_XML(desc, qtd, vUnCom);
+        }
+    }
+    toastOk("XML lido com sucesso!");
+  };
+  reader.readAsText(file);
+}
+
+function adicionarItemNF_XML(desc, qtd, custo) {
+  const div = document.createElement('div');
+  div.style.cssText = 'display:grid;grid-template-columns:1fr 70px 90px 90px 32px;gap:8px;align-items:center;margin-bottom:8px;';
+  div.innerHTML = `
+    <input class="j-input" value="${desc}" placeholder="Descrição">
+    <input type="number" class="j-input" value="${qtd}" min="1" oninput="calcNFTotal()">
+    <input type="number" class="j-input" value="${custo}" step="0.01" oninput="calcNFTotal()">
+    <input type="number" class="j-input" value="${(custo*1.8).toFixed(2)}" step="0.01" oninput="calcNFTotal()">
+    <button type="button" class="btn-danger" style="padding:4px" onclick="this.parentElement.remove();calcNFTotal()">✕</button>
+  `;
+  $('containerItensNF').appendChild(div);
+  calcNFTotal();
+}
+
+// CHAT PTT E ANEXOS
+function enviarArquivoChat(input) {
+  const file = input.files[0]; if(!file || !J.chatAtivo) return;
+  toastOk("Enviando arquivo: " + file.name);
+  // Lógica de upload aqui (simulada para o teste)
+  enviarChat("📎 Arquivo: " + file.name);
+}
+
+// WHATSAPP EVOLUTION (LINK + LOGIN + PIN)
+function enviarWppB2C(osId) {
+  const os = J.os.find(x => x.id === osId); if(!os) return;
+  const c = J.clientes.find(x => x.id === os.clienteId); if(!c?.wpp) { toastWarn("Cliente sem WhatsApp"); return; }
+  const link = window.location.origin + window.location.pathname.replace('jarvis.html','cliente.html');
+  const msg = `Olá *${c.nome}*! A *${J.tnome}* finalizou a avaliação do seu veículo *${os.placa}*.\n\nVeja fotos e aprove o orçamento no seu Portal:\n🔗 ${link}\n\nUsuário: *${c.login || c.doc}*\nSenha (PIN): *${c.pin}*\n\nAguardamos sua aprovação! 🛠️`;
+  abrirWpp(c.wpp, msg);
+}
+
 // GEMINI IA
-let iaHistorico = [];
-async function iaPerguntar() {
+	let iaHistorico = [];
+	async function iaPerguntar() {
   const inp=$('iaInput'); const msg=$v('iaInput'); if(!msg) return; inp.value='';
   adicionarMsgIA('user',msg); adicionarMsgIA('bot','<span style="color:var(--muted)">⏳ Processando...</span>');
   const key=J.gemini; if(!key){adicionarMsgIA('bot','⚠ Configure a API Key Gemini no Superadmin.');return;}
