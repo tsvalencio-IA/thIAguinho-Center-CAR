@@ -18,7 +18,6 @@
         body { background-color: var(--bg-main); color: #f1f5f9; }
         .hidden { display: none !important; }
         
-        /* KPI Estilo Chevron */
         .kpi-card {
             background: var(--bg-card);
             border: 1px solid rgba(255,255,255,0.05);
@@ -26,7 +25,6 @@
         }
         .kpi-card:hover { transform: translateY(-2px); border-color: var(--brand); }
         
-        /* Tabela Master */
         .master-table tr { border-bottom: 1px solid rgba(255,255,255,0.05); }
         .master-table tr:hover { background: rgba(255,255,255,0.02); }
         
@@ -136,6 +134,7 @@
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <script src="js/config.js"></script>
     
@@ -187,7 +186,7 @@
             });
         }
 
-        // 2. CADASTRO DE NOVA OFICINA (CORRIGIDO SEM DUPLICIDADE)
+        // 2. CADASTRO DE NOVA OFICINA 
         document.getElementById('formCadastroOficina').onsubmit = async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btnSalvar');
@@ -198,16 +197,16 @@
             const email = document.getElementById('cadEmail').value.trim();
 
             try {
-                // SALVA APENAS NA COLEÇÃO 'oficinas' (DIRETRIZ CUMPRIDA)
+                // Salvando com o formato ISO nativo do Javascript
                 await db.collection('oficinas').add({
                     nomeFantasia: nome,
                     emailGestor: email,
-                    usuario: email,      // Login do Evolution busca por 'usuario'
-                    senha: "123456",     // Senha padrão inicial
+                    usuario: email,
+                    senha: "123456", 
                     status: 'Ativo',
                     nicho: 'carros',
-                    dataCriacao: firebase.firestore.FieldValue.serverTimestamp(),
-                    dataLgpd: firebase.firestore.FieldValue.serverTimestamp()
+                    dataCriacao: new Date().toISOString(),
+                    dataLgpd: new Date().toISOString()
                 });
 
                 alert("Unidade Cadastrada com Sucesso!");
@@ -216,7 +215,7 @@
 
             } catch (err) {
                 console.error("Erro ao cadastrar:", err);
-                alert("Falha no cadastro. Verifique as regras do Firebase.");
+                alert("Falha no cadastro. Erro: " + err.message);
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = "CADASTRAR E ATIVAR UNIDADE";
@@ -234,11 +233,18 @@
         // UI HELPERS
         function abrirModal() { document.getElementById('modalNovaOficina').classList.remove('hidden'); }
         function fecharModal() { document.getElementById('modalNovaOficina').classList.add('hidden'); }
-        function fazerLogout() { sessionStorage.clear(); window.location.href = 'index.html'; }
+        
+        async function fazerLogout() { 
+            sessionStorage.clear(); 
+            localStorage.removeItem('j_role_master');
+            try { await firebase.auth().signOut(); } catch(e){}
+            window.location.href = 'index.html'; 
+        }
 
-        // Inicialização
+        // Inicialização com validação de sessão
         window.onload = () => {
-            if (sessionStorage.getItem('j_role') !== 'superadmin') {
+            const role = sessionStorage.getItem('j_role') || localStorage.getItem('j_role_master');
+            if (role !== 'superadmin') {
                 window.location.href = 'index.html';
                 return;
             }
