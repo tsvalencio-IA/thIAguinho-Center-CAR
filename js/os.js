@@ -115,7 +115,7 @@ let timelineOSAtual = [];
 window.prepOS = function(mode, id = null) {
   ['osId', 'osPlaca', 'osVeiculo', 'osCliente', 'osCelular', 'osCpf', 'osDiagnostico', 'osRelato', 'osDescricao', 'chkObs'].forEach(f => { if ($(f)) $(f).value = ''; });
   
-  if ($('osStatus')) $('osStatus').value = 'patio';
+  if ($('osStatus')) $('osStatus').value = 'Triagem';
   if ($('containerItensOS')) $('containerItensOS').innerHTML = '';
   if ($('containerServicosOS')) $('containerServicosOS').innerHTML = '';
   if ($('containerPecasOS')) $('containerPecasOS').innerHTML = '';
@@ -136,7 +136,7 @@ window.prepOS = function(mode, id = null) {
     if ($('osCliente')) $('osCliente').value = o.cliente || o.clienteId || '';
     if ($('osCelular')) $('osCelular').value = o.celular || '';
     if ($('osCpf')) $('osCpf').value = o.cpf || '';
-    if ($('osStatus')) $('osStatus').value = o.status || 'patio';
+    if ($('osStatus')) $('osStatus').value = STATUS_MAP_LEGACY[o.status] || o.status || 'Triagem';
     if ($('osDiagnostico')) $('osDiagnostico').value = o.diagnostico || '';
     if ($('osRelato')) $('osRelato').value = o.relato || '';
     if ($('osDescricao')) $('osDescricao').value = o.desc || o.relato || '';
