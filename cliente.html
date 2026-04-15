@@ -80,13 +80,14 @@ body { overflow-y: auto; }
 
 .os-card-body { padding: 20px; }
 
-/* Progress stepper */
+/* Progress stepper (Ajustado para 7 etapas) */
 .stepper {
   display: flex;
   align-items: center;
   gap: 0;
   position: relative;
   margin: 20px 0;
+  justify-content: space-between;
 }
 
 .step {
@@ -100,13 +101,13 @@ body { overflow-y: auto; }
 }
 
 .step-dot {
-  width: 30px;
-  height: 30px;
+  width: 26px; /* Diminuído ligeiramente para caber 7 passos no mobile */
+  height: 26px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: 11px;
   border: 2px solid;
   background: var(--surf-1);
   transition: var(--t-mid);
@@ -119,10 +120,11 @@ body { overflow-y: auto; }
 
 .step-label {
   font-family: var(--ff-mono);
-  font-size: 0.52rem;
+  font-size: 0.45rem; /* Ajustado para caber 7 textos */
   letter-spacing: 0.04em;
   text-align: center;
   color: var(--text-muted);
+  max-width: 50px;
 }
 
 .step.done .step-label   { color: var(--success); }
@@ -130,7 +132,7 @@ body { overflow-y: auto; }
 
 .step-line {
   position: absolute;
-  top: 15px; left: 0; right: 0;
+  top: 13px; left: 0; right: 0;
   height: 2px;
   background: var(--border);
   z-index: 0;
@@ -138,7 +140,7 @@ body { overflow-y: auto; }
 
 .step-line-fill {
   position: absolute;
-  top: 15px; left: 0;
+  top: 13px; left: 0;
   height: 2px;
   background: var(--success);
   z-index: 0;
@@ -208,6 +210,36 @@ body { overflow-y: auto; }
   gap: 8px;
 }
 
+.chat-msg {
+    padding: 10px 14px;
+    border-radius: var(--r-md);
+    max-width: 85%;
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+
+.chat-msg.outgoing {
+    background: var(--brand-dim);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    color: var(--text-primary);
+    align-self: flex-end;
+}
+
+.chat-msg.incoming {
+    background: var(--surf-3);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    align-self: flex-start;
+}
+
+.msg-time {
+    font-family: var(--ff-mono);
+    font-size: 0.6rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+    text-align: right;
+}
+
 .portal-chat-input {
   background: var(--surf-2);
   border: 1px solid var(--border);
@@ -231,7 +263,6 @@ body { overflow-y: auto; }
 <body>
 <div id="toast-container"></div>
 
-<!-- LOGIN PORTAL -->
 <div id="loginView" class="portal-bg">
   <div class="portal-login">
     <div class="portal-login-card">
@@ -241,26 +272,25 @@ body { overflow-y: auto; }
         <div style="font-family:var(--ff-mono);font-size:0.62rem;color:var(--text-muted);margin-top:4px;letter-spacing:0.08em">ACOMPANHE SEU VEÍCULO</div>
       </div>
 
-      <div id="portalLoginErr" class="login-err">Credenciais inválidas.</div>
+      <div id="portalLoginErr" class="login-err" style="display:none; background: rgba(244, 63, 94, 0.1); color: #f43f5e; padding: 10px; border-radius: 8px; font-size: 0.8rem; margin-bottom: 15px; text-align: center; border: 1px solid rgba(244, 63, 94, 0.2);">Credenciais inválidas.</div>
 
-      <div class="form-group">
-        <label class="form-label">Login</label>
-        <input class="input input-mono" id="pLogin" placeholder="seu.login" autocomplete="off">
+      <div class="form-group" style="margin-bottom:16px;">
+        <label class="form-label" style="display:block;font-family:var(--ff-mono);font-size:0.6rem;color:var(--text-muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;">Login</label>
+        <input class="input input-mono" id="pLogin" placeholder="seu.login" autocomplete="off" style="width:100%;padding:10px;background:var(--surf-2);border:1px solid var(--border);border-radius:4px;color:white;font-family:var(--ff-mono);">
       </div>
-      <div class="form-group">
-        <label class="form-label">PIN de acesso</label>
-        <input class="input" id="pPin" type="password" placeholder="••••••">
+      <div class="form-group" style="margin-bottom:16px;">
+        <label class="form-label" style="display:block;font-family:var(--ff-mono);font-size:0.6rem;color:var(--text-muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;">PIN de acesso</label>
+        <input class="input" id="pPin" type="password" placeholder="••••••" style="width:100%;padding:10px;background:var(--surf-2);border:1px solid var(--border);border-radius:4px;color:white;">
       </div>
-      <button class="btn btn-brand btn-xl btn-full" onclick="portalLogin()">Acessar Portal</button>
+      <button class="btn btn-brand btn-xl btn-full" onclick="portalLogin()" style="width:100%;padding:12px;background:var(--brand);color:white;border:none;border-radius:4px;font-family:var(--ff-display);font-weight:700;cursor:pointer;">Acessar Portal</button>
 
       <div style="text-align:center;margin-top:16px;font-size:0.75rem;color:var(--text-muted)">
-        Seu login e PIN foram fornecidos pela oficina
+        Seu login e PIN foram fornecidos pela oficina via WhatsApp.
       </div>
     </div>
   </div>
 </div>
 
-<!-- DASHBOARD DO CLIENTE -->
 <div id="portalView" style="display:none" class="portal-bg">
   <div class="portal-header">
     <div style="display:flex;align-items:center;gap:10px">
@@ -270,23 +300,21 @@ body { overflow-y: auto; }
         <div style="font-family:var(--ff-mono);font-size:0.55rem;color:var(--brand)" id="portalClienteNome">Carregando...</div>
       </div>
     </div>
-    <button class="btn btn-ghost btn-sm" onclick="portalLogout()">Sair</button>
+    <button class="btn btn-ghost btn-sm" onclick="portalLogout()" style="background:transparent;border:1px solid var(--border);color:var(--text-muted);padding:4px 10px;border-radius:4px;cursor:pointer;">Sair</button>
   </div>
 
   <div class="portal-body">
     <div id="portalContent">
-      <!-- Preenchido pelo JS -->
-    </div>
+      </div>
   </div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="js/config.js"></script>
-<script src="js/ui.js"></script>
 <script>
 // ============================================================
-// PORTAL DO CLIENTE
+// PORTAL DO CLIENTE (ATUALIZADO PARA 7 ETAPAS CHEVRON E LGPD)
 // ============================================================
 const db = window.initFirebase();
 
@@ -297,12 +325,10 @@ let P = {
   oficina:   null
 };
 
-// Pré-carrega tenant via URL se tiver
+// Pré-carrega tenant via URL se tiver (Ex: portal.html?t=TENANT_ID)
 const params = new URLSearchParams(window.location.search);
 const _tenantSlug = params.get('tenant') || params.get('t') || null;
-const _preOsId    = params.get('id')     || null;
 
-// Carrega brand do tenant se for direto pelo link
 if (_tenantSlug) _carregarBrandTenant(_tenantSlug);
 
 async function _carregarBrandTenant(tenantId) {
@@ -310,19 +336,18 @@ async function _carregarBrandTenant(tenantId) {
     const snap = await db.collection('oficinas').doc(tenantId).get();
     if (!snap.exists) return;
     const d = snap.data();
-    const brand = {
-      name:       d.brandName    || d.nomeFantasia,
-      logoLetter: d.brandLetter  || (d.nomeFantasia||'J').charAt(0).toUpperCase(),
-      color:      d.brandColor   || '#3B82F6',
-      tagline:    d.brandTagline || 'Gestão Automotiva',
-      footer:     d.brandFooter  || `${d.nomeFantasia} · JARVIS ERP`
-    };
-    brand.colorDim = `rgba(${_hexR(brand.color)},${_hexG(brand.color)},${_hexB(brand.color)},0.12)`;
-    window.aplicarBrand(brand);
+    
+    // Configura o branding visual para White Label
+    const brandColor = d.brandColor || '#3B82F6';
+    document.documentElement.style.setProperty('--brand', brandColor);
+    document.documentElement.style.setProperty('--brand-dim', `rgba(${_hexR(brandColor)},${_hexG(brandColor)},${_hexB(brandColor)},0.12)`);
+    
     document.getElementById('portalOficinaName').textContent = d.nomeFantasia || 'Portal do Cliente';
-    document.getElementById('portalLogoMark').textContent = brand.logoLetter;
-    document.getElementById('portalHdrMark').textContent  = brand.logoLetter;
+    const logoL = d.brandLetter || (d.nomeFantasia||'J').charAt(0).toUpperCase();
+    document.getElementById('portalLogoMark').textContent = logoL;
+    document.getElementById('portalHdrMark').textContent  = logoL;
     document.getElementById('portalHdrName').textContent  = d.nomeFantasia || 'Portal do Cliente';
+    
     P.tenantId = tenantId;
     P.oficina  = d;
   } catch(e) {}
@@ -342,8 +367,8 @@ async function portalLogin() {
 
   if (!login || !pin) { err.textContent = 'Preencha login e PIN.'; err.style.display='block'; return; }
 
-  const btn = document.querySelector('#loginView .btn-brand');
-  btn.innerHTML = '<div class="spinner"></div> Verificando...';
+  const btn = document.querySelector('#loginView button');
+  btn.innerHTML = 'Verificando...';
   btn.disabled = true;
 
   try {
@@ -360,7 +385,6 @@ async function portalLogin() {
     P.tenantId  = c.tenantId;
     P.cliente   = { id: doc.id, ...c };
 
-    // Carrega oficina se não tiver
     if (!P.oficina) {
       const ofSnap = await db.collection('oficinas').doc(P.tenantId).get();
       if (ofSnap.exists) {
@@ -396,7 +420,6 @@ function portalLogout() {
 // PORTAL PRINCIPAL
 // ============================================================
 function _iniciarPortal() {
-  // Ouve as OS do cliente em tempo real
   db.collection('ordens_servico')
     .where('tenantId', '==', P.tenantId)
     .where('clienteId', '==', P.clienteId)
@@ -406,7 +429,6 @@ function _iniciarPortal() {
       _renderPortal(osList);
     });
 
-  // Ouve mensagens
   db.collection('mensagens')
     .where('tenantId', '==', P.tenantId)
     .where('clienteId', '==', P.clienteId)
@@ -418,13 +440,17 @@ function _iniciarPortal() {
 
 function _renderPortal(osList) {
   const content = document.getElementById('portalContent');
-  const STEPS = ['Aguardando','Orcamento','Aprovado','Andamento','Concluido'];
+  
+  // OS 7 STATUS DA DIRETRIZ CHEVRON
+  const STEPS = ['Triagem', 'Orcamento', 'Orcamento_Enviado', 'Aprovado', 'Andamento', 'Pronto', 'Entregue'];
   const STEP_LABELS = {
-    Aguardando: 'Triagem',
-    Orcamento:  'Orçamento',
-    Aprovado:   'Aprovado',
-    Andamento:  'Em Serviço',
-    Concluido:  'Pronto'
+    Triagem:           'Triagem',
+    Orcamento:         'Orçamento',
+    Orcamento_Enviado: 'Enviado',
+    Aprovado:          'Aprovado',
+    Andamento:         'Em Serviço',
+    Pronto:            'Pronto',
+    Entregue:          'Entregue'
   };
 
   if (!osList.length) {
@@ -441,13 +467,16 @@ function _renderPortal(osList) {
   }
 
   content.innerHTML = osList.map(os => {
-    const statusIdx = STEPS.indexOf(os.status);
-    const isConcluida = os.status === 'Concluido';
-    const isOrcamento = os.status === 'Orcamento';
+    // Tratamento de segurança caso OS legadas não tenham o status novo mapeado
+    const statusLimpo = STEPS.includes(os.status) ? os.status : (os.status === 'Aguardando' ? 'Triagem' : (os.status === 'Concluido' ? 'Entregue' : 'Triagem'));
+    const statusIdx = STEPS.indexOf(statusLimpo);
+    
+    const isConcluida = (statusLimpo === 'Pronto' || statusLimpo === 'Entregue');
+    const isOrcamento = (statusLimpo === 'Orcamento_Enviado');
 
-    // Stepper
+    // Stepper Chevron (7 Etapas)
     const stepperHTML = `
-      <div style="position:relative">
+      <div style="position:relative; margin-bottom: 24px;">
         <div class="step-line"></div>
         <div class="step-line-fill" style="width:${Math.max(0, (statusIdx / (STEPS.length-1)) * 100)}%"></div>
         <div class="stepper">
@@ -463,7 +492,7 @@ function _renderPortal(osList) {
       </div>
     `;
 
-    // Alerta orçamento
+    // Alerta de Aprovação de Orçamento (Evolution B2C)
     const orcAlerta = isOrcamento ? `
       <div class="orcamento-alert">
         <div style="font-family:var(--ff-display);font-weight:700;color:var(--warn);margin-bottom:6px">💰 Orçamento aguardando aprovação</div>
@@ -471,33 +500,45 @@ function _renderPortal(osList) {
           Valor do serviço: <strong style="color:var(--text-primary)">${_moeda(os.total)}</strong>
         </div>
         <div style="display:flex;gap:10px">
-          <button class="btn btn-brand" onclick="_aprovarOrcamento('${os.id}')">✓ Aprovar</button>
-          <button class="btn btn-danger" onclick="_recusarOrcamento('${os.id}')">✕ Recusar</button>
+          <button class="btn btn-brand" style="background:#10B981;color:white;padding:8px 16px;border:none;border-radius:4px;cursor:pointer;font-weight:700;" onclick="_aprovarOrcamento('${os.id}')">✓ APROVAR</button>
+          <button class="btn btn-danger" style="background:transparent;border:1px solid rgba(255,59,59,0.5);color:#FF3B3B;padding:8px 16px;border-radius:4px;cursor:pointer;" onclick="_recusarOrcamento('${os.id}')">✕ RECUSAR</button>
         </div>
       </div>
     ` : '';
 
-    // Peças
-    const pecasHTML = os.pecas?.length ? `
-      <div style="margin-top:14px">
-        <div class="t-label" style="margin-bottom:8px">Serviços e Peças</div>
-        <div style="background:var(--surf-2);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden">
-          ${os.pecas.map(p => `
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border)">
-              <div style="font-size:0.84rem">${p.desc || '—'} × ${p.qtd}</div>
-              <div style="font-family:var(--ff-mono);font-size:0.82rem;color:var(--success)">${_moeda(p.qtd * p.venda)}</div>
-            </div>
-          `).join('')}
-          ${os.maoObra ? `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border)"><div style="font-size:0.84rem">Mão de Obra</div><div style="font-family:var(--ff-mono);font-size:0.82rem;color:var(--success)">${_moeda(os.maoObra)}</div></div>` : ''}
-        </div>
-        ${os.total ? `<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--success-dim);border-radius:0 0 var(--r-lg) var(--r-lg);border:1px solid rgba(34,211,160,0.2);border-top:none"><span style="font-family:var(--ff-mono);font-size:0.7rem;color:var(--text-muted)">TOTAL</span><span style="font-family:var(--ff-display);font-size:1.3rem;font-weight:800;color:var(--success)">${_moeda(os.total)}</span></div>` : ''}
-      </div>
-    ` : '';
+    // Serviços Detalhados (Múltiplos) + Peças (Novo Formato)
+    let detalheHtml = '';
+    if (os.servicos?.length > 0 || os.pecas?.length > 0 || os.maoObra > 0) {
+      detalheHtml += `
+        <div style="margin-top:14px">
+          <div style="font-family:var(--ff-mono);font-size:0.65rem;color:var(--text-muted);letter-spacing:2px;margin-bottom:8px;">DETALHAMENTO TÉCNICO</div>
+          <div style="background:var(--surf-2);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden">`;
+      
+      // Renderiza Serviços
+      if(os.servicos) {
+        os.servicos.forEach(s => {
+          detalheHtml += `<div style="display:flex;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border)"><div style="font-size:0.84rem">🔧 ${s.desc || 'Serviço'}</div><div style="font-family:var(--ff-mono);font-size:0.82rem;">${_moeda(s.valor)}</div></div>`;
+        });
+      } else if (os.maoObra) {
+        detalheHtml += `<div style="display:flex;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border)"><div style="font-size:0.84rem">🔧 Mão de Obra Geral</div><div style="font-family:var(--ff-mono);font-size:0.82rem;">${_moeda(os.maoObra)}</div></div>`;
+      }
+      
+      // Renderiza Peças
+      if(os.pecas) {
+        os.pecas.forEach(p => {
+          detalheHtml += `<div style="display:flex;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border)"><div style="font-size:0.84rem">📦 ${p.desc || '—'} (x${p.qtd})</div><div style="font-family:var(--ff-mono);font-size:0.82rem;color:var(--success)">${_moeda(p.qtd * p.venda)}</div></div>`;
+        });
+      }
+      
+      detalheHtml += `</div>
+          ${os.total ? `<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--success-dim);border-radius:0 0 var(--r-lg) var(--r-lg);border:1px solid rgba(34,211,160,0.2);border-top:none"><span style="font-family:var(--ff-mono);font-size:0.7rem;color:var(--text-muted)">TOTAL APROVADO</span><span style="font-family:var(--ff-display);font-size:1.3rem;font-weight:800;color:var(--success)">${_moeda(os.total)}</span></div>` : ''}
+        </div>`;
+    }
 
-    // Fotos
+    // Fotos de Evidência
     const fotoHTML = os.media?.length ? `
       <div style="margin-top:14px">
-        <div class="t-label" style="margin-bottom:8px">Fotos do Serviço (${os.media.length})</div>
+        <div style="font-family:var(--ff-mono);font-size:0.65rem;color:var(--text-muted);letter-spacing:2px;margin-bottom:8px;">GALERIA DE FOTOS DO SERVIÇO</div>
         <div class="media-preview-grid">
           ${os.media.map(m => m.type !== 'video'
             ? `<div class="media-preview-item"><img src="${m.url}" onclick="window.open('${m.url}','_blank')" loading="lazy"></div>`
@@ -507,12 +548,12 @@ function _renderPortal(osList) {
       </div>
     ` : '';
 
-    // Entrega
+    // Alerta de Conclusão
     const entregaHTML = isConcluida ? `
-      <div style="background:var(--success-dim);border:1px solid rgba(34,211,160,0.3);border-radius:var(--r-lg);padding:14px 16px;margin-top:14px;display:flex;align-items:center;gap:12px">
+      <div style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);border-radius:var(--r-lg);padding:14px 16px;margin-top:14px;display:flex;align-items:center;gap:12px">
         <div style="font-size:1.5rem">🎉</div>
         <div>
-          <div style="font-family:var(--ff-display);font-weight:700;color:var(--success)">Veículo Pronto!</div>
+          <div style="font-family:var(--ff-display);font-weight:700;color:var(--success)">Veículo Liberado!</div>
           <div style="font-size:0.82rem;color:var(--text-secondary)">Seu veículo está pronto para retirada em ${P.oficina?.nomeFantasia || 'nossa oficina'}.</div>
         </div>
       </div>
@@ -525,7 +566,7 @@ function _renderPortal(osList) {
             <div style="font-family:var(--ff-mono);font-size:0.72rem;color:var(--text-muted);margin-bottom:2px">OS #${os.id.slice(-6).toUpperCase()}</div>
             <div style="font-family:var(--ff-display);font-size:1rem;font-weight:700">${os.tipoVeiculo === 'bicicleta' ? '🚲' : os.tipoVeiculo === 'moto' ? '🏍️' : '🚗'} ${os.desc?.substring(0,40) || 'Serviço'}${os.desc?.length > 40 ? '...' : ''}</div>
           </div>
-          <span class="badge ${_osBadgeClass(os.status)}">${STEP_LABELS[os.status] || os.status}</span>
+          <span style="font-family:var(--ff-mono);font-size:0.7rem;color:var(--brand);font-weight:700;text-transform:uppercase;border:1px solid var(--brand);padding:2px 8px;border-radius:10px;">${STEP_LABELS[statusLimpo] || statusLimpo}</span>
         </div>
         <div class="os-card-body">
           ${stepperHTML}
@@ -538,12 +579,12 @@ function _renderPortal(osList) {
               <div class="info-item-value">${_dtBr(os.data)}</div>
             </div>
             <div class="info-item">
-              <div class="info-item-label">KM</div>
+              <div class="info-item-label">KM / Milhagem</div>
               <div class="info-item-value">${os.km ? Number(os.km).toLocaleString('pt-BR') + ' km' : '—'}</div>
             </div>
           </div>
 
-          ${pecasHTML}
+          ${detalheHtml}
           ${fotoHTML}
         </div>
       </div>
@@ -557,17 +598,17 @@ function _chatHTML() {
   return `
     <div class="os-card portal-chat">
       <div class="os-card-header">
-        <div style="font-family:var(--ff-display);font-weight:700">💬 Fale com a Oficina</div>
-        <div class="status-dot online"></div>
+        <div style="font-family:var(--ff-display);font-weight:700">💬 Fale com o Mecânico / Oficina</div>
+        <div style="width:8px;height:8px;background:var(--success);border-radius:50%;"></div>
       </div>
       <div class="portal-chat-messages" id="portalChatMsgs">
         <div style="text-align:center;color:var(--text-muted);font-size:0.78rem;padding:16px">
-          Envie uma mensagem para a oficina
+          Envie uma mensagem direta para a oficina.
         </div>
       </div>
       <div class="portal-chat-input">
-        <input class="input" id="portalChatInput" placeholder="Digite sua mensagem..." style="flex:1">
-        <button class="btn btn-brand" onclick="_enviarPortalMsg()" id="btnPortalEnviar">Enviar</button>
+        <input class="input" id="portalChatInput" placeholder="Digite sua dúvida ou resposta..." style="flex:1;background:var(--surf-1);border:1px solid var(--border);color:white;padding:10px;border-radius:4px;">
+        <button class="btn btn-brand" style="background:var(--brand);color:white;border:none;padding:10px 16px;border-radius:4px;cursor:pointer;font-weight:700;" onclick="_enviarPortalMsg()" id="btnPortalEnviar">ENVIAR</button>
       </div>
     </div>
   `;
@@ -588,7 +629,8 @@ function _renderChat(msgs) {
     return `<div class="chat-msg ${dir}">${m.msg}<div class="msg-time">${t}</div></div>`;
   }).join('');
   container.scrollTop = container.scrollHeight;
-  // Marca como lidas
+  
+  // Marca mensagens da oficina como lidas pelo cliente
   msgs.filter(m => m.sender === 'admin' && !m.lidaCliente)
     .forEach(m => db.collection('mensagens').doc(m.id).update({ lidaCliente: true }).catch(()=>{}));
 }
@@ -611,12 +653,31 @@ async function _enviarPortalMsg() {
 
 async function _aprovarOrcamento(osId) {
   await db.collection('ordens_servico').doc(osId).update({ status: 'Aprovado', updatedAt: new Date().toISOString() });
-  toast('Orçamento aprovado! Sua O.S. entrou na fila de serviço.', 'success');
+  
+  // Audita e notifica a oficina
+  await db.collection('lixeira_auditoria').add({
+    tenantId: P.tenantId,
+    modulo: 'PORTAL B2C',
+    acao: `Cliente aprovou o orçamento da OS #${osId.slice(-6)}`,
+    usuario: P.cliente?.nome || 'Cliente',
+    ts: new Date().toISOString()
+  });
+  
+  toast('Orçamento aprovado! A oficina já foi notificada.', 'success');
 }
 
 async function _recusarOrcamento(osId) {
-  if (!confirm('Tem certeza que deseja recusar o orçamento?')) return;
+  if (!confirm('Tem certeza que deseja recusar o orçamento? A O.S. será cancelada.')) return;
   await db.collection('ordens_servico').doc(osId).update({ status: 'Cancelado', updatedAt: new Date().toISOString() });
+  
+  await db.collection('lixeira_auditoria').add({
+    tenantId: P.tenantId,
+    modulo: 'PORTAL B2C',
+    acao: `Cliente recusou o orçamento da OS #${osId.slice(-6)}`,
+    usuario: P.cliente?.nome || 'Cliente',
+    ts: new Date().toISOString()
+  });
+  
   toast('Orçamento recusado.', 'warn');
 }
 
@@ -626,9 +687,13 @@ async function _recusarOrcamento(osId) {
 function _moeda(v) { return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(parseFloat(v)||0); }
 function _dtBr(iso) { try { return iso ? new Date(iso).toLocaleDateString('pt-BR') : '—'; } catch { return iso||'—'; } }
 
-function _osBadgeClass(status) {
-  const m = { Aguardando:'badge-neutral', Orcamento:'badge-warn', Aprovado:'badge-brand', Andamento:'badge-warn', Concluido:'badge-success', Cancelado:'badge-danger' };
-  return m[status] || 'badge-neutral';
+function toast(msg, type='ok') {
+  const box = document.getElementById('toast-container');
+  const el = document.createElement('div');
+  el.style.cssText = `background:${type==='warn'?'#F59E0B':'#10B981'};color:white;padding:12px 20px;margin-bottom:10px;border-radius:4px;font-family:var(--ff-display);font-weight:700;animation: slideUp 0.3s ease;`;
+  el.innerHTML = msg;
+  box.appendChild(el);
+  setTimeout(() => { el.style.opacity='0'; setTimeout(()=>el.remove(),400); }, 3500);
 }
 
 function _hexR(hex) { return parseInt(hex.replace('#','').substring(0,2),16); }
