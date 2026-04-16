@@ -69,7 +69,7 @@ function _buildCard(os, v, c, status) {
 
   const prioColor = { vermelho:'var(--danger)', amarelo:'var(--warn)', verde:'var(--success)' }[os.prioridade||'verde'] || 'var(--success)';
 
-  return `<div class="k-card" style="border-left-color:${cor}" onclick="window.prepOS('edit','${os.id}');abrirModal('modalOS')">
+  return `<div class="k-card" draggable="true" ondragstart="window.dragOS(event, '${os.id}')" style="border-left-color:${cor}" onclick="window.prepOS('edit','${os.id}');abrirModal('modalOS')">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
       <div class="k-placa" style="color:${cor}">
         <span class="prio-indicador" style="background:${prioColor};box-shadow:0 0 4px ${prioColor};"></span>
@@ -89,6 +89,27 @@ function _buildCard(os, v, c, status) {
     </div>
   </div>`;
 }
+
+// ── LÓGICA DE DRAG & DROP NATIVO ───────────────────────────
+window.allowDrop = function(ev) {
+  ev.preventDefault();
+};
+
+window.dragOS = function(ev, id) {
+  ev.dataTransfer.setData("text/plain", id);
+};
+
+window.drop = function(ev) {
+  ev.preventDefault();
+  const osId = ev.dataTransfer.getData("text/plain");
+  const col = ev.target.closest('.k-col');
+  if (col && osId) {
+    const novoStatus = col.getAttribute('data-s');
+    if (novoStatus) {
+      window.moverStatusOS(osId, novoStatus);
+    }
+  }
+};
 
 // ── MOVER STATUS ───────────────────────────────────────────
 window.moverStatusOS = async function(id, novoStatus) {
@@ -144,15 +165,19 @@ window.enviarWppB2C = function(id) {
   const v  = J.veiculos.find(x => x.id === os.veiculoId);
   const cel = os.celular || c?.wpp || '';
   if (!cel) { toastWarn('⚠ Cliente sem WhatsApp'); return; }
-  const pin    = os.pin || randId(6);
-  const link   = window.location.origin + '/cliente.html';
-  const cliNome = (c?.nome || os.cliente || 'Cliente').split(' ')[0];
-  const veicNome = v?.modelo || os.veiculo || 'veículo';
-  const msg = JARVIS_CONST.WPP_MSGS.orcamento(cliNome, veicNome, J.tnome, (os.total||0).toFixed(2).replace('.',','), link, pin);
+  
+  const pin = c?.pin || os.pin || '';
+  const loginCliente = c?.login || (c?.nome ? c.nome.split(' ')[0].toUpperCase() : 'CLIENTE');
+  const cliNome = c?.nome ? c.nome.split(' ')[0] : 'Cliente';
+  const veicNome = v?.modelo || 'veículo';
+  const baseUrl = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '');
+  const link = baseUrl + '/cliente.html';
+  
+  const msg = `Olá ${cliNome}! ⚙️\n\nO orçamento do seu ${veicNome} está pronto na ${J.tnome}.\n\n💰 Total: R$ ${(os.total||0).toFixed(2).replace('.',',')}\n\nAcesse seu portal exclusivo para aprovar o serviço:\n🔗 Link: ${link}\n\n(Em conformidade com a LGPD, seus dados estão protegidos conosco.)\n👤 Usuário: ${loginCliente}\n🔑 PIN: ${pin}`;
+  
   window.open(`https://wa.me/55${cel.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`, '_blank');
   audit('WHATSAPP', `Enviou orçamento B2C para ${os.placa||veicNome}`);
 };
-
 // ── PREPARAR MODAL OS ──────────────────────────────────────
 window.prepOS = function(mode, id=null) {
   const reset = ['osId','osPlaca','osDiagnostico','osRelato','osDescricao','chkObs','osKm','osData','osCelular','osCpf'];
@@ -491,23 +516,39 @@ async function _gerarFinanceiroOS(payload, pecas, totalMO, totalPecas, osId) {
 
 // ── UPLOAD MÍDIA ───────────────────────────────────────────
 window.uploadOsMedia = async function() {
-  const f = document.getElementById('osFileInput')?.files[0]; if (!f) return;
+  const files = document.getElementById('osFileInput')?.files; 
+  if (!files || files.length === 0) return;
+  
   const btn = document.getElementById('btnUploadMedia');
   if (btn) { btn.innerHTML='<span class="spinner"></span> Enviando...'; btn.disabled=true; }
+  
   try {
-    const fd = new FormData(); fd.append('file', f); fd.append('upload_preset', J.cloudPreset);
-    const res  = await fetch(`https://api.cloudinary.com/v1_1/${J.cloudName}/auto/upload`, {method:'POST',body:fd});
-    const data = await res.json();
-    if (data.secure_url) {
-      const media = JSON.parse(document.getElementById('osMediaArray').value||'[]');
-      media.push({ url: data.secure_url, type: data.resource_type });
-      _sv('osMediaArray', JSON.stringify(media));
-      renderMediaOS(); toastOk('✓ Mídia enviada');
+    const media = JSON.parse(document.getElementById('osMediaArray').value||'[]');
+    
+    for (let i = 0; i < files.length; i++) {
+      const fd = new FormData(); 
+      fd.append('file', files[i]); 
+      fd.append('upload_preset', J.cloudPreset);
+      
+      const res  = await fetch(`https://api.cloudinary.com/v1_1/${J.cloudName}/auto/upload`, {method:'POST',body:fd});
+      const data = await res.json();
+      
+      if (data.secure_url) {
+        media.push({ url: data.secure_url, type: data.resource_type });
+      }
     }
-  } catch(e) { toastErr('Erro no upload: '+e.message); }
-  finally { if (btn) { btn.innerHTML='UPLOAD'; btn.disabled=false; } }
+    
+    _sv('osMediaArray', JSON.stringify(media));
+    renderMediaOS(); 
+    toastOk(`✓ ${files.length} mídia(s) enviada(s)`);
+    
+  } catch(e) { 
+    toastErr('Erro no upload: '+e.message); 
+  } finally { 
+    if (btn) { btn.innerHTML='UPLOAD'; btn.disabled=false; } 
+    document.getElementById('osFileInput').value = ''; 
+  }
 };
-
 window.renderMediaOS = function() {
   const media = JSON.parse(document.getElementById('osMediaArray')?.value||'[]');
   const grid  = document.getElementById('osMediaGrid'); if (!grid) return;
