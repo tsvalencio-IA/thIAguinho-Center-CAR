@@ -7,8 +7,8 @@
 
 const OS_STATUSES = ['Triagem','Orcamento','Orcamento_Enviado','Aprovado','Andamento','Pronto','Entregue'];
 
-// Mapa de compatibilidade com dados legados
-const STATUS_LEGADO = {
+// Correção Bug Crítico 1 (Tela de Loader Infinita): Usa objeto de janela global para evitar re-declaração duplicada da constante `STATUS_LEGADO` entre arquivos.
+window.STATUS_LEGADO = window.STATUS_LEGADO || {
   'Aguardando':'Triagem','patio':'Triagem','box':'Andamento',
   'aprovacao':'Orcamento_Enviado','faturado':'Pronto','cancelado':'Cancelado',
   'concluido':'Entregue','Concluido':'Entregue',
@@ -25,16 +25,15 @@ window.renderKanban = function() {
   OS_STATUSES.forEach(s => { cols[s] = []; cnts[s] = 0; });
 
   J.os.filter(o => {
-    const st = STATUS_LEGADO[o.status] || o.status;
+    const st = window.STATUS_LEGADO[o.status] || o.status;
     if (st === 'Cancelado') return false;
     
-    // CORREÇÃO (BUG 4): Filtro de visualização para o Mecânico (Equipe)
     if ((J.role === 'mecanico' || J.role === 'equipe') && o.mecId !== J.fid) {
       return false;
     }
     return true;
   }).forEach(o => {
-    const st  = STATUS_LEGADO[o.status] || o.status || 'Triagem';
+    const st  = window.STATUS_LEGADO[o.status] || o.status || 'Triagem';
     const v   = J.veiculos.find(x => x.id === o.veiculoId) || { placa: o.placa, modelo: o.veiculo, tipo: o.tipoVeiculo };
     const c   = J.clientes.find(x => x.id === o.clienteId) || { nome: o.cliente };
     
@@ -104,13 +103,13 @@ window.moverStatusOS = async function(id, novoStatus) {
   const os = J.os.find(x => x.id === id);
   if (!os) return;
 
-  const st = STATUS_LEGADO[os.status] || os.status || 'Triagem';
+  const st = window.STATUS_LEGADO[os.status] || os.status || 'Triagem';
   
   if (novoStatus === 'Orcamento' && !os.desc && !os.relato) {
     window.toastWarn && toastWarn('⚠ Preencha o defeito/serviço antes de mover para Orçamento.');
     return;
   }
-  if (novoStatus === 'Andamento' && !['Aprovado','Orcamento_Enviado'].includes(STATUS_LEGADO[os.status]||os.status)) {
+  if (novoStatus === 'Andamento' && !['Aprovado','Orcamento_Enviado'].includes(window.STATUS_LEGADO[os.status]||os.status)) {
     window.toastWarn && toastWarn('⚠ A O.S. precisa estar Aprovada antes de ir para Em Serviço.');
     return;
   }
@@ -149,7 +148,6 @@ window.enviarWppB2C = function(id) {
   
   if (!cel) { window.toastWarn && toastWarn('⚠ Cliente sem WhatsApp'); return; }
   
-  // CORREÇÃO (BUG 5): Link modificado e resgate correto do PIN/Login do BD (cliente).
   const pin      = c?.pin || os.pin || '1234';
   const loginApp = c?.login || c?.email || c?.doc || 'seu login';
   const link     = 'https://tsvalencio-ia.github.io/of/clientes.html';
@@ -197,7 +195,7 @@ window.prepOS = function(mode, id=null) {
     _sv('osData',      o.data   || '');
     _sv('osKm',        o.km     || '');
     _sv('osMec',       o.mecId  || '');
-    _sv('osStatus', STATUS_LEGADO[o.status] || o.status || 'Triagem');
+    _sv('osStatus', window.STATUS_LEGADO[o.status] || o.status || 'Triagem');
 
     _sv('osCliente', o.clienteId||'');
     window.filtrarVeiculosOS && filtrarVeiculosOS();
@@ -316,7 +314,7 @@ window.salvarOS = async function() {
   
   if (status === 'Andamento') {
     const osAtual = J.os.find(x => x.id === osId);
-    const stAtual = osAtual ? (STATUS_LEGADO[osAtual.status]||osAtual.status) : 'Triagem';
+    const stAtual = osAtual ? (window.STATUS_LEGADO[osAtual.status]||osAtual.status) : 'Triagem';
     if (!['Aprovado','Andamento','Orcamento_Enviado'].includes(stAtual) && !osId) {
       window.toastWarn && toastWarn('⚠ A O.S. precisa ser aprovada antes de ir para execução'); return;
     }
@@ -362,7 +360,7 @@ window.salvarOS = async function() {
   const total = parseFloat(_v('osTotalHidden')||0);
 
   const tl = JSON.parse(document.getElementById('osTimelineData')?.value||'[]');
-  const stAtualTL = osId ? (STATUS_LEGADO[J.os.find(x=>x.id===osId)?.status]||status) : 'Nova';
+  const stAtualTL = osId ? (window.STATUS_LEGADO[J.os.find(x=>x.id===osId)?.status]||status) : 'Nova';
   const acaoTL    = osId ? `Editou O.S. | Status: ${stAtualTL} → ${status}` : `Abriu nova O.S. | Status: ${status}`;
   tl.push({ dt: new Date().toISOString(), user: J.nome, role: J.role, acao: acaoTL, tipo: 'edicao', antes: stAtualTL, depois: status });
 
