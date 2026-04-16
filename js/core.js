@@ -452,6 +452,7 @@ function _hexToRGB(hex) {
   const c = (hex||'#3B82F6').replace('#','');
   return `${parseInt(c.substring(0,2),16)},${parseInt(c.substring(2,4),16)},${parseInt(c.substring(4,6),16)}`;
 }
+
 // ── MOTOR DE MÍDIA DO CHAT (ÁUDIO E ARQUIVOS) ─────────────────
 let _mediaRecorder;
 let _audioChunks = [];
@@ -460,7 +461,6 @@ window.togglePTT = async function() {
   const btn = document.getElementById('btnPTT');
   if (!btn) return;
 
-  // 1. Parar gravação e enviar
   if (_mediaRecorder && _mediaRecorder.state === 'recording') {
     _mediaRecorder.stop();
     btn.style.color = '';
@@ -469,7 +469,6 @@ window.togglePTT = async function() {
     return;
   }
 
-  // 2. Iniciar gravação com permissão
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     _mediaRecorder = new MediaRecorder(stream);
