@@ -130,501 +130,500 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 .k-col[data-status=Pronto] .k-col-label{color:var(--success);}
 .k-col[data-status=Entregue] .k-col-label{color:var(--green2);}
 
-.k-col[data-status=Triagem]{border-top:2px solid var(--muted);}
-.k-col[data-status=Orcamento]{border-top:2px solid var(--warn);}
-.k-col[data-status=Orcamento_Enviado]{border-top:2px solid var(--purple);}
-.k-col[data-status=Aprovado]{border-top:2px solid var(--cyan);}
-.k-col[data-status=Andamento]{border-top:2px solid #FF8C00;}
-.k-col[data-status=Pronto]{border-top:2px solid var(--success);}
-.k-col[data-status=Entregue]{border-top:2px solid var(--green2);}
+.j-table{width:100%;border-collapse:collapse;}
+.j-table th{text-align:left;padding:12px 16px;background:var(--surf2);font-family:var(--fm);font-size:0.65rem;color:var(--muted);letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid var(--border);}
+.j-table td{padding:12px 16px;border-bottom:1px solid var(--border);font-size:0.82rem;}
+.j-table tr:hover td{background:rgba(255,255,255,0.015);}
 
-.j-table{width:100%;border-collapse:collapse;font-size:0.82rem;}
-.j-table th{padding:10px 14px;text-align:left;font-family:var(--fm);font-size:0.6rem;color:var(--muted);letter-spacing:2px;text-transform:uppercase;border-bottom:1px solid var(--border);background:var(--surf2);}
-.j-table td{padding:11px 14px;border-bottom:1px solid rgba(0,212,255,0.05);vertical-align:middle;color:var(--text);}
-.j-table tr:hover td{background:rgba(0,212,255,0.02);}
-.j-table tr:last-child td{border-bottom:none;}
-.pill{display:inline-block;padding:2px 10px;border-radius:10px;font-family:var(--fm);font-size:0.6rem;letter-spacing:1px;font-weight:700;}
-.pill-cyan{background:rgba(0,212,255,0.12);color:var(--cyan);}
-.pill-green{background:rgba(0,255,136,0.12);color:var(--success);}
-.pill-warn{background:rgba(255,184,0,0.12);color:var(--warn);}
-.pill-danger{background:rgba(255,59,59,0.12);color:var(--danger);}
-.pill-gray{background:rgba(255,255,255,0.06);color:var(--muted2);}
-.pill-purple{background:var(--purple-dim);color:var(--purple);}
-.placa-badge{font-family:var(--fm);font-size:0.8rem;font-weight:700;letter-spacing:2px;padding:3px 10px;border:1px solid var(--border2);border-radius:2px;color:var(--cyan);}
+.placa-badge{font-family:var(--fm);font-weight:700;letter-spacing:2px;padding:3px 8px;background:var(--surf3);border:1px solid var(--border2);border-radius:2px;color:var(--cyan);}
+.pill{padding:3px 10px;border-radius:10px;font-family:var(--fm);font-size:0.55rem;font-weight:700;letter-spacing:1px;display:inline-block;}
+.pill-cyan{background:rgba(0,212,255,0.1);color:var(--cyan);}
+.pill-green{background:rgba(0,255,136,0.1);color:var(--success);}
+.pill-warn{background:rgba(255,184,0,0.1);color:var(--warn);}
+.pill-danger{background:rgba(255,59,59,0.1);color:var(--danger);}
 
-.j-input{background:var(--surf2);border:1px solid var(--border);border-radius:2px;color:var(--text);font-family:var(--ff);font-size:0.85rem;padding:9px 12px;outline:none;transition:all 0.2s;width:100%;}
-.j-input:focus{border-color:var(--cyan);background:rgba(0,212,255,0.04);}
-.j-input::placeholder{color:var(--muted);font-size:0.78rem;}
-.j-select{background:var(--surf2);border:1px solid var(--border);border-radius:2px;color:var(--text);font-family:var(--ff);font-size:0.85rem;padding:9px 12px;outline:none;cursor:pointer;width:100%;}
-.j-select:focus{border-color:var(--cyan);}
-.j-select option{background:var(--surf2);}
-.j-textarea{background:var(--surf2);border:1px solid var(--border);border-radius:2px;color:var(--text);font-family:var(--ff);font-size:0.85rem;padding:10px 12px;outline:none;resize:vertical;width:100%;min-height:80px;}
-.j-textarea:focus{border-color:var(--cyan);}
-.j-label{display:block;font-family:var(--fm);font-size:0.6rem;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;}
-.form-group{margin-bottom:16px; width: 100%;}
-.form-row{display:grid;gap:14px;margin-bottom:16px;}
-.form-row.cols-2{grid-template-columns:1fr 1fr;}
-.form-row.cols-3{grid-template-columns:1fr 1fr 1fr;}
+.chat-layout{display:flex;height:calc(100vh - 160px);gap:1px;background:var(--border);border-radius:4px;overflow:hidden;}
+.chat-list{width:280px;background:var(--surf);display:flex;flex-direction:column;}
+.chat-item{padding:14px;border-bottom:1px solid var(--border);cursor:pointer;transition:all 0.15s;}
+.chat-item:hover{background:var(--surf2);}
+.chat-item.active{background:var(--cyan-dim);border-left:3px solid var(--cyan);}
+.chat-item-name{font-weight:700;font-size:0.85rem;margin-bottom:3px;display:flex;justify-content:space-between;}
+.chat-item-last{font-size:0.7rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.chat-unread{background:var(--danger);color:#fff;font-size:0.55rem;padding:1px 5px;border-radius:10px;}
+.chat-main{flex:1;background:var(--surf2);display:flex;flex-direction:column;}
+.chat-head{padding:14px 20px;background:var(--surf);border-bottom:1px solid var(--border);font-family:var(--fd);font-weight:700;letter-spacing:1px;color:var(--cyan);}
+.chat-msgs{flex:1;padding:20px;overflow-y:auto;display:flex;flex-direction:column;gap:12px;}
+.chat-msg{max-width:80%;padding:10px 14px;border-radius:4px;position:relative;font-size:0.85rem;line-height:1.4;}
+.chat-msg.cliente{align-self:flex-start;background:var(--surf3);border:1px solid var(--border);}
+.chat-msg.admin{align-self:flex-end;background:var(--cyan2);color:#000;font-weight:500;}
+.chat-msg .ts{font-size:0.55rem;opacity:0.6;margin-top:4px;text-align:right;}
+.chat-foot{padding:14px;background:var(--surf);border-top:1px solid var(--border);display:flex;gap:10px;}
 
-.grid-servicos { display:grid; grid-template-columns: 1fr 100px 40px; gap:8px; align-items:center; margin-bottom:8px; }
-.grid-pecas { display:grid; grid-template-columns: 2fr 80px 90px 90px 40px; gap:8px; align-items:center; margin-bottom:8px; }
+.ia-box{background:var(--surf2);border-radius:4px;overflow:hidden;}
+.ia-messages{height:300px;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:14px;}
+.ia-msg{padding:12px 16px;border-radius:4px;font-size:0.85rem;line-height:1.5;max-width:90%;}
+.ia-msg.user{align-self:flex-end;background:var(--surf3);border:1px solid var(--border2);}
+.ia-msg.bot{align-self:flex-start;background:rgba(0,212,255,0.05);border-left:3px solid var(--cyan);}
+.ia-input-area{padding:14px;background:var(--surf);border-top:1px solid var(--border);display:flex;gap:10px;}
 
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:1000;display:none;align-items:flex-start;justify-content:center;padding:20px;backdrop-filter:blur(4px);overflow-y:auto;}
-.overlay.open{display:flex;}
-.modal{background:var(--surf);border:1px solid var(--border2);border-radius:6px;width:100%;max-width:860px;position:relative;margin:auto;box-shadow: 0 10px 30px rgba(0,0,0,0.5);}
-.modal::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);}
-.modal-head{padding:18px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between; position:sticky; top:0; background:var(--surf); z-index:10; border-radius:6px 6px 0 0;}
-.modal-title{font-family:var(--fd);font-size:1.2rem;font-weight:700;letter-spacing:2px;display:flex;align-items:center;gap:10px;}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px);}
+.modal{background:var(--surf);border:1px solid var(--border2);border-radius:4px;width:100%;max-width:800px;max-height:90vh;display:flex;flex-direction:column;position:relative;box-shadow:0 20px 50px rgba(0,0,0,0.5);}
+.modal::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);}
+.modal-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.modal-title{font-family:var(--fd);font-size:1.1rem;font-weight:700;letter-spacing:2px;color:var(--cyan);display:flex;align-items:center;gap:10px;}
 .modal-title svg{width:18px;height:18px;fill:var(--cyan);}
-.modal-close{background:none;border:none;color:var(--muted);font-size:1.5rem;cursor:pointer;padding:4px 8px;transition:color 0.2s;}
+.modal-close{background:none;border:none;color:var(--muted);font-size:1.4rem;cursor:pointer;padding:4px;}
 .modal-close:hover{color:var(--danger);}
-.modal-body{padding:24px;}
-.modal-foot{padding:16px 24px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:flex-end;gap:10px; position:sticky; bottom:0; background:var(--surf); z-index:10; border-radius:0 0 6px 6px;}
-.modal-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);padding:0 24px; overflow-x: auto;}
-.mtab{padding:12px 18px;font-family:var(--fm);font-size:0.7rem;letter-spacing:1px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;margin-bottom:-1px; white-space: nowrap;}
-.mtab.active{color:var(--cyan);border-bottom-color:var(--cyan);font-weight:700;}
-.tab-pane{display:none;padding:20px 24px;}
+.modal-body{padding:24px;overflow-y:auto;flex:1;}
+.modal-foot{padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px;flex-shrink:0;}
+
+.form-group{margin-bottom:18px;}
+.j-label{display:block;font-family:var(--fm);font-size:0.6rem;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;}
+.j-input, .j-select, .j-textarea{width:100%;background:var(--surf2);border:1px solid var(--border2);border-radius:2px;padding:10px 14px;color:var(--text);font-family:var(--ff);font-size:0.85rem;outline:none;transition:all 0.2s;}
+.j-input:focus, .j-select:focus, .j-textarea:focus{border-color:var(--cyan);background:var(--surf3);}
+.form-row{display:grid;gap:16px;margin-bottom:16px;}
+.cols-2{grid-template-columns:1fr 1fr;}
+.cols-3{grid-template-columns:1fr 1fr 1fr;}
+
+.modal-tabs{display:flex;border-bottom:1px solid var(--border);padding:0 20px;background:var(--surf2);}
+.mtab{padding:12px 20px;font-family:var(--fm);font-size:0.65rem;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;letter-spacing:1px;}
+.mtab:hover{color:var(--text);}
+.mtab.active{color:var(--cyan);border-bottom-color:var(--cyan);}
+.tab-pane{display:none;padding:24px;}
 .tab-pane.active{display:block;}
 
-#toastBox{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none;}
-.toast-j{padding:12px 18px;border-radius:4px;font-family:var(--fm);font-size:0.75rem;border-left:4px solid;display:flex;align-items:center;gap:8px;transition:opacity 0.4s;pointer-events:none;min-width:250px; background:#111; box-shadow: 0 4px 12px rgba(0,0,0,0.3);}
-.toast-j.ok{border-color:var(--success);color:var(--success);}
-.toast-j.err{border-color:var(--danger);color:var(--danger);}
-.toast-j.warn{border-color:var(--warn);color:var(--warn);}
+.stock-critical{background:rgba(255,59,59,0.03) !important;}
 
-.timeline{padding-left:24px;border-left:2px solid var(--border); margin-top:10px;}
-.tl-item{padding:10px 0 16px 24px;position:relative;border-bottom:1px solid rgba(0,212,255,0.05);}
-.tl-item:last-child{border-bottom:none;}
-.tl-item::before{content:'';position:absolute;left:-7px;top:16px;width:12px;height:12px;background:var(--cyan);border:2px solid var(--surf);border-radius:50%; box-shadow: 0 0 8px var(--cyan-dim);}
-.tl-date{font-family:var(--fm);font-size:0.65rem;color:var(--muted);margin-bottom:4px;letter-spacing:1px;}
-.tl-user{font-family:var(--fm);font-size:0.7rem;color:var(--cyan);font-weight:700;margin-bottom:4px;}
-.tl-action{font-size:0.9rem;color:#ffffff !important; font-weight:500; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); line-height:1.4;}
+.search-wrap{position:relative;max-width:400px;width:100%;}
+.search-input{padding-left:36px !important;}
+.search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;fill:var(--muted);}
 
-.media-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;}
-.media-item{aspect-ratio:1;border-radius:4px;overflow:hidden;border:1px solid var(--border);position:relative;background:var(--surf3);}
-.media-item img,.media-item video{width:100%;height:100%;object-fit:cover;}
-.media-del{position:absolute;top:4px;right:4px;background:rgba(255,59,59,0.9);border:none;border-radius:50%;width:24px;height:24px;color:#fff;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;}
+.timeline{border-left:1px solid var(--border);padding-left:20px;margin-left:10px;}
+.tl-item{position:relative;padding-bottom:20px;}
+.tl-item::before{content:'';position:absolute;left:-25px;top:5px;width:10px;height:10px;background:var(--surf);border:2px solid var(--cyan);border-radius:50%;}
+.tl-date{font-family:var(--fm);font-size:0.6rem;color:var(--muted);margin-bottom:4px;}
+.tl-content{font-size:0.82rem;background:var(--surf2);padding:10px;border-radius:2px;border:1px solid var(--border);}
 
-.chat-layout{display:grid;grid-template-columns:260px 1fr;gap:14px;height:calc(100vh - 180px);}
-.chat-list{background:var(--surf);border:1px solid var(--border);border-radius:4px;overflow-y:auto;}
-.chat-item{padding:14px;border-bottom:1px solid rgba(0,212,255,0.05);cursor:pointer;transition:background 0.15s;}
-.chat-item:hover,.chat-item.active{background:var(--cyan-dim); border-left: 3px solid var(--cyan);}
-.chat-item-name{font-size:0.85rem;font-weight:700;margin-bottom:4px;}
-.chat-item-last{font-size:0.75rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.chat-unread{background:var(--danger);color:#fff;font-family:var(--fm);font-size:0.6rem;padding:2px 6px;border-radius:10px;float:right;}
-.chat-main{background:var(--surf);border:1px solid var(--border);border-radius:4px;display:flex;flex-direction:column;}
-.chat-head{padding:16px;border-bottom:1px solid var(--border);font-family:var(--fd);font-size:1.1rem;font-weight:700;letter-spacing:1px; background:var(--surf2);}
-.chat-msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;}
-.chat-msg{max-width:75%;padding:12px 16px;border-radius:6px;font-size:0.85rem;line-height:1.5;}
-.chat-msg.admin{background:var(--surf2);border:1px solid var(--border2);align-self:flex-end; border-bottom-right-radius:0;}
-.chat-msg.cliente{background:var(--surf3);border:1px solid var(--border);align-self:flex-start; border-bottom-left-radius:0;}
-.chat-msg .ts{font-family:var(--fm);font-size:0.6rem;color:var(--muted);margin-top:6px;text-align:right;}
-.chat-foot{padding:14px;border-top:1px solid var(--border);display:flex;gap:10px; background:var(--surf2); align-items:center;}
+.media-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(120px, 1fr));gap:10px;}
+.media-item{aspect-ratio:1;background:var(--surf3);border:1px solid var(--border);border-radius:2px;overflow:hidden;position:relative;}
+.media-item img, .media-item video{width:100%;height:100%;object-fit:cover;}
+.media-del{position:absolute;top:5px;right:5px;background:var(--danger);color:#fff;border:none;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:0.7rem;}
 
-.ia-box{background:var(--surf2);border:1px solid var(--border);border-radius:4px;padding:0;display:flex;flex-direction:column;height:65vh;}
-.ia-messages{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:14px;}
-.ia-msg{padding:14px 18px;border-radius:6px;max-width:85%;font-size:0.9rem;line-height:1.6;}
-.ia-msg.user{background:var(--surf3);border:1px solid var(--border);align-self:flex-end;font-family:var(--fm);font-size:0.8rem; border-bottom-right-radius:0;}
-.ia-msg.bot{background:rgba(0,212,255,0.05);border:1px solid var(--border2);align-self:flex-start; border-bottom-left-radius:0;}
-.ia-msg.bot strong{color:var(--cyan);font-family:var(--fd);font-size:1.1rem;letter-spacing:1px;display:block;margin-bottom:6px;}
-.ia-input-area{padding:14px;border-top:1px solid var(--border);display:flex;gap:10px;background:var(--surf);}
-
-.dre-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px;}
-.dre-card{background:var(--surf);border:1px solid var(--border);border-radius:4px;padding:24px;text-align:center; box-shadow: 0 4px 12px rgba(0,0,0,0.2);}
-.dre-val{font-family:var(--fd);font-size:2.2rem;font-weight:700;margin:10px 0;}
-.dre-label{font-family:var(--fm);font-size:0.65rem;color:var(--muted);letter-spacing:2px;text-transform:uppercase;}
-.dre-card.entradas .dre-val{color:var(--success);}
-.dre-card.saidas .dre-val{color:var(--danger);}
-.dre-card.saldo .dre-val{color:var(--cyan);}
-.stock-critical{background:rgba(255,59,59,0.08);border-left:3px solid var(--danger);}
-
-@media(max-width:768px){
-  :root{--sidebar:0px;}
-  .sidebar{display:none;}
-  .topbar{padding: 14px 16px;}
-  .content{padding: 16px;}
+@media (max-width:1024px){
+  .sidebar{width:70px;}
+  .sb-logo-text, .user-info-text, .nav-text{display:none;}
+  .nav-item{justify-content:center;padding:12px;}
   .kpi-grid{grid-template-columns:1fr 1fr;}
-  .dre-grid{grid-template-columns:1fr;}
-  .form-row.cols-2, .form-row.cols-3 { grid-template-columns: 1fr !important; gap:10px; }
-  /* Chevron Scroll Horizontal mantido em mobile para não espremer */
-  .kanban-wrap{flex-direction:row; overflow-x:auto; padding-bottom:20px;}
-  .k-col{min-width:280px; width:280px; max-height: calc(100vh - 250px); margin-bottom:0;}
-  .k-col-body{max-height: 400px;}
-  .chat-layout{grid-template-columns:1fr; height: calc(100vh - 120px);}
-  .chat-list { max-height: 30vh; }
-  
-  .overlay{padding:10px; align-items:center;}
-  .modal{max-height: 90vh; display:flex; flex-direction:column;}
-  .modal-body, .tab-pane{overflow-y:auto; padding:16px;}
-  .modal-head, .modal-foot{padding:14px 16px;}
-  
-  .grid-servicos { grid-template-columns: 1fr 80px 32px; }
-  .grid-pecas { grid-template-columns: 1fr 1fr; gap:6px; background: rgba(0,0,0,0.2); padding:10px; border-radius:4px; margin-bottom:10px;}
-  .grid-pecas .peca-sel { grid-column: span 2; }
-  .cabecalho-pecas { display: none !important; }
+}
+@media (max-width:768px){
+  .layout{flex-direction:column;}
+  .sidebar{width:100%;height:auto;border-right:none;border-bottom:1px solid var(--border);}
+  .sb-nav{display:flex;overflow-x:auto;padding:5px;}
+  .nav-item{flex-direction:column;font-size:0.6rem;gap:4px;min-width:70px;}
+  .kpi-grid{grid-template-columns:1fr;}
+  .cols-2, .cols-3{grid-template-columns:1fr;}
+}
+
+/* NOVAS REGRAS CHEVRON */
+.kanban-wrap {
+    display: flex;
+    gap: 15px;
+    overflow-x: auto;
+    padding: 10px 0 20px 0;
+    min-height: calc(100vh - 250px);
+    scrollbar-width: thin;
+    scrollbar-color: var(--cyan) var(--surf);
+}
+.kanban-wrap::-webkit-scrollbar { height: 8px; }
+.kanban-wrap::-webkit-scrollbar-thumb { background: var(--cyan); border-radius: 10px; }
+.k-col {
+    min-width: 320px;
+    width: 320px;
+    flex-shrink: 0;
 }
 </style>
 </head>
 <body>
-<div id="toastBox"></div>
 
 <div class="layout">
-
-<aside class="sidebar">
-  <div class="sb-logo">
-    <div class="logo-mark"></div>
-    <div class="logo-text">
-      <div class="sb-logo-text">J.A.R.V.I.S</div>
-      <small id="sbTenantNome">Carregando...</small>
+  <aside class="sidebar">
+    <div class="sb-logo">
+      <div class="logo-mark"></div>
+      <div class="sb-logo-text">J.A.R.V.I.S <small>AUTO SHOP SYSTEM</small></div>
     </div>
-  </div>
-
-  <nav class="sb-nav">
-    <div class="nav-section-label">PRINCIPAL</div>
-    <div class="nav-item active" onclick="ir('dashboard',this)">
-      <svg viewBox="0 0 16 16"><path d="M8 4a.5.5 0 0 1 .5.5V6a.5.5 0 0 1-1 0V4.5A.5.5 0 0 1 8 4zM3.732 5.732a.5.5 0 0 1 .707 0l.915.914a.5.5 0 1 1-.708.708l-.914-.915a.5.5 0 0 1 0-.707zM2 10a.5.5 0 0 1 .5-.5h1.586a.5.5 0 0 1 0 1H2.5A.5.5 0 0 1 2 10zm9.5 0a.5.5 0 0 1 .5-.5h1.5a.5.5 0 0 1 0 1H12a.5.5 0 0 1-.5-.5zm.754-4.246a.389.389 0 0 0-.527-.02L7.547 9.31a.91.91 0 1 0 1.302 1.258l3.434-4.297a.389.389 0 0 0-.029-.518z"/><path fill-rule="evenodd" d="M0 10a8 8 0 1 1 15.547 2.661c-.442 1.253-1.845 1.602-2.932 1.25C11.309 13.488 9.475 13 8 13c-1.474 0-3.31.488-4.615.911-1.087.352-2.49.003-2.932-1.25A7.987 7.987 0 0 1 0 10zm8-7a7 7 0 0 0-6.603 9.329c.203.575.923.876 1.68.63C4.397 12.533 6.358 12 8 12s3.604.532 4.923.96c.757.245 1.477-.056 1.68-.631A7 7 0 0 0 8 3z"/></svg>
-      Dashboard
-    </div>
-    <div class="nav-item" onclick="ir('agenda',this)">
-      <svg viewBox="0 0 16 16"><path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z"/></svg>
-      Agenda
-    </div>
-    <div class="nav-item" onclick="ir('kanban',this)">
-      <svg viewBox="0 0 16 16"><path d="M13.5 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h11zm-11-1a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2h-11z"/><path d="M6.5 5a.5.5 0 0 0 0 1h4a.5.5 0 0 0 0-1h-4zm-.5 2.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5zm.5 2.5a.5.5 0 0 0 0 1h4a.5.5 0 0 0 0-1h-4zM3 5a.5.5 0 0 0 0 1h.5a.5.5 0 0 0 0-1H3zm.5 2.5A.5.5 0 0 0 3 7h.5a.5.5 0 0 0 0-1H3zm0 2.5a.5.5 0 0 1 .5-.5H4a.5.5 0 0 1 0 1h-.5a.5.5 0 0 1-.5-.5z"/></svg>
-      Pátio / O.S.
-    </div>
-
-    <div class="nav-section-label">GESTÃO</div>
-    <div class="nav-item" onclick="ir('clientes',this)">
-      <svg viewBox="0 0 16 16"><path d="M15 14s1 0 1-1-1-4-5-4-5 3-5 4 1 1 1 1h8zm-7.978-1A.261.261 0 0 1 7 12.996c.001-.264.167-1.03.76-1.72C8.312 10.629 9.282 10 11 10c1.717 0 2.687.63 3.24 1.276.593.69.758 1.457.76 1.72l-.008.002a.274.274 0 0 1-.014.002H7.022zM11 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm3-2a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM6.936 9.28a5.88 5.88 0 0 0-1.23-.247A7.35 7.35 0 0 0 5 9c-4 0-5 3-5 4 0 .667.333 1 1 1h4.216A2.238 2.238 0 0 1 5 13c0-1.01.377-2.042 1.09-2.904.243-.294.526-.569.846-.816zM4.92 10A5.493 5.493 0 0 0 4 13H1c0-.26.164-1.03.76-1.724.545-.636 1.492-1.256 3.16-1.275zM1.5 5.5a3 3 0 1 1 6 0 3 3 0 0 1-6 0zm3-2a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/></svg>
-      Clientes / Veículos
-    </div>
-    <div class="nav-item" onclick="ir('estoque',this)">
-      <svg viewBox="0 0 16 16"><path d="M0 2.5A.5.5 0 0 1 .5 2H2a.5.5 0 0 1 .485.379L2.89 4H14.5a.5.5 0 0 1 .485.621l-1.5 6A.5.5 0 0 1 13 11H4a.5.5 0 0 1-.485-.379L1.61 3H.5a.5.5 0 0 1-.5-.5zM3.14 5l1.25 5h8.22l1.25-5H3.14zM5 13a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm-2 1a2 2 0 1 1 4 0 2 2 0 0 1-4 0zm9-1a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm-2 1a2 2 0 1 1 4 0 2 2 0 0 1-4 0z"/></svg>
-      Estoque / NF
-    </div>
-    <div class="nav-item" onclick="ir('financeiro',this)">
-      <svg viewBox="0 0 16 16"><path d="M1 3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1H1zm7 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/><path fill-rule="evenodd" d="M0 5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H1a1 1 0 0 1-1-1V5zm3 1h10v6H3V6z"/></svg>
-      Financeiro / DRE
-    </div>
-    <div class="nav-item" onclick="ir('equipe',this)">
-      <svg viewBox="0 0 16 16"><path d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1H7zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path fill-rule="evenodd" d="M5.216 14A2.238 2.238 0 0 1 5 13c0-1.355.68-2.75 1.936-3.72A6.325 6.325 0 0 0 5 9c-4 0-5 3-5 4s1 1 1 1h4.216z"/><path d="M4.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"/></svg>
-      Equipe / RH
-    </div>
-
-    <div class="nav-section-label">COMUNICAÇÃO</div>
-    <div class="nav-item" onclick="ir('chat',this)">
-      <svg viewBox="0 0 16 16"><path d="M5 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm4 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 1a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/><path fill-rule="evenodd" d="m2.165 15.803.02-.004c1.83-.363 2.948-.842 3.468-1.105A9.06 9.06 0 0 0 8 15c4.418 0 8-3.134 8-7s-3.582-7-8-7-8 3.134-8 7c0 1.76.743 3.37 1.97 4.6a10.437 10.437 0 0 1-.524 2.318l-.003.011a10.722 10.722 0 0 1-.244.637c-.079.186.074.394.273.362a21.673 21.673 0 0 0 .693-.125zm.8-3.108a1 1 0 0 0-.287-.801C1.618 10.83 1 9.468 1 8c0-3.192 3.004-6 7-6s7 2.808 7 6c0 3.193-3.004 6-7 6a8.06 8.06 0 0 1-2.088-.272 1 1 0 0 0-.711.074c-.387.196-1.24.57-2.634.893a10.97 10.97 0 0 0 .398-2z"/></svg>
-      CRM Chat
-      <span class="nav-badge" id="chatBadge">0</span>
-    </div>
-
-    <div class="nav-section-label">INTELIGÊNCIA</div>
-    <div class="nav-item" onclick="ir('ia',this)">
-      <svg viewBox="0 0 16 16"><path d="M6 12.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5ZM3 8.062C3 6.76 4.235 5.765 5.53 5.886a26.58 26.58 0 0 0 4.94 0C11.765 5.765 13 6.76 13 8.062v1.157a.933.933 0 0 1-.765.935c-.845.147-2.34.346-4.235.346-1.895 0-3.39-.2-4.235-.346A.933.933 0 0 1 3 9.219V8.062Zm4.542-.827a.25.25 0 0 0-.217.068l-.92.9a24.767 24.767 0 0 1-1.339-.092c-.855-.144-1.566-.43-1.566-1.11 0-.52.53-.94 1.209-.94h6.582c.678 0 1.208.42 1.208.94 0 .68-.71.966-1.565 1.11a24.6 24.6 0 0 1-1.34.092l-.92-.9a.25.25 0 0 0-.218-.068ZM4.5 11.5A.5.5 0 0 1 5 11h6a.5.5 0 0 1 0 1H5a.5.5 0 0 1-.5-.5Z"/></svg>
-      thIAguinho IA
-    </div>
-    <div class="nav-item" onclick="ir('auditoria',this)">
-      <svg viewBox="0 0 16 16"><path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2zm3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/></svg>
-      Auditoria
-    </div>
-  </nav>
-
-  <div class="sb-user">
-    <div class="sb-user-info">
-      <div class="avatar" id="sbAvatar">G</div>
-      <div>
-        <div class="user-name" id="sbUserNome">Carregando</div>
-        <div class="user-role" id="sbUserRole">ADMIN</div>
+    <nav class="sb-nav">
+      <div class="nav-section-label">Principal</div>
+      <div class="nav-item active" onclick="ir('dashboard',this)">
+        <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+        <span class="nav-text">Dashboard</span>
       </div>
-    </div>
-    <button class="btn-sair" onclick="sair()">⏻ ENCERRAR SESSÃO</button>
-  </div>
-</aside>
-
-<div class="main">
-  <div class="topbar">
-    <div class="page-title">
-      <span id="pageSub">SISTEMA OPERACIONAL</span>
-      <span id="pageTitle">DASHBOARD</span>
-    </div>
-    <div class="topbar-actions">
-      <div class="topbar-badge"><div class="live-dot"></div> NUVEM SYNC</div>
-      <div class="topbar-badge" id="tbNicho" style="color:var(--cyan)">🚗 CARROS</div>
-    </div>
-  </div>
-
-  <div class="content">
-
-    <section class="section active" id="s-dashboard">
-      <div class="kpi-grid">
-        <div class="kpi-card c-success">
-          <div class="kpi-label">FATURAMENTO MÊS</div>
-          <div class="kpi-value" id="kFat">R$ 0</div>
-          <div class="kpi-sub">Ordens entregues/prontas</div>
-          <div class="kpi-icon">💰</div>
-        </div>
-        <div class="kpi-card c-cyan">
-          <div class="kpi-label">NO PÁTIO AGORA</div>
-          <div class="kpi-value" id="kPatio">0</div>
-          <div class="kpi-sub">Veículos na esteira</div>
-          <div class="kpi-icon">🔧</div>
-        </div>
-        <div class="kpi-card c-warn">
-          <div class="kpi-label">ESTOQUE CRÍTICO</div>
-          <div class="kpi-value" id="kStock">0</div>
-          <div class="kpi-sub">Itens abaixo do mínimo</div>
-          <div class="kpi-icon">📦</div>
-        </div>
-        <div class="kpi-card c-danger">
-          <div class="kpi-label">TÍTULOS VENCIDOS</div>
-          <div class="kpi-value" id="kVenc">0</div>
-          <div class="kpi-sub">Contas em atraso</div>
-          <div class="kpi-icon">📋</div>
+      <div class="nav-item" onclick="ir('patio',this)">
+        <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 18H4V4h16v16zM18 6h-5c-1.1 0-2 .9-2 2v2.28c-.6.35-1 .98-1 1.72 0 1.1.9 2 2 2s2-.9 2-2c0-.74-.4-1.38-1-1.72V8h3v8H8V8h2V6H6v12h12V6z"/></svg>
+        <span class="nav-text">Pátio / O.S.</span>
+      </div>
+      <div class="nav-item" onclick="ir('clientes',this)">
+        <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+        <span class="nav-text">Clientes</span>
+      </div>
+      <div class="nav-item" onclick="ir('veiculos',this)">
+        <svg viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.27-3.82c.07-.21.27-.35.49-.35h10.48c.22 0 .42.14.49.35L19 11H5z"/></svg>
+        <span class="nav-text">Veículos</span>
+      </div>
+      <div class="nav-section-label">Gestão</div>
+      <div class="nav-item" onclick="ir('estoque',this)">
+        <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 18H4V4h16v16zM13 5h-2v4H7v2h4v4h2v-4h4V9h-4z"/></svg>
+        <span class="nav-text">Estoque</span>
+      </div>
+      <div class="nav-item" onclick="ir('financeiro',this)">
+        <svg viewBox="0 0 24 24"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 1.88 1.55 3.28 3.48 3.72V21h3v-2.15c2-.41 3.51-1.55 3.51-3.5-.01-2.37-1.9-3.54-4.8-4.45z"/></svg>
+        <span class="nav-text">Financeiro</span>
+      </div>
+      <div class="nav-item" onclick="ir('equipe',this)">
+        <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+        <span class="nav-text">Equipe / RH</span>
+      </div>
+      <div class="nav-item" onclick="ir('agenda',this)">
+        <svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>
+        <span class="nav-text">Agenda</span>
+      </div>
+      <div class="nav-item" onclick="ir('chat',this)">
+        <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>
+        <span class="nav-text">Chat CRM</span>
+        <span class="nav-badge" id="chatBadge">0</span>
+      </div>
+      <div class="nav-item" onclick="ir('ia',this)">
+        <svg viewBox="0 0 24 24"><path d="M19 13H5v-2h14v2z"/></svg>
+        <span class="nav-text">thIAguinho AI</span>
+      </div>
+    </nav>
+    <div class="sb-user">
+      <div class="sb-user-info">
+        <div class="avatar" id="sbAvatar">A</div>
+        <div class="user-info-text">
+          <div class="user-name" id="sbUserNome">Admin</div>
+          <div class="user-role" id="sbUserRole">Administrador</div>
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-        <div class="j-card">
-          <div class="j-card-header">
-            <div class="j-card-title">
-              <svg viewBox="0 0 16 16" fill="var(--cyan)" width="16" height="16"><path d="M0 2.5A.5.5 0 0 1 .5 2H2a.5.5 0 0 1 .485.379L2.89 4H14.5a.5.5 0 0 1 .485.621l-1.5 6A.5.5 0 0 1 13 11H4a.5.5 0 0 1-.485-.379L1.61 3H.5a.5.5 0 0 1-.5-.5z"/></svg>
-              ÚLTIMAS O.S.
-            </div>
-          </div>
-          <div class="j-card-body" style="padding:0;">
-            <table class="j-table">
-              <thead><tr><th>Placa</th><th>Cliente</th><th>Status</th><th>Valor</th></tr></thead>
-              <tbody id="dashRecentOS"></tbody>
-            </table>
-          </div>
-        </div>
-        <div class="j-card">
-          <div class="j-card-header">
-            <div class="j-card-title">
-              <svg viewBox="0 0 16 16" fill="var(--warn)" width="16" height="16"><path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg>
-              ALERTAS ESTOQUE
-            </div>
-          </div>
-          <div class="j-card-body" style="padding:0;">
-            <table class="j-table">
-              <thead><tr><th>Peça</th><th>Atual</th><th>Mínimo</th><th>Status</th></tr></thead>
-              <tbody id="dashAlertStock"></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </section>
+      <button class="btn-sair" onclick="sair()">ENCERRAR SESSÃO</button>
+    </div>
+  </aside>
 
-    <section class="section" id="s-agenda">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-        <div></div>
-        <div style="display:flex;gap:10px;">
-          <button class="btn-primary" onclick="abrirModal('modalAgenda');prepAgenda('add')">
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/></svg>
-            NOVO AGENDAMENTO
-          </button>
-        </div>
+  <main class="main">
+    <header class="topbar">
+      <div class="page-title">
+        <span id="tbNicho">OFICINA MECÂNICA</span>
+        <div id="topNomeTenant">J.A.R.V.I.S</div>
       </div>
-      <div class="j-card">
-        <div class="j-card-body" style="padding:0;">
-          <table class="j-table">
-            <thead><tr><th>Data / Hora</th><th>Cliente</th><th>Veículo</th><th>Serviço</th><th>Mecânico</th><th>Status</th><th>Ações</th></tr></thead>
-            <tbody id="tbAgenda"></tbody>
-          </table>
+      <div class="topbar-actions">
+        <div class="topbar-badge">
+          <div class="live-dot"></div>
+          SISTEMA ONLINE
         </div>
-      </div>
-    </section>
-
-    <section class="section" id="s-kanban">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:12px;flex-wrap:wrap;">
-        <div style="display:flex;gap:10px;align-items:center;">
-          <div class="search-wrap">
-            <svg viewBox="0 0 16 16"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.099zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/></svg>
-            <input class="j-input" id="searchOS" placeholder="Buscar placa ou cliente..." oninput="window.renderKanban()">
-          </div>
-          <select class="j-select" style="width:130px" id="filtroNichoKanban" onchange="window.renderKanban()">
-            <option value="">Todos</option><option value="carro">🚗 Carros</option><option value="moto">🏍️ Motos</option><option value="bicicleta">🚲 Bicicletas</option>
-          </select>
-        </div>
-        <button class="btn-primary" onclick="abrirModal('modalOS');window.prepOS('add')">
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/></svg>
+        <button class="btn-primary" onclick="window.prepOS('add');abrirModal('modalOS')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
           NOVA O.S.
         </button>
       </div>
-      
-<div class="kanban-wrap" id="kanbanBoard">
-        <div class="k-col" data-status="Triagem"><div class="k-col-head"><span class="k-col-label">TRIAGEM</span><span class="k-col-count" id="cnt-Triagem">0</span></div><div class="k-col-body" id="kb-Triagem"></div></div>
-        <div class="k-col" data-status="Orcamento"><div class="k-col-head"><span class="k-col-label">ORÇAMENTO</span><span class="k-col-count" id="cnt-Orcamento">0</span></div><div class="k-col-body" id="kb-Orcamento"></div></div>
-        <div class="k-col" data-status="Orcamento_Enviado"><div class="k-col-head"><span class="k-col-label">ORÇ. ENVIADO</span><span class="k-col-count" id="cnt-Orcamento_Enviado">0</span></div><div class="k-col-body" id="kb-Orcamento_Enviado"></div></div>
-        <div class="k-col" data-status="Aprovado"><div class="k-col-head"><span class="k-col-label">APROVADO</span><span class="k-col-count" id="cnt-Aprovado">0</span></div><div class="k-col-body" id="kb-Aprovado"></div></div>
-        <div class="k-col" data-status="Andamento"><div class="k-col-head"><span class="k-col-label">EM SERVIÇO</span><span class="k-col-count" id="cnt-Andamento">0</span></div><div class="k-col-body" id="kb-Andamento"></div></div>
-        <div class="k-col" data-status="Pronto"><div class="k-col-head"><span class="k-col-label">PRONTO/CAIXA</span><span class="k-col-count" id="cnt-Pronto">0</span></div><div class="k-col-body" id="kb-Pronto"></div></div>
-        <div class="k-col" data-status="Entregue"><div class="k-col-head"><span class="k-col-label">ENTREGUES</span><span class="k-col-count" id="cnt-Entregue">0</span></div><div class="k-col-body" id="kb-Entregue"></div></div>
-      </div>
-    </section>
+    </header>
 
-    <section class="section" id="s-clientes">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+    <div class="content" id="mainContent">
+      
+      <!-- DASHBOARD -->
+      <section class="section active" id="s-dashboard">
+        <div class="kpi-grid">
+          <div class="kpi-card c-success">
+            <div class="kpi-label">FATURAMENTO (MÊS)</div>
+            <div class="kpi-value" id="kFat">R$ 0,00</div>
+            <div class="kpi-sub">Total concluído este mês</div>
+            <div class="kpi-icon">💰</div>
+          </div>
+          <div class="kpi-card c-cyan">
+            <div class="kpi-label">VEÍCULOS NO PÁTIO</div>
+            <div class="kpi-value" id="kPatio">0</div>
+            <div class="kpi-sub">Ordens de serviço ativas</div>
+            <div class="kpi-icon">🚗</div>
+          </div>
+          <div class="kpi-card c-warn">
+            <div class="kpi-label">ESTOQUE CRÍTICO</div>
+            <div class="kpi-value" id="kStock">0</div>
+            <div class="kpi-sub">Itens abaixo do mínimo</div>
+            <div class="kpi-icon">📦</div>
+          </div>
+          <div class="kpi-card c-danger">
+            <div class="kpi-label">CONTAS VENCIDAS</div>
+            <div class="kpi-value" id="kVenc">0</div>
+            <div class="kpi-sub">Pagamentos pendentes</div>
+            <div class="kpi-icon">⚠️</div>
+          </div>
+        </div>
+
+        <div class="form-row cols-2">
+          <div class="j-card">
+            <div class="j-card-header"><div class="j-card-title">ÚLTIMAS MOVIMENTAÇÕES</div></div>
+            <div class="j-card-body" style="padding:0;">
+              <table class="j-table">
+                <thead><tr><th>Placa</th><th>Cliente</th><th>Status</th><th>Valor</th></tr></thead>
+                <tbody id="dashRecentOS"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="j-card">
+            <div class="j-card-header"><div class="j-card-title">ALERTAS DE REPOSIÇÃO</div></div>
+            <div class="j-card-body" style="padding:0;">
+              <table class="j-table">
+                <thead><tr><th>Item</th><th>Qtd</th><th>Mín</th><th>Status</th></tr></thead>
+                <tbody id="dashAlertStock"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PATIO / KANBAN -->
+      <section class="section" id="s-patio">
+        <div class="j-card-header" style="margin-bottom:15px; background:var(--surf); border:1px solid var(--border); border-radius:3px;">
+          <div class="search-wrap">
+            <svg class="search-icon" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+            <input type="text" class="j-input search-input" id="searchOS" placeholder="Buscar por placa, cliente ou serviço..." oninput="renderKanban()">
+          </div>
+          <select class="j-select" id="filtroNichoKanban" style="width:180px" onchange="renderKanban()">
+            <option value="">Todos os Tipos</option>
+            <option value="carro">🚗 Carros</option>
+            <option value="moto">🏍️ Motos</option>
+            <option value="bicicleta">🚲 Bicicletas</option>
+          </select>
+        </div>
+
+        <div class="kanban-wrap">
+          <div class="k-col" data-status="Triagem">
+            <div class="k-col-head"><div class="k-col-label">1. TRIAGEM</div><div class="k-col-count" id="cnt-Triagem">0</div></div>
+            <div class="k-col-body" id="kb-Triagem"></div>
+          </div>
+          <div class="k-col" data-status="Orcamento">
+            <div class="k-col-head"><div class="k-col-label">2. ORÇAMENTO</div><div class="k-col-count" id="cnt-Orcamento">0</div></div>
+            <div class="k-col-body" id="kb-Orcamento"></div>
+          </div>
+          <div class="k-col" data-status="Orcamento_Enviado">
+            <div class="k-col-head"><div class="k-col-label">3. ENVIADO</div><div class="k-col-count" id="cnt-Orcamento_Enviado">0</div></div>
+            <div class="k-col-body" id="kb-Orcamento_Enviado"></div>
+          </div>
+          <div class="k-col" data-status="Aprovado">
+            <div class="k-col-head"><div class="k-col-label">4. APROVADO</div><div class="k-col-count" id="cnt-Aprovado">0</div></div>
+            <div class="k-col-body" id="kb-Aprovado"></div>
+          </div>
+          <div class="k-col" data-status="Andamento">
+            <div class="k-col-head"><div class="k-col-label">5. EXECUÇÃO</div><div class="k-col-count" id="cnt-Andamento">0</div></div>
+            <div class="k-col-body" id="kb-Andamento"></div>
+          </div>
+          <div class="k-col" data-status="Pronto">
+            <div class="k-col-head"><div class="k-col-label">6. PRONTO</div><div class="k-col-count" id="cnt-Pronto">0</div></div>
+            <div class="k-col-body" id="kb-Pronto"></div>
+          </div>
+          <div class="k-col" data-status="Entregue">
+            <div class="k-col-head"><div class="k-col-label">7. ENTREGUE</div><div class="k-col-count" id="cnt-Entregue">0</div></div>
+            <div class="k-col-body" id="kb-Entregue"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CLIENTES -->
+      <section class="section" id="s-clientes">
         <div class="j-card">
           <div class="j-card-header">
-            <div class="j-card-title">CLIENTES B2C</div>
-            <button class="btn-primary" onclick="abrirModal('modalCliente');prepCliente('add')">+ NOVO</button>
+            <div class="j-card-title">BASE DE CLIENTES</div>
+            <button class="btn-primary" onclick="prepCliente('add');abrirModal('modalCliente')">+ NOVO CLIENTE</button>
           </div>
           <div class="j-card-body" style="padding:0;">
             <table class="j-table">
-              <thead><tr><th>Nome</th><th>WhatsApp</th><th>Veículos</th><th>Ações</th></tr></thead>
+              <thead><tr><th>Nome / Razão</th><th>WhatsApp</th><th>Veículos</th><th>Ações</th></tr></thead>
               <tbody id="tbClientes"></tbody>
             </table>
           </div>
         </div>
+      </section>
+
+      <!-- VEICULOS -->
+      <section class="section" id="s-veiculos">
         <div class="j-card">
           <div class="j-card-header">
-            <div class="j-card-title">VEÍCULOS CADASTRADOS</div>
-            <button class="btn-primary" onclick="abrirModal('modalVeiculo');prepVeiculo('add')">+ NOVO</button>
+            <div class="j-card-title">FROTA CADASTRADA</div>
+            <button class="btn-primary" onclick="prepVeiculo('add');abrirModal('modalVeiculo')">+ NOVO VEÍCULO</button>
           </div>
           <div class="j-card-body" style="padding:0;">
             <table class="j-table">
-              <thead><tr><th>Placa</th><th>Tipo</th><th>Modelo</th><th>Dono</th><th>KM</th><th>Ações</th></tr></thead>
+              <thead><tr><th>Placa</th><th>Tipo</th><th>Modelo</th><th>Proprietário</th><th>KM Atual</th><th>Ações</th></tr></thead>
               <tbody id="tbVeiculos"></tbody>
             </table>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <section class="section" id="s-estoque">
-      <div style="display:grid;grid-template-columns:1fr 360px;gap:16px;">
+      <!-- ESTOQUE -->
+      <section class="section" id="s-estoque">
         <div class="j-card">
           <div class="j-card-header">
-            <div class="j-card-title">INVENTÁRIO DE PEÇAS</div>
+            <div class="j-card-title">CONTROLE DE ESTOQUE</div>
             <div style="display:flex;gap:8px;">
-              <button class="btn-success" onclick="abrirModal('modalNF');window.prepNF()">+ ENTRADA NF</button>
-              <bu<button class="btn-primary" id="btnRegistrarOS" onclick="abrirModal('modalOS');prepOS('add')">+ NOVA O.S.</button>>
+              <button class="btn-outline" onclick="abrirModal('modalNF');prepNF()">📦 IMPORTAR XML</button>
+              <button class="btn-primary" onclick="prepPeca('add');abrirModal('modalPeca')">+ ADICIONAR ITEM</button>
             </div>
           </div>
           <div class="j-card-body" style="padding:0;">
             <table class="j-table">
-              <thead><tr><th>Ref / Código</th><th>Descrição</th><th>Custo</th><th>Venda</th><th>Qtd</th><th>Mín</th><th>Status</th><th>Ações</th></tr></thead>
+              <thead><tr><th>Cód</th><th>Descrição</th><th>Custo</th><th>Venda</th><th>Qtd</th><th>Mín</th><th>Status</th><th>Ações</th></tr></thead>
               <tbody id="tbEstoque"></tbody>
             </table>
           </div>
         </div>
-        <div class="j-card">
-          <div class="j-card-header"><div class="j-card-title">FORNECEDORES</div><button class="btn-primary" onclick="abrirModal('modalFornec')">+ NOVO</button></div>
-          <div class="j-card-body" style="padding:0;"><table class="j-table"><thead><tr><th>Razão Social</th><th>Segmento</th><th>Ações</th></tr></thead><tbody id="tbFornec"></tbody></table></div>
-        </div>
-      </div>
-    </section>
+      </section>
 
-    <section class="section" id="s-financeiro">
-      <div class="dre-grid">
-        <div class="dre-card entradas">
-          <div class="dre-label">RECEITAS PAGAS</div>
-          <div class="dre-val" id="dreEntradas">R$ 0,00</div>
-        </div>
-        <div class="dre-card saidas">
-          <div class="dre-label">DESPESAS PAGAS</div>
-          <div class="dre-val" id="dreSaidas">R$ 0,00</div>
-        </div>
-        <div class="dre-card saldo">
-          <div class="dre-label">SALDO LÍQUIDO</div>
-          <div class="dre-val" id="dreSaldo">R$ 0,00</div>
-        </div>
-      </div>
-      <div class="j-card">
-        <div class="j-card-header">
-          <div class="j-card-title">FLUXO DE CAIXA E TÍTULOS</div>
-          <div style="display:flex;gap:8px;align-items:center;">
-            <select class="j-select" style="width:120px" id="filtroFinTipo" onchange="window.renderFinanceiro()"><option value="">Todos</option><option value="Entrada">Receitas</option><option value="Saída">Despesas</option></select>
-            <select class="j-select" style="width:130px" id="filtroFinStatus" onchange="window.renderFinanceiro()"><option value="">Todos</option><option value="Pago">Liquidado</option><option value="Pendente">Pendente</option></select>
-            <input type="date" class="j-input" style="width:130px" id="filtroFinInicio" onchange="window.renderFinanceiro()" title="Data Início">
-            <input type="date" class="j-input" style="width:130px" id="filtroFinFim" onchange="window.renderFinanceiro()" title="Data Fim">
-            <button class="btn-primary" onclick="abrirModal('modalFin');window.prepFin()">+ LANÇAMENTO</button>
+      <!-- FINANCEIRO -->
+      <section class="section" id="s-financeiro">
+        <div class="kpi-grid">
+          <div class="kpi-card c-success">
+            <div class="kpi-label">ENTRADAS (PAGO)</div>
+            <div class="kpi-value" id="dreEntradas">R$ 0,00</div>
+          </div>
+          <div class="kpi-card c-danger">
+            <div class="kpi-label">SAÍDAS (PAGO)</div>
+            <div class="kpi-value" id="dreSaidas">R$ 0,00</div>
+          </div>
+          <div class="kpi-card c-cyan">
+            <div class="kpi-label">SALDO LÍQUIDO</div>
+            <div class="kpi-value" id="dreSaldo">R$ 0,00</div>
           </div>
         </div>
-        <div class="j-card-body" style="padding:0;"><table class="j-table"><thead><tr><th>Vencimento</th><th>Tipo</th><th>Descrição</th><th>Pagamento</th><th>Valor</th><th>Status</th><th>Ações</th></tr></thead><tbody id="tbFinanceiro"></tbody></table></div>
-      </div>
-    </section>
 
-    <section class="section" id="s-equipe">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
         <div class="j-card">
           <div class="j-card-header">
-            <div class="j-card-title">EQUIPE TÉCNICA</div>
-            <div style="display:flex;gap:8px;">
-                <button class="btn-warn" onclick="abrirModal('modalPgtoRH');window.prepPgtoRH()">💸 VALES/PGTOS</button>
-                <button class="btn-primary" onclick="abrirModal('modalFunc');prepFunc('add')">+ CONTRATAR</button>
+            <div class="j-card-title">FLUXO DE CAIXA</div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <select id="filtroFinTipo" class="j-select" style="width:120px" onchange="renderFinanceiro()">
+                <option value="">Tipo...</option><option value="Entrada">Entrada</option><option value="Saída">Saída</option>
+              </select>
+              <select id="filtroFinStatus" class="j-select" style="width:120px" onchange="renderFinanceiro()">
+                <option value="">Status...</option><option value="Pago">Pago</option><option value="Pendente">Pendente</option>
+              </select>
+              <input type="date" id="filtroFinInicio" class="j-input" style="width:130px" onchange="renderFinanceiro()">
+              <input type="date" id="filtroFinFim" class="j-input" style="width:130px" onchange="renderFinanceiro()">
+              <button class="btn-primary" onclick="prepFin();abrirModal('modalFin')">+ LANÇAMENTO</button>
             </div>
           </div>
-          <div class="j-card-body" style="padding:0;"><table class="j-table"><thead><tr><th>Colaborador</th><th>Cargo</th><th>Login</th><th>Comissão%</th><th>Ações</th></tr></thead><tbody id="tbEquipe"></tbody></table></div>
+          <div class="j-card-body" style="padding:0;">
+            <table class="j-table">
+              <thead><tr><th>Vencimento</th><th>Tipo</th><th>Descrição</th><th>Pagamento</th><th>Valor</th><th>Status</th><th>Ações</th></tr></thead>
+              <tbody id="tbFinanceiro"></tbody>
+            </table>
+          </div>
         </div>
+      </section>
+
+      <!-- EQUIPE / RH -->
+      <section class="section" id="s-equipe">
+        <div class="form-row cols-2">
+          <div class="j-card">
+            <div class="j-card-header">
+              <div class="j-card-title">EQUIPE TÉCNICA</div>
+              <div style="display:flex;gap:8px;">
+                  <button class="btn-warn" onclick="abrirModal('modalPgtoRH');window.prepPgtoRH()">💸 VALES/PGTOS</button>
+                  <button class="btn-primary" onclick="abrirModal('modalFunc');prepFunc('add')">+ CONTRATAR</button>
+              </div>
+            </div>
+            <div class="j-card-body" style="padding:0;"><table class="j-table"><thead><tr><th>Colaborador</th><th>Cargo</th><th>Login</th><th>Comissão%</th><th>Ações</th></tr></thead><tbody id="tbEquipe"></tbody></table></div>
+          </div>
+          <div class="j-card">
+            <div class="j-card-header"><div class="j-card-title" style="color:var(--success)">COMISSÕES A PAGAR</div></div>
+            <div class="j-card-body" id="boxComissoes"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CHAT CRM -->
+      <section class="section" id="s-chat">
+        <div class="chat-layout">
+          <div class="chat-list">
+            <div class="chat-tabs" style="display:flex; border-bottom:1px solid var(--border);">
+              <div class="chat-tab active" onclick="switchChatTab(this, 'listaClientes')" style="flex:1; padding:10px; text-align:center; cursor:pointer; font-family:var(--fm); font-size:0.7rem; color:var(--cyan);">CLIENTES</div>
+              <div class="chat-tab" onclick="switchChatTab(this, 'listaEquipe')" style="flex:1; padding:10px; text-align:center; cursor:pointer; font-family:var(--fm); font-size:0.7rem; color:var(--muted);">EQUIPE</div>
+            </div>
+            <div id="listaClientes" class="chat-list-content active">
+              <div id="chatLista"></div>
+            </div>
+            <div id="listaEquipe" class="chat-list-content" style="display:none;">
+              <div id="chatListaEquipe"></div>
+            </div>
+          </div>
+          <div class="chat-main">
+            <div class="chat-head" id="chatHead">Selecione um chat</div>
+            <div class="chat-msgs" id="chatMsgs"></div>
+            <div class="chat-foot" id="chatFoot" style="display:none;">
+              <button class="btn-ghost" id="btnPTT" title="Gravar Áudio" onclick="toggleMicrofone()">🎤</button>
+              <button class="btn-ghost" onclick="document.getElementById('chatFile').click()">📎</button>
+              <input type="file" id="chatFile" style="display:none" onchange="enviarArquivoChat(this)">
+              <input class="j-input" id="chatInput" placeholder="Responder...">
+              <button class="btn-primary" onclick="enviarChat()">ENVIAR</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- thIAguinho AI -->
+      <section class="section" id="s-ia">
         <div class="j-card">
-          <div class="j-card-header"><div class="j-card-title" style="color:var(--success)">COMISSÕES A PAGAR</div></div>
-          <div class="j-card-body" id="boxComissoes"></div>
-        </div>
-      </div>
-    </section>
-
-    <section class="section" id="s-chat">
-      <div class="chat-layout">
-        <div class="chat-list" id="chatLista"></div>
-        <div class="chat-main">
-          <div class="chat-head" id="chatHead">Selecione um cliente</div>
-          <div class="chat-msgs" id="chatMsgs" style="display:flex;flex-direction:column;gap:8px;padding:15px;overflow-y:auto;background:rgba(0,0,0,0.2);border-radius:4px;min-height:300px;"></div>
-          <div class="chat-foot" id="chatFoot" style="display:none; gap:8px; align-items:center;">
-            <button class="btn-ghost" id="btnPTT" title="Gravar Áudio" style="padding:8px; border-radius:50%; transition:all 0.2s;" onclick="toggleMicrofone()">
-              <svg id="micIcon" style="width:18px;height:18px;"><path fill="currentColor" d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path fill="currentColor" d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
-            </button>
-            <button class="btn-ghost" onclick="document.getElementById('chatFile').click()" title="Anexar Arquivo" style="padding:8px; border-radius:50%;"><svg style="width:18px;height:18px;"><path fill="currentColor" d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V5c0-2.21-1.79-4-4-4S7 2.79 7 5v12.5c0 3.31 2.69 6 6 6s6-2.69 6-6V6h-1.5z"/></svg></button>
-            <input type="file" id="chatFile" style="display:none" onchange="enviarArquivoChat(this)">
-            <input class="j-input" id="chatInput" placeholder="Responder..." style="flex:1;">
-            <button class="btn-primary" onclick="enviarChat()">ENVIAR</button>
+          <div class="j-card-header">
+            <div class="j-card-title" style="color:var(--warn)">thIAguinho — DIAGNÓSTICO INTELIGENTE</div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn-warn" onclick="iaAnalisarDRE()">📊 ANALISAR DRE</button>
+              <button class="btn-warn" onclick="iaAnalisarEstoque()">📦 ANALISAR ESTOQUE</button>
+            </div>
+          </div>
+          <div class="ia-box">
+            <div class="ia-messages" id="iaMsgs">
+              <div class="ia-msg bot"><strong>thIAguinho:</strong> Sistema operacional. Tenho acesso à base de dados da oficina. Posso analisar histórico de O.S., estoque crítico, fluxo de caixa e sugerir diagnósticos. O que deseja?</div>
+            </div>
+            <div class="ia-input-area">
+              <input class="j-input" id="iaInput" placeholder="Ex: A placa ABC-1234 trocou óleo há menos de 3000km?" style="flex:1;">
+              <button class="btn-primary" onclick="iaPerguntar()">PROCESSAR</button>
+            </div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <section class="section" id="s-ia">
-      <div class="j-card">
-        <div class="j-card-header">
-          <div class="j-card-title" style="color:var(--warn)">thIAguinho — DIAGNÓSTICO INTELIGENTE</div>
-          <div style="display:flex;gap:8px;">
-            <button class="btn-warn" onclick="iaAnalisarDRE()">📊 ANALISAR DRE</button>
-            <button class="btn-warn" onclick="iaAnalisarEstoque()">📦 ANALISAR ESTOQUE</button>
+      <!-- AUDITORIA -->
+      <section class="section" id="s-auditoria">
+        <div class="j-card">
+          <div class="j-card-header"><div class="j-card-title">LOG GLOBAL DE AUDITORIA</div></div>
+          <div class="j-card-body" style="padding:0;"><table class="j-table"><thead><tr><th>Data/Hora</th><th>Módulo</th><th>Usuário</th><th>Ação</th></tr></thead><tbody id="tbAuditoria"></tbody></table></div>
+        </div>
+      </section>
+
+      <!-- AGENDA -->
+      <section class="section" id="s-agenda">
+        <div class="j-card">
+          <div class="j-card-header">
+            <div class="j-card-title">AGENDA DE SERVIÇOS</div>
+            <button class="btn-primary" onclick="prepAgenda('add');abrirModal('modalAgenda')">+ NOVO AGENDAMENTO</button>
+          </div>
+          <div class="j-card-body" style="padding:0;">
+            <table class="j-table">
+              <thead><tr><th>Data/Hora</th><th>Cliente</th><th>Placa</th><th>Serviço</th><th>Mecânico</th><th>Status</th><th>Ações</th></tr></thead>
+              <tbody id="tbAgenda"></tbody>
+            </table>
           </div>
         </div>
-        <div class="ia-box">
-          <div class="ia-messages" id="iaMsgs">
-            <div class="ia-msg bot"><strong>thIAguinho:</strong> Sistema operacional. Tenho acesso à base de dados da oficina. Posso analisar histórico de O.S., estoque crítico, fluxo de caixa e sugerir diagnósticos. O que deseja?</div>
-          </div>
-          <div class="ia-input-area">
-            <input class="j-input" id="iaInput" placeholder="Ex: A placa ABC-1234 trocou óleo há menos de 3000km?" style="flex:1;">
-            <button class="btn-primary" onclick="iaPerguntar()">PROCESSAR</button>
-          </div>
-        </div>
-      </div>
-    </section>
+      </section>
 
-    <section class="section" id="s-auditoria">
-      <div class="j-card">
-        <div class="j-card-header"><div class="j-card-title">LOG GLOBAL DE AUDITORIA</div></div>
-        <div class="j-card-body" style="padding:0;"><table class="j-table"><thead><tr><th>Data/Hora</th><th>Módulo</th><th>Usuário</th><th>Ação</th></tr></thead><tbody id="tbAuditoria"></tbody></table></div>
-      </div>
-    </section>
-
-  </div>
-</div>
+    </div>
+  </main>
 </div>
 
+<!-- MODAL O.S. -->
 <div class="overlay" id="modalOS">
 <div class="modal" style="max-width:980px;">
   <div class="modal-head">
-    <div class="modal-title">
-      <svg viewBox="0 0 16 16"><path d="M1 2a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v8a2 2 0 0 1 2 2v.5a.5.5 0 0 0 1 0V2h-.5a.5.5 0 0 1 0-1H15v1h-.5a.5.5 0 0 1 0 1H14v10.5a1.5 1.5 0 0 1-3 0V10a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v6h10v1H2a2 2 0 0 1-2-2V2z"/></svg>
-      FICHA TÉCNICA O.S.
-    </div>
+    <div class="modal-title">FICHA TÉCNICA O.S.</div>
     <div style="display:flex;align-items:center;gap:12px;">
-      <span class="pill pill-cyan" id="osIdBadge" style="font-size:0.7rem;letter-spacing:2px;">NOVA</span>
+      <span class="pill pill-cyan" id="osIdBadge">NOVA</span>
       <button class="modal-close" onclick="fecharModal('modalOS')">✕</button>
     </div>
   </div>
@@ -634,14 +633,10 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
     <div class="mtab" onclick="switchTab(this,'tabOS3','tabOS1','tabOS2')">3. AUDITORIA (TIMELINE)</div>
   </div>
   <div class="tab-pane active" id="tabOS1">
-    
     <div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
-      <button id="btnEnviarWppOS" type="button" class="btn-primary" style="display:none;background:#25D366;color:#fff;" onclick="window.enviarWppB2C($v('osId'))">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="margin-right:4px;"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.052 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-        ENVIAR ORÇAMENTO (B2C)
-      </button>
+      <button id="btnEnviarWppOS" type="button" class="btn-primary" style="display:none;background:#25D366;color:#fff;" onclick="window.enviarWppB2C($v('osId'))">ENVIAR ORÇAMENTO (B2C)</button>
     </div>
-
+    <input type="hidden" id="osId">
     <div class="form-row cols-2">
       <div class="form-group">
         <label class="j-label">Tipo de Veículo</label>
@@ -650,875 +645,274 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
         </select>
       </div>
       <div class="form-group">
-        <label class="j-label">Status Kanban</label>
-<select class="j-select" id="osStatus" onchange="window.verificarStatusOS()">
-          <option value="Triagem">Triagem / Avaliação</option>
-          <option value="Orcamento">Em Orçamento</option>
-          <option value="Orcamento_Enviado">Orçamento Enviado (Aguard. Aprovação)</option>
-          <option value="Aprovado">Aprovado (Fila de Serviço)</option>
-          <option value="Andamento">Em Serviço / Execução</option>
-          <option value="Pronto">Pronto para Retirada / Caixa</option>
-          <option value="Entregue">Veículo Entregue (Concluído)</option>
-          <option value="Cancelado">Cancelado</option>
-        </select>
+        <label class="j-label">Placa / Identificação</label>
+        <input class="j-input" id="osPlaca" placeholder="ABC-1234" style="text-transform:uppercase">
       </div>
     </div>
     <div class="form-row cols-2">
       <div class="form-group">
-        <label class="j-label">Cliente Proprietário</label>
-        <div style="display:flex;gap:8px;">
-          <select class="j-select" id="osCliente" onchange="window.filtrarVeiculosOS()"></select>
-          <button class="btn-outline" onclick="abrirModal('modalCliente');prepCliente('add')" title="Novo cliente">+</button>
-        </div>
+        <label class="j-label">Cliente</label>
+        <select class="j-select" id="osCliente" onchange="window.filtrarVeiculosOS()"></select>
       </div>
       <div class="form-group">
-        <label class="j-label">Veículo Vinculado</label>
-        <div style="display:flex;gap:8px;">
-          <select class="j-select" id="osVeiculo"></select>
-          <button class="btn-outline" onclick="abrirModal('modalVeiculo');prepVeiculo('add')" title="Novo veículo">+</button>
-        </div>
+        <label class="j-label">Veículo (Modelo)</label>
+        <select class="j-select" id="osVeiculo"></select>
       </div>
     </div>
     <div class="form-row cols-3">
+      <div class="form-group"><label class="j-label">KM Atual</label><input type="number" class="j-input" id="osKm"></div>
+      <div class="form-group"><label class="j-label">Data Entrada</label><input type="date" class="j-input" id="osData"></div>
       <div class="form-group">
-        <label class="j-label">Mecânico Responsável</label>
-        <select class="j-select" id="osMec"><option value="">Não atribuído</option></select>
-      </div>
-      <div class="form-group">
-        <label class="j-label">Data de Entrada</label>
-        <input type="date" class="j-input" id="osData">
-      </div>
-      <div class="form-group">
-        <label class="j-label">KM Entrada</label>
-        <input type="number" class="j-input" id="osKm" placeholder="Ex: 45000">
+        <label class="j-label">Status</label>
+        <select class="j-select" id="osStatus">
+          <option value="Triagem">1. Triagem</option>
+          <option value="Orcamento">2. Orçamento</option>
+          <option value="Orcamento_Enviado">3. Orçamento Enviado</option>
+          <option value="Aprovado">4. Aprovado / Box</option>
+          <option value="Andamento">5. Em Execução</option>
+          <option value="Pronto">6. Pronto / Teste</option>
+          <option value="Entregue">7. Entregue / Faturado</option>
+        </select>
       </div>
     </div>
-    <div class="form-group">
-      <label class="j-label">Defeito Reclamado / Queixa do Cliente</label>
-      <textarea class="j-textarea" id="osDescricao" rows="2" placeholder="Descreva o problema reclamado pelo cliente..."></textarea>
-    </div>
-    <div class="form-group">
-      <label class="j-label">Diagnóstico Técnico (Interno)</label>
-      <textarea class="j-textarea" id="osDiagnostico" rows="2" placeholder="Diagnóstico da equipe técnica após avaliação..."></textarea>
+    <div class="form-group"><label class="j-label">Relato do Cliente / Diagnóstico</label><textarea class="j-textarea" id="osRelato"></textarea></div>
+    
+    <div style="margin-top:20px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <h4 style="font-family:var(--fd);font-size:0.9rem;letter-spacing:1px;">MÃO DE OBRA & SERVIÇOS</h4>
+        <button type="button" class="btn-outline" style="font-size:0.6rem;" onclick="window.adicionarServicoOS()">+ SERVIÇO</button>
+      </div>
+      <div id="containerServicosOS"></div>
     </div>
 
-    <div style="background:var(--surf3);border:1px solid rgba(0,212,255,0.15);border-radius:3px;padding:18px;margin-top:12px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-        <div style="font-family:var(--fd);font-size:1rem;font-weight:700;color:var(--cyan);">SERVIÇOS / MÃO DE OBRA</div>
-        <button type="button" class="btn-outline" onclick="window.adicionarServicoOS()">+ ADICIONAR SERVIÇO</button>
+    <div style="margin-top:20px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <h4 style="font-family:var(--fd);font-size:0.9rem;letter-spacing:1px;">PEÇAS & COMPONENTES</h4>
+        <button type="button" class="btn-outline" style="font-size:0.6rem;" onclick="window.adicionarPecaOS()">+ PEÇA</button>
       </div>
-      <div id="containerServicosOS" style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px;"></div>
+      <div id="containerPecasOS"></div>
     </div>
 
-    <div style="background:var(--surf3);border:1px solid rgba(0,255,136,0.15);border-radius:3px;padding:18px;margin-top:12px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-        <div style="font-family:var(--fd);font-size:1rem;font-weight:700;color:var(--success);">PEÇAS DO ESTOQUE</div>
-        <button type="button" class="btn-success" onclick="window.adicionarPecaOS()">+ ADICIONAR PEÇA</button>
-      </div>
-      <div class="cabecalho-pecas" style="display:grid;grid-template-columns:1fr 80px 90px 90px 32px;gap:8px;margin-bottom:6px;font-family:var(--fm);font-size:0.65rem;color:var(--muted);text-transform:uppercase;font-weight:bold;">
-        <div>Peça / Produto</div><div>Qtd</div><div>Custo(R$)</div><div>Venda(R$)</div><div>Del</div>
-      </div>
-      <div id="containerPecasOS" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;"></div>
-      
-      <div style="display:flex;justify-content:flex-end;align-items:center;gap:20px;padding:14px;background:rgba(0,255,136,0.05);border-radius:3px;border:1px dashed rgba(0,255,136,0.2);">
-        <span style="font-family:var(--fm);font-size:0.7rem;color:var(--muted);">TOTAL DA O.S.:</span>
-        <span style="font-family:var(--fd);font-size:2rem;font-weight:700;color:var(--success);">R$ <span id="osTotalVal">0,00</span></span>
-        <input type="hidden" id="osTotalHidden" value="0">
-      </div>
-    </div>
-
-    <div id="areaPgtoOS" style="display:none;background:rgba(0,212,255,0.04);border:1px solid rgba(0,212,255,0.2);border-radius:3px;padding:18px;margin-top:12px;">
-      <div style="font-family:var(--fd);font-size:1rem;font-weight:700;color:var(--cyan);margin-bottom:14px;">FECHO NO CAIXA E RECEBIMENTO</div>
+    <div id="areaPgtoOS" style="margin-top:20px; padding:15px; background:rgba(0,255,136,0.03); border:1px solid rgba(0,255,136,0.1); border-radius:3px; display:none;">
+      <h4 style="font-family:var(--fd);font-size:0.9rem;letter-spacing:1px;margin-bottom:12px;color:var(--success)">FECHAMENTO FINANCEIRO</h4>
       <div class="form-row cols-3">
-        <div class="form-group"><label class="j-label">Forma de Pagamento</label>
+        <div class="form-group">
+          <label class="j-label">Forma de Pgto</label>
           <select class="j-select" id="osPgtoForma" onchange="window.checkPgtoOS()">
-            <option value="">Ainda não pago...</option>
-            <option value="Dinheiro">Dinheiro</option><option value="PIX">PIX</option>
-            <option value="Débito">Cartão Débito</option><option value="Crédito à Vista">Crédito à Vista</option>
-            <option value="Crédito Parcelado">Crédito Parcelado</option><option value="Boleto">Boleto (Pendente)</option>
+            <option value="Dinheiro">Dinheiro</option><option value="PIX">PIX</option><option value="Débito">Cartão Débito</option><option value="Crédito à Vista">Crédito à Vista</option><option value="Crédito Parcelado">Crédito Parcelado</option><option value="Boleto">Boleto / Faturado</option>
           </select>
         </div>
-        <div class="form-group"><label class="j-label">Data do Pagamento</label><input type="date" class="j-input" id="osPgtoData"></div>
-        <div class="form-group" id="divParcelasOS" style="display:none;"><label class="j-label">Parcelas</label>
-          <select class="j-select" id="osPgtoParcelas"><option value="2">2x</option><option value="3">3x</option><option value="4">4x</option><option value="6">6x</option><option value="10">10x</option><option value="12">12x</option></select>
-        </div>
-      </div>
-      <div class="form-row cols-2">
-        <div class="form-group"><label class="j-label">Próxima Revisão — Data</label><input type="date" class="j-input" id="osProxRev"></div>
-        <div class="form-group"><label class="j-label">Próxima Revisão — KM</label><input type="number" class="j-input" id="osProxKm" placeholder="KM para retornar"></div>
+        <div class="form-group" id="divParcelasOS" style="display:none;"><label class="j-label">Parcelas</label><input type="number" class="j-input" id="osPgtoParcelas" value="1" min="1"></div>
+        <div class="form-group"><label class="j-label">Data do Recebimento</label><input type="date" class="j-input" id="osPgtoData"></div>
       </div>
     </div>
   </div>
-
   <div class="tab-pane" id="tabOS2">
-    <div style="background:var(--surf3);border:1px solid var(--border);border-radius:3px;padding:16px;margin-bottom:16px;">
-      <div style="font-family:var(--fd);font-weight:700;margin-bottom:12px;color:var(--cyan);">GALERIA DE PROVAS (CLOUDINARY)</div>
-      <div style="display:flex;gap:10px;margin-bottom:14px;">
-        <input type="file" class="j-input" id="osFileInput" accept="image/*,video/*" capture="environment" style="flex:1;">
-        <button class="btn-primary" onclick="window.uploadOsMedia()" id="btnUploadMedia">UPLOAD</button>
+    <div class="form-row cols-2">
+      <div class="form-group">
+        <label class="j-label">Mecânico Responsável</label>
+        <select class="j-select" id="osMec"></select>
       </div>
+      <div class="form-group">
+        <label class="j-label">Combustível</label>
+        <select class="j-select" id="chkComb">
+          <option value="Vazio">Vazio</option><option value="1/4">1/4</option><option value="1/2">1/2</option><option value="3/4">3/4</option><option value="Cheio">Cheio</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="j-label">Checklist Rápido</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <label style="display:flex;align-items:center;gap:8px;font-size:0.75rem;"><input type="checkbox" id="chkPainel"> Luzes de Painel OK</label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:0.75rem;"><input type="checkbox" id="chkPressao"> Pressão Pneus OK</label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:0.75rem;"><input type="checkbox" id="chkCarroceria"> Sem Riscos/Amassados</label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:0.75rem;"><input type="checkbox" id="chkDocumentos"> Documentos no Veículo</label>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="j-label">Fotos & Vídeos da O.S.</label>
+      <button type="button" class="btn-outline" style="width:100%; margin-bottom:12px;" onclick="window.abrirCloudinaryOS()">+ SUBIR MÍDIA (CLOUDINARY)</button>
       <div class="media-grid" id="osMediaGrid"></div>
       <input type="hidden" id="osMediaArray" value="[]">
     </div>
-    <div style="background:var(--surf3);border:1px solid var(--border);border-radius:3px;padding:16px;">
-      <div style="font-family:var(--fd);font-weight:700;margin-bottom:12px;color:var(--warn);">CHECKLIST DE ENTREGA</div>
-      <div class="form-row cols-3">
-        <div class="form-group"><label class="j-label">Pneu Dianteiro Desgaste %</label><input type="number" class="j-input" id="chkPneuDia" placeholder="0-100" max="100"></div>
-        <div class="form-group"><label class="j-label">Pneu Traseiro Desgaste %</label><input type="number" class="j-input" id="chkPneuTra" placeholder="0-100" max="100"></div>
-        <div class="form-group"><label class="j-label">Nível Combustível</label>
-          <select class="j-select" id="chkComb"><option>N/A</option><option>Reserva</option><option>1/4</option><option>Meio</option><option>3/4</option><option>Cheio</option></select>
-        </div>
-      </div>
-      <div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:14px;">
-        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.82rem;">
-          <input type="checkbox" id="chkPainel" style="accent-color:var(--cyan);"> Painel / Instrumentos OK
-        </label>
-        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.82rem;">
-          <input type="checkbox" id="chkPressao" style="accent-color:var(--cyan);"> Pressão Pneus OK
-        </label>
-        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.82rem;">
-          <input type="checkbox" id="chkCarroceria" style="accent-color:var(--cyan);"> Carroceria/Carenagem OK
-        </label>
-        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.82rem;">
-          <input type="checkbox" id="chkDocumentos" style="accent-color:var(--cyan);"> Documentos OK
-        </label>
-      </div>
-      <div class="form-group"><label class="j-label">Avarias Prévias / Observações de Entrega</label><textarea class="j-textarea" id="chkObs" rows="3" placeholder="Arranhões, amassados, acessórios ausentes..."></textarea></div>
-    </div>
   </div>
-
   <div class="tab-pane" id="tabOS3">
     <div class="timeline" id="osTimeline"></div>
+    <input type="hidden" id="osTimelineData" value="[]">
   </div>
-
   <div class="modal-foot">
-    <button class="btn-ghost" id="btnGerarPDFOS" style="display:none;" onclick="window.gerarPDFOS()">📄 EXPORTAR LAUDO PDF</button>
+    <div style="flex:1; display:flex; align-items:center; gap:10px;">
+      <span style="font-family:var(--fm); font-size:0.7rem; color:var(--muted);">TOTAL ESTIMADO:</span>
+      <span style="font-family:var(--fd); font-size:1.4rem; font-weight:700; color:var(--success);" id="osTotalVal">R$ 0,00</span>
+      <input type="hidden" id="osTotalHidden" value="0">
+    </div>
     <button class="btn-ghost" onclick="fecharModal('modalOS')">CANCELAR</button>
-    <button class="btn-primary" id="btnSalvarOS" onclick="window.salvarOS()">REGISTRAR O.S.</button>
+    <button class="btn-primary" onclick="window.salvarOS()">REGISTRAR O.S.</button>
   </div>
-  <input type="hidden" id="osId">
-  <input type="hidden" id="osTimelineData" value="[]">
 </div>
 </div>
 
+<!-- OUTROS MODAIS -->
 <div class="overlay" id="modalCliente">
-<div class="modal" style="max-width:500px;">
-  <div class="modal-head"><div class="modal-title">CLIENTE B2C</div><button class="modal-close" onclick="fecharModal('modalCliente')">✕</button></div>
-  <div class="modal-body">
-    <input type="hidden" id="cliId">
-    <div class="form-row cols-2">
-      <div class="form-group"><label class="j-label">Nome Completo</label><input class="j-input" id="cliNome" placeholder="João da Silva" required></div>
-      <div class="form-group"><label class="j-label">WhatsApp (somente números)</label><input type="tel" class="j-input" id="cliWpp" placeholder="17999999999"></div>
-    </div>
-    <div class="form-row cols-2">
-      <div class="form-group"><label class="j-label">CPF / Documento</label><input class="j-input" id="cliDoc" inputmode="numeric" placeholder="000.000.000-00"></div>
-      <div class="form-group"><label class="j-label">E-mail</label><input type="email" class="j-input" id="cliEmail" placeholder="email@exemplo.com"></div>
-    </div>
-    <div style="font-family:var(--fm);font-size:0.65rem;color:var(--cyan);letter-spacing:2px;margin:12px 0 8px;border-top:1px solid var(--border);padding-top:12px;">ENDEREÇO (LGPD / NFe)</div>
-    <div class="form-row cols-2">
-      <div class="form-group"><label class="j-label">CEP</label><input class="j-input" id="cliCep" placeholder="00000-000" onblur="window.buscarCEP(this.value)"></div>
-      <div class="form-group"><label class="j-label">Rua / Logradouro</label><input class="j-input" id="cliRua" placeholder="Rua das Flores"></div>
-    </div>
-    <div class="form-row cols-3">
-      <div class="form-group"><label class="j-label">Nº</label><input class="j-input" id="cliNum" placeholder="123"></div>
-      <div class="form-group"><label class="j-label">Bairro</label><input class="j-input" id="cliBairro" placeholder="Centro"></div>
-      <div class="form-group"><label class="j-label">Cidade</label><input class="j-input" id="cliCidade" placeholder="São Paulo"></div>
-    </div>
-    <div style="border-top:1px solid var(--border);padding-top:14px;margin-top:4px;">
-      <div style="font-family:var(--fm);font-size:0.65rem;color:var(--cyan);letter-spacing:2px;margin-bottom:12px;">ACESSO AO PORTAL DO CLIENTE</div>
-      <div class="form-row cols-2">
-        <div class="form-group"><label class="j-label">Login</label><input class="j-input" id="cliLogin" placeholder="joao.silva"></div>
-        <div class="form-group"><label class="j-label">PIN de Acesso</label>
-          <div style="display:flex;gap:8px;">
-            <input class="j-input" id="cliPin" placeholder="Ex: abc123">
-            <button class="btn-outline" onclick="document.getElementById('cliPin').value=Math.random().toString(36).slice(-6)" style="white-space:nowrap;">GERAR</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="modal-foot"><button class="btn-ghost" onclick="fecharModal('modalCliente')">CANCELAR</button><button class="btn-primary" onclick="window.salvarCliente()">SALVAR</button></div>
-</div>
+  <div class="modal"><div class="modal-head"><div class="modal-title">CADASTRO DE CLIENTE</div><button class="modal-close" onclick="fecharModal('modalCliente')">✕</button></div><div class="modal-body"><input type="hidden" id="cliId"><div class="form-group"><label class="j-label">Nome Completo / Razão Social</label><input class="j-input" id="cliNome"></div><div class="form-row cols-2"><div class="form-group"><label class="j-label">WhatsApp (com DDD)</label><input class="j-input" id="cliWpp" placeholder="11999999999"></div><div class="form-group"><label class="j-label">CPF / CNPJ</label><input class="j-input" id="cliDoc"></div></div><div class="form-row cols-3"><div class="form-group"><label class="j-label">CEP</label><input class="j-input" id="cliCep" onblur="window.buscarCEP(this.value)"></div><div class="form-group"><label class="j-label">Rua</label><input class="j-input" id="cliRua"></div><div class="form-group"><label class="j-label">Nº</label><input class="j-input" id="cliNum"></div></div><div class="form-row cols-2"><div class="form-group"><label class="j-label">Bairro</label><input class="j-input" id="cliBairro"></div><div class="form-group"><label class="j-label">Cidade</label><input class="j-input" id="cliCidade"></div></div><div class="form-row cols-2" style="background:var(--surf2);padding:10px;border-radius:2px;"><div class="form-group"><label class="j-label">Login de Acesso</label><input class="j-input" id="cliLogin" placeholder="Ex: placa ou cpf"></div><div class="form-group"><label class="j-label">PIN (4-6 dígitos)</label><input class="j-input" id="cliPin"></div></div></div><div class="modal-foot"><button class="btn-ghost" onclick="fecharModal('modalCliente')">CANCELAR</button><button class="btn-primary" onclick="window.salvarCliente()">SALVAR CLIENTE</button></div></div>
 </div>
 
 <div class="overlay" id="modalVeiculo">
-<div class="modal" style="max-width:500px;">
-  <div class="modal-head"><div class="modal-title">VEÍCULO</div><button class="modal-close" onclick="fecharModal('modalVeiculo')">✕</button></div>
-  <div class="modal-body">
-    <input type="hidden" id="veicId">
-    <div class="form-group"><label class="j-label">Tipo de Veículo</label>
-      <select class="j-select" id="veicTipo"><option value="carro">🚗 Carro</option><option value="moto">🏍️ Moto</option><option value="bicicleta">🚲 Bicicleta</option></select>
-    </div>
-    <div class="form-row cols-2">
-      <div class="form-group"><label class="j-label">Proprietário</label><select class="j-select" id="veicDono"></select></div>
-      <div class="form-group"><label class="j-label">Placa / Identificação</label><input class="j-input" id="veicPlaca" placeholder="ABC-1234" style="text-transform:uppercase;font-family:var(--fm);letter-spacing:2px;font-weight:700;"></div>
-    </div>
-    <div class="form-row cols-2">
-      <div class="form-group"><label class="j-label">Marca / Modelo</label><input class="j-input" id="veicModelo" placeholder="Honda CB 500F"></div>
-      <div class="form-group"><label class="j-label">Ano</label><input type="number" class="j-input" id="veicAno" placeholder="2022"></div>
-    </div>
-    <div class="form-row cols-2">
-      <div class="form-group"><label class="j-label">Cor</label><input class="j-input" id="veicCor" placeholder="Preto Metálico"></div>
-      <div class="form-group"><label class="j-label">KM Atual</label><input type="number" class="j-input" id="veicKm" placeholder="45000"></div>
-    </div>
-    <div class="form-group"><label class="j-label">Observações</label><textarea class="j-textarea" id="veicObs" rows="2" placeholder="Modificações, histórico relevante..."></textarea></div>
-  </div>
-  <div class="modal-foot"><button class="btn-ghost" onclick="fecharModal('modalVeiculo')">CANCELAR</button><button class="btn-primary" onclick="window.salvarVeiculo()">SALVAR</button></div>
-</div>
+  <div class="modal"><div class="modal-head"><div class="modal-title">CADASTRO DE VEÍCULO</div><button class="modal-close" onclick="fecharModal('modalVeiculo')">✕</button></div><div class="modal-body"><input type="hidden" id="veicId"><div class="form-row cols-2"><div class="form-group"><label class="j-label">Tipo</label><select class="j-select" id="veicTipo"><option value="carro">Carro</option><option value="moto">Moto</option><option value="bicicleta">Bicicleta</option></select></div><div class="form-group"><label class="j-label">Proprietário</label><select class="j-select" id="veicDono"></select></div></div><div class="form-row cols-2"><div class="form-group"><label class="j-label">Placa</label><input class="j-input" id="veicPlaca" style="text-transform:uppercase"></div><div class="form-group"><label class="j-label">Modelo / Versão</label><input class="j-input" id="veicModelo"></div></div><div class="form-row cols-3"><div class="form-group"><label class="j-label">Ano</label><input class="j-input" id="veicAno"></div><div class="form-group"><label class="j-label">Cor</label><input class="j-input" id="veicCor"></div><div class="form-group"><label class="j-label">KM Atual</label><input type="number" class="j-input" id="veicKm"></div></div><div class="form-group"><label class="j-label">Observações Técnicas</label><textarea class="j-textarea" id="veicObs"></textarea></div></div><div class="modal-foot"><button class="btn-ghost" onclick="fecharModal('modalVeiculo')">CANCELAR</button><button class="btn-primary" onclick="window.salvarVeiculo()">SALVAR VEÍCULO</button></div></div>
 </div>
 
 <div class="overlay" id="modalPeca">
-<div class="modal" style="max-width:500px;">
-  <div class="modal-head"><div class="modal-title">PEÇA / PRODUTO</div><button class="modal-close" onclick="fecharModal('modalPeca')">✕</button></div>
-  <div class="modal-body">
-    <input type="hidden" id="pecaId">
-    <div class="form-row cols-2">
-      <div class="form-group"><label class="j-label">Código / Referência</label><input class="j-input" id="pecaCodigo" placeholder="EX: OIL-5W30-1L" style="font-family:var(--fm);"></div>
-      <div class="form-group"><label class="j-label">Descrição</label><input class="j-input" id="pecaDesc" placeholder="Óleo Motor 5W30 1L" required></div>
-    </div>
-    <div class="form-row cols-3">
-      <div class="form-group"><label class="j-label">Custo (R$)</label><input type="number" step="0.01" class="j-input" id="pecaCusto" placeholder="0,00" oninput="window.calcMargem()"></div>
-      <div class="form-group"><label class="j-label">Venda (R$)</label><input type="number" step="0.01" class="j-input" id="pecaVenda" placeholder="0,00" oninput="window.calcMargem()"></div>
-      <div class="form-group"><label class="j-label">Margem</label><div class="j-input" id="pecaMargem" style="color:var(--success);font-weight:700;">—</div></div>
-    </div>
-    <div class="form-row cols-2">
-      <div class="form-group"><label class="j-label">Quantidade Inicial</label><input type="number" class="j-input" id="pecaQtd" placeholder="0"></div>
-      <div class="form-group"><label class="j-label">Estoque Mínimo</label><input type="number" class="j-input" id="pecaMin" placeholder="2"></div>
-    </div>
-    <div class="form-group"><label class="j-label">Unidade</label>
-      <select class="j-select" id="pecaUnd"><option value="UN">UN — Unidade</option><option value="PC">PC — Peça</option><option value="L">L — Litro</option><option value="ML">ML — Mililitro</option><option value="KG">KG — Quilograma</option><option value="M">M — Metro</option><option value="JG">JG — Jogo</option><option value="PAR">PAR — Par</option></select>
-    </div>
-  </div>
-  <div class="modal-foot"><button class="btn-ghost" onclick="fecharModal('modalPeca')">CANCELAR</button><button class="btn-primary" onclick="window.salvarPeca()">SALVAR PEÇA</button></div>
-</div>
-</div>
-
-<div class="overlay" id="modalNF">
-<div class="modal" style="max-width:720px;">
-  <div class="modal-head"><div class="modal-title">ENTRADA DE NF / COMPRA</div><button class="modal-close" onclick="fecharModal('modalNF')">✕</button></div>
-  <div class="modal-body">
-    <div class="form-row cols-2">
-      <div class="form-group"><label class="j-label">Fornecedor</label><select class="j-select" id="nfFornec"></select></div>
-      <div class="form-group"><label class="j-label">Importar XML da Nota Fiscal</label>
-        <div style="display:flex;gap:8px;">
-          <input type="file" id="xmlInputFile" accept=".xml" style="display:none" onchange="if(window.lerXMLNFe) window.lerXMLNFe(event); else alert('Erro: Atualize o arquivo financeiro.js')">
-          <button class="btn-outline" onclick="document.getElementById('xmlInputFile').click()" style="flex:1; border-color:var(--success); color:var(--success);">📄 SELECIONAR XML</button>
-        </div>
-      </div>
-    </div>
-    <div class="form-row cols-2">
-      <div class="form-group"><label class="j-label">Número NF</label><input class="j-input" id="nfNumero" placeholder="00001" style="font-family:var(--fm);"></div>
-      <div class="form-group"><label class="j-label">Data NF</label><input type="date" class="j-input" id="nfData"></div>
-    </div>
-    <div style="background:var(--surf3);border:1px solid var(--border);border-radius:3px;padding:14px;margin-bottom:14px;">
-      <div style="font-family:var(--fd);font-weight:700;margin-bottom:10px;">ITENS DA NOTA FISCAL</div>
-      <div id="containerItensNF" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px;"></div>
-      <button class="btn-outline" onclick="window.adicionarItemNF()">+ ADICIONAR ITEM MANUAL</button>
-    </div>
-    <div class="form-row cols-3">
-      <div class="form-group"><label class="j-label">Forma de Pagamento</label>
-        <select class="j-select" id="nfPgtoForma" onchange="window.checkPgtoNF()">
-          <option value="Dinheiro">Dinheiro</option><option value="PIX">PIX</option><option value="Boleto">Boleto (Pendente)</option><option value="Parcelado">Parcelado (Títulos)</option>
-        </select>
-      </div>
-      <div class="form-group"><label class="j-label">Vencimento</label><input type="date" class="j-input" id="nfVenc"></div>
-      <div class="form-group" id="divParcelasNF" style="display:none;"><label class="j-label">Parcelas</label>
-        <select class="j-select" id="nfParcelas"><option value="2">2x</option><option value="3">3x</option><option value="4">4x</option><option value="6">6x</option></select>
-      </div>
-    </div>
-    <div style="display:flex;justify-content:flex-end;align-items:center;gap:16px;padding:12px;background:rgba(255,59,59,0.04);border:1px dashed rgba(255,59,59,0.2);border-radius:3px;">
-      <span style="font-family:var(--fm);font-size:0.7rem;color:var(--muted);">TOTAL NF:</span>
-      <span style="font-family:var(--fd);font-size:1.6rem;font-weight:700;color:var(--danger);">R$ <span id="nfTotal">0,00</span></span>
-    </div>
-  </div>
-  <div class="modal-foot"><button class="btn-ghost" onclick="fecharModal('modalNF')">CANCELAR</button><button class="btn-primary" onclick="window.salvarNF()">FINALIZAR ENTRADA</button></div>
-</div>
+  <div class="modal"><div class="modal-head"><div class="modal-title">ITEM DE ESTOQUE</div><button class="modal-close" onclick="fecharModal('modalPeca')">✕</button></div><div class="modal-body"><input type="hidden" id="pecaId"><div class="form-row cols-2"><div class="form-group"><label class="j-label">Código / SKU</label><input class="j-input" id="pecaCodigo"></div><div class="form-group"><label class="j-label">Descrição do Produto</label><input class="j-input" id="pecaDesc"></div></div><div class="form-row cols-3"><div class="form-group"><label class="j-label">Custo (R$)</label><input type="number" class="j-input" id="pecaCusto" step="0.01" oninput="window.calcMargem()"></div><div class="form-group"><label class="j-label">Venda (R$)</label><input type="number" class="j-input" id="pecaVenda" step="0.01" oninput="window.calcMargem()"></div><div class="form-group"><label class="j-label">Unidade</label><select class="j-select" id="pecaUnd"><option value="UN">Unidade (UN)</option><option value="LT">Litro (LT)</option><option value="JG">Jogo (JG)</option><option value="MT">Metro (MT)</option></select></div></div><div class="form-row cols-2"><div class="form-group"><label class="j-label">Qtd em Estoque</label><input type="number" class="j-input" id="pecaQtd"></div><div class="form-group"><label class="j-label">Estoque Mínimo</label><input type="number" class="j-input" id="pecaMin"></div></div><div id="pecaMargem" style="font-family:var(--fm);font-size:0.7rem;text-align:right;font-weight:700;">—</div></div><div class="modal-foot"><button class="btn-ghost" onclick="fecharModal('modalPeca')">CANCELAR</button><button class="btn-primary" onclick="window.salvarPeca()">SALVAR NO ESTOQUE</button></div></div>
 </div>
 
 <div class="overlay" id="modalFin">
-<div class="modal" style="max-width:500px;">
-  <div class="modal-head"><div class="modal-title">LANÇAMENTO FINANCEIRO</div><button class="modal-close" onclick="fecharModal('modalFin')">✕</button></div>
-  <div class="modal-body">
-    <input type="hidden" id="finId">
-    <div class="form-row cols-2">
-      <div class="form-group"><label class="j-label">Tipo</label>
-        <select class="j-select" id="finTipo"><option value="Entrada" style="color:var(--success)">💰 RECEITA</option><option value="Saída" style="color:var(--danger)">💸 DESPESA</option></select>
-      </div>
-      <div class="form-group"><label class="j-label">Valor (R$)</label><input type="number" step="0.01" class="j-input" id="finValor" placeholder="0,00"></div>
-    </div>
-    <div class="form-group"><label class="j-label">Descrição</label><input class="j-input" id="finDesc" placeholder="Ex: Mensalidade software, Pagamento fornecedor..."></div>
-    
-    <div class="form-group"><label class="j-label">Vinculado a (Opcional)</label>
-      <select class="j-select" id="finVinculo">
-        <option value="">Nenhum / Não se aplica</option>
-        <optgroup label="Fornecedores" id="optFornec"></optgroup>
-        <optgroup label="Equipe/Colaboradores" id="optEquipe"></optgroup>
-      </select>
-    </div>
-
-    <div class="form-row cols-2">
-      <div class="form-group"><label class="j-label">Vencimento</label><input type="date" class="j-input" id="finVenc"></div>
-      <div class="form-group"><label class="j-label">Forma de Pagamento</label>
-        <select class="j-select" id="finPgto"><option>Dinheiro</option><option>PIX</option><option>Transferência</option><option>Cartão Débito</option><option>Cartão Crédito</option><option>Boleto</option></select>
-      </div>
-    </div>
-    <div class="form-row cols-2">
-      <div class="form-group"><label class="j-label">Status</label>
-        <select class="j-select" id="finStatus"><option value="Pago">Liquidado</option><option value="Pendente">Pendente</option></select>
-      </div>
-    </div>
-    <div class="form-group"><label class="j-label">Nota Interna / Auditoria</label><textarea class="j-textarea" id="finNota" rows="2" placeholder="Justificativa ou observação..."></textarea></div>
-  </div>
-  <div class="modal-foot"><button class="btn-ghost" onclick="fecharModal('modalFin')">CANCELAR</button><button class="btn-primary" onclick="window.salvarFin()">LANÇAR</button></div>
-</div>
+  <div class="modal"><div class="modal-head"><div class="modal-title">LANÇAMENTO FINANCEIRO</div><button class="modal-close" onclick="fecharModal('modalFin')">✕</button></div><div class="modal-body"><input type="hidden" id="finId"><div class="form-row cols-2"><div class="form-group"><label class="j-label">Tipo</label><select class="j-select" id="finTipo"><option value="Entrada">Entrada (+)</option><option value="Saída">Saída (-)</option></select></div><div class="form-group"><label class="j-label">Status</label><select class="j-select" id="finStatus"><option value="Pago">Pago / Recebido</option><option value="Pendente">Pendente</option></select></div></div><div class="form-group"><label class="j-label">Descrição</label><input class="j-input" id="finDesc" placeholder="Ex: Aluguel, Peças, Serviço X..."></div><div class="form-row cols-3"><div class="form-group"><label class="j-label">Valor (R$)</label><input type="number" class="j-input" id="finValor" step="0.01"></div><div class="form-group"><label class="j-label">Data Venc/Pgto</label><input type="date" class="j-input" id="finVenc"></div><div class="form-group"><label class="j-label">Meio de Pgto</label><select class="j-select" id="finPgto"><option value="PIX">PIX</option><option value="Dinheiro">Dinheiro</option><option value="Cartão">Cartão</option><option value="Boleto">Boleto</option><option value="Transferência">Transferência</option></select></div></div><div class="form-group"><label class="j-label">Vincular a Fornecedor ou Colaborador</label><select class="j-select" id="finVinculo"><option value="">Nenhum vínculo</option><optgroup label="Fornecedores" id="optFornec"></optgroup><optgroup label="Equipe" id="optEquipe"></optgroup></select></div></div><div class="modal-foot"><button class="btn-ghost" onclick="fecharModal('modalFin')">CANCELAR</button><button class="btn-primary" onclick="window.salvarFin()">SALVAR LANÇAMENTO</button></div></div>
 </div>
 
 <div class="overlay" id="modalFunc">
-<div class="modal" style="max-width:500px;">
-  <div class="modal-head"><div class="modal-title">COLABORADOR / EQUIPE</div><button class="modal-close" onclick="fecharModal('modalFunc')">✕</button></div>
-  <div class="modal-body">
-    <input type="hidden" id="funcId">
-    <div class="form-row cols-2">
-      <div class="form-group"><label class="j-label">Nome</label><input class="j-input" id="funcNome" placeholder="Nome completo"></div>
-      <div class="form-group"><label class="j-label">Cargo / Especialidade</label>
-        <select class="j-select" id="funcCargo">
-          <option value="mecanico">Mecânico</option><option value="eletricista">Eletricista</option>
-          <option value="funileiro">Funileiro</option><option value="pintor">Pintor</option>
-          <option value="gerente">Gerente</option><option value="vendedor">Vendedor</option>
-        </select>
-      </div>
-    </div>
-    <div class="form-row cols-3">
-      <div class="form-group"><label class="j-label">% Com. Mão de Obra</label><input type="number" step="0.1" class="j-input" id="funcComissaoServico" placeholder="0" min="0" max="100"></div>
-      <div class="form-group"><label class="j-label">% Com. Peças</label><input type="number" step="0.1" class="j-input" id="funcComissaoPeca" placeholder="0" min="0" max="100"></div>
-      <div class="form-group"><label class="j-label">WhatsApp</label><input type="tel" class="j-input" id="funcWpp" placeholder="17999999999"></div>
-    </div>
-    <div style="border-top:1px solid var(--border);padding-top:14px;margin-top:4px;">
-      <div style="font-family:var(--fm);font-size:0.65rem;color:var(--cyan);letter-spacing:2px;margin-bottom:12px;">CREDENCIAIS DE ACESSO (equipe.html)</div>
-      <div class="form-row cols-2">
-        <div class="form-group"><label class="j-label">Usuário de Login</label><input class="j-input" id="funcUser" placeholder="jose.mecanico" style="font-family:var(--fm);"></div>
-        <div class="form-group"><label class="j-label">Senha</label><input type="password" class="j-input" id="funcPass" placeholder="••••••••"></div>
-      </div>
-    </div>
-  </div>
-  <div class="modal-foot"><button class="btn-ghost" onclick="fecharModal('modalFunc')">CANCELAR</button><button class="btn-primary" onclick="window.salvarFunc()">ADMITIR</button></div>
-</div>
+  <div class="modal"><div class="modal-head"><div class="modal-title">COLABORADOR / MECÂNICO</div><button class="modal-close" onclick="fecharModal('modalFunc')">✕</button></div><div class="modal-body"><input type="hidden" id="funcId"><div class="form-group"><label class="j-label">Nome Completo</label><input class="j-input" id="funcNome"></div><div class="form-row cols-2"><div class="form-group"><label class="j-label">WhatsApp</label><input class="j-input" id="funcWpp"></div><div class="form-group"><label class="j-label">Cargo / Função</label><select class="j-select" id="funcCargo"><option value="mecanico">Mecânico Técnico</option><option value="ajudante">Ajudante / Auxiliar</option><option value="gerente">Gerente de Pátio</option><option value="atendente">Atendente / Recepção</option></select></div></div><div class="form-row cols-2"><div class="form-group"><label class="j-label">Comissão Serviços (%)</label><input type="number" class="j-input" id="funcComissaoServico" value="0"></div><div class="form-group"><label class="j-label">Comissão Peças (%)</label><input type="number" class="j-input" id="funcComissaoPeca" value="0"></div></div><div class="form-row cols-2" style="background:var(--surf2);padding:10px;border-radius:2px;"><div class="form-group"><label class="j-label">Usuário de Acesso</label><input class="j-input" id="funcUser"></div><div class="form-group"><label class="j-label">Senha</label><input type="password" class="j-input" id="funcPass"></div></div></div><div class="modal-foot"><button class="btn-ghost" onclick="fecharModal('modalFunc')">CANCELAR</button><button class="btn-primary" onclick="window.salvarFunc()">SALVAR COLABORADOR</button></div></div>
 </div>
 
-<div class="overlay" id="modalPgtoRH">
-<div class="modal" style="max-width:500px;">
-  <div class="modal-head"><div class="modal-title">PAGAMENTO / VALE - RH</div><button class="modal-close" onclick="fecharModal('modalPgtoRH')">✕</button></div>
-  <div class="modal-body">
-    <div class="form-group"><label class="j-label">Colaborador</label><select class="j-select" id="rhPgtoFunc"></select></div>
-    <div class="form-row cols-2">
-      <div class="form-group"><label class="j-label">Tipo de Lançamento</label>
-        <select class="j-select" id="rhPgtoTipo">
-          <option value="Vale / Adiantamento">Vale / Adiantamento</option>
-          <option value="Pagamento Salário">Pagamento Salário</option>
-          <option value="Pagamento Comissão">Pagamento de Comissão</option>
-          <option value="Acerto Rescisório">Acerto Rescisório</option>
-        </select>
-      </div>
-      <div class="form-group"><label class="j-label">Valor (R$)</label><input type="number" step="0.01" class="j-input" id="rhPgtoValor" placeholder="0,00"></div>
-    </div>
-    <div class="form-row cols-2">
-      <div class="form-group"><label class="j-label">Data</label><input type="date" class="j-input" id="rhPgtoData"></div>
-      <div class="form-group"><label class="j-label">Forma de Pagamento</label>
-        <select class="j-select" id="rhPgtoForma"><option>PIX</option><option>Dinheiro</option><option>Transferência Bancária</option></select>
-      </div>
-    </div>
-    <div class="form-group"><label class="j-label">Observação / Justificativa</label><input class="j-input" id="rhPgtoObs" placeholder="Ref. Mês atual, Adiantamento para viagem..."></div>
-  </div>
-  <div class="modal-foot"><button class="btn-ghost" onclick="fecharModal('modalPgtoRH')">CANCELAR</button><button class="btn-primary" onclick="window.salvarPgtoRH()">REGISTRAR PAGAMENTO</button></div>
-</div>
-</div>
-
-<div class="overlay" id="modalFornec">
-<div class="modal" style="max-width:440px;">
-  <div class="modal-head"><div class="modal-title">FORNECEDOR</div><button class="modal-close" onclick="fecharModal('modalFornec')">✕</button></div>
-  <div class="modal-body">
-    <input type="hidden" id="fornecId">
-    <div class="form-group"><label class="j-label">Razão Social / Nome</label><input class="j-input" id="fornecNome" placeholder="Distribuidora ABC Ltda."></div>
-    <div class="form-row cols-2">
-      <div class="form-group"><label class="j-label">Segmento</label><input class="j-input" id="fornecSeg" placeholder="Peças, Óleo, Elétrica..."></div>
-      <div class="form-group"><label class="j-label">WhatsApp / Contato</label><input class="j-input" id="fornecWpp" placeholder="17999..."></div>
-    </div>
-  </div>
-  <div class="modal-foot"><button class="btn-ghost" onclick="fecharModal('modalFornec')">CANCELAR</button><button class="btn-primary" onclick="window.salvarFornec()">SALVAR</button></div>
-</div>
-</div>
-
-<div class="overlay" id="modalAgenda">
-<div class="modal" style="max-width:500px;">
-  <div class="modal-head"><div class="modal-title">AGENDAMENTO</div><button class="modal-close" onclick="fecharModal('modalAgenda')">✕</button></div>
-  <div class="modal-body">
-    <input type="hidden" id="agdId">
-    <div class="form-row cols-2">
-      <div class="form-group"><label class="j-label">Cliente</label><select class="j-select" id="agdCliente" onchange="window.filtrarVeicsAgenda()"></select></div>
-      <div class="form-group"><label class="j-label">Veículo</label><select class="j-select" id="agdVeiculo"></select></div>
-    </div>
-    <div class="form-row cols-2">
-      <div class="form-group"><label class="j-label">Data</label><input type="date" class="j-input" id="agdData"></div>
-      <div class="form-group"><label class="j-label">Hora</label><input type="time" class="j-input" id="agdHora"></div>
-    </div>
-    <div class="form-row cols-2">
-      <div class="form-group"><label class="j-label">Serviço</label><input class="j-input" id="agdServico" placeholder="Revisão, alinhamento, troca de óleo..."></div>
-      <div class="form-group"><label class="j-label">Mecânico</label><select class="j-select" id="agdMec"><option value="">Não definido</option></select></div>
-    </div>
-  </div>
-  <div class="modal-foot"><button class="btn-ghost" onclick="fecharModal('modalAgenda')">CANCELAR</button><button class="btn-primary" onclick="window.salvarAgenda()">AGENDAR</button></div>
-</div>
-</div>
+<!-- SCRIPTS -->
+<script src="js/ui.js"></script>
+<script src="js/core.js"></script>
+<script src="js/os.js"></script>
+<script src="js/ia.js"></script>
+<script src="js/financeiro.js"></script>
+<script src="js/clientes.js"></script>
 
 <script>
-// ============================================================
-// BOOTSTRAP DO SISTEMA E IA
-// ============================================================
-const J = {}; 
-const $ = id => document.getElementById(id);
-const $v = id => $(id) ? $(id).value.trim() : '';
+  // Inicialização do Admin
+  window.addEventListener('DOMContentLoaded', () => {
+    initCore();
+    // Inicia listeners específicos
+    escutarClientes();
+    escutarVeiculos();
+    escutarEstoque();
+    escutarFinanceiro();
+    escutarEquipe();
+    escutarFornecedores();
+    escutarMensagens();
+    escutarAuditoria();
+    escutarAgendamentos();
+    
+    // Polling de Dash
+    setInterval(renderDashboard, 30000);
+  });
 
-// SESSÃO
-J.tid = sessionStorage.getItem('j_tid');
-J.role = sessionStorage.getItem('j_role');
-J.nome = sessionStorage.getItem('j_nome');
-J.tnome = sessionStorage.getItem('j_tnome');
-J.gemini = sessionStorage.getItem('j_gemini');
-J.nicho = sessionStorage.getItem('j_nicho') || 'carros';
-J.cloudName = sessionStorage.getItem('j_cloud_name') || 'dmuvm1o6m';
-J.cloudPreset = sessionStorage.getItem('j_cloud_preset') || 'evolution';
+  function ir(id, el) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.getElementById('s-' + id).classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    el.classList.add('active');
+    
+    // Renderizações sob demanda
+    if(id === 'patio') renderKanban();
+    if(id === 'financeiro') renderFinanceiro();
+    if(id === 'equipe') { renderEquipe(); calcComissoes(); }
+    if(id === 'clientes') renderClientes();
+    if(id === 'veiculos') renderVeiculos();
+    if(id === 'estoque') renderEstoque();
+    if(id === 'agenda') renderAgenda();
+    if(id === 'chat') renderChatLista();
+  }
 
-if(!J.tid) window.location.replace('index.html');
+  const $ = id => document.getElementById(id);
+  const $v = id => { const el=$(id); return el ? el.value.trim() : ''; };
 
-const db = window.initFirebase();
+  // UI HELPERS MODAIS
+  function abrirModal(id) { document.getElementById(id).classList.add('open'); }
+  function fecharModal(id) { document.getElementById(id).classList.remove('open'); }
+  function switchTab(el, show, h1, h2) {
+    el.parentElement.querySelectorAll('.mtab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById(show).classList.add('active');
+    document.getElementById(h1).classList.remove('active');
+    document.getElementById(h2).classList.remove('active');
+  }
 
-// ESTADO IN-MEMORY
-J.os = []; J.clientes = []; J.veiculos = []; J.estoque = [];
-J.financeiro = []; J.equipe = []; J.fornecedores = [];
-J.agendamentos = []; J.mensagens = []; J.auditoria = [];
-J.chatAtivo = null;
-
-document.addEventListener('DOMContentLoaded', () => {
-  $('sbTenantNome').innerText = J.tnome;
-  $('sbUserNome').innerText = J.nome;
-  $('sbUserRole').innerText = J.role.toUpperCase();
-  $('sbAvatar').innerText = J.nome.charAt(0).toUpperCase();
-  
-  const nichoLabels = {carros:'🚗 CARROS', motos:'🏍️ MOTOS', bicicletas:'🚲 BICICLETAS'};
-  $('tbNicho').innerText = nichoLabels[J.nicho] || '🚗 CARROS';
-
-  if(typeof window.escutarOS === 'function') window.escutarOS(); 
-  window.escutarClientes(); window.escutarVeiculos();
-  window.escutarEstoque(); window.escutarFinanceiro(); window.escutarEquipe();
-  window.escutarFornecedores(); window.escutarMensagens(); window.escutarAgendamentos();
-  window.escutarAuditoria();
-});
-
-const sectionMap = { dashboard:'s-dashboard', agenda:'s-agenda', kanban:'s-kanban', clientes:'s-clientes', estoque:'s-estoque', financeiro:'s-financeiro', equipe:'s-equipe', chat:'s-chat', ia:'s-ia', auditoria:'s-auditoria' };
-const titleMap = { dashboard:'DASHBOARD', agenda:'AGENDA', kanban:'PÁTIO / O.S.', clientes:'CLIENTES & VEÍCULOS', estoque:'ESTOQUE / NF', financeiro:'FINANCEIRO / DRE', equipe:'EQUIPE & RH', chat:'CRM CHAT', ia:'thIAguinho IA', auditoria:'AUDITORIA' };
-
-function ir(key, el) {
-  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  const s = $(sectionMap[key]); if(s) s.classList.add('active');
-  if(el) el.classList.add('active');
-  $('pageTitle').innerText = titleMap[key] || key.toUpperCase();
-}
-
-function sair() { sessionStorage.clear(); window.location.href='index.html'; }
-function abrirModal(id) { $(id).classList.add('open'); }
-function fecharModal(id) { $(id).classList.remove('open'); }
-
-function switchTab(el, active, ...others) {
-  el.parentElement.querySelectorAll('.mtab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
-  $(active).classList.add('active');
-  others.forEach(o => $(o).classList.remove('active'));
-}
-
-window.toast = function(msg, type='ok') {
-  const el = document.createElement('div');
-  el.className = `toast-j ${type}`;
-  el.innerHTML = msg;
-  $('toastBox').appendChild(el);
-  setTimeout(() => { el.style.opacity='0'; setTimeout(()=>el.remove(),400); }, 3500);
-}
-
-async function audit(modulo, acao) {
-  try {
-    await db.collection('lixeira_auditoria').add({
-      tenantId:J.tid, modulo, acao,
-      usuario:J.nome, ts:new Date().toISOString()
+  // CHAT TABS
+  window.switchChatTab = function(el, targetId) {
+    document.querySelectorAll('.chat-tab').forEach(t => {
+      t.classList.remove('active');
+      t.style.color = 'var(--muted)';
     });
-  } catch(e){}
-}
-
-const moeda = v => 'R$ ' + parseFloat(v||0).toFixed(2).replace('.',',');
-const dtBr = iso => iso ? new Date(iso).toLocaleDateString('pt-BR') : '-';
-const dtHrBr = iso => iso ? new Date(iso).toLocaleString('pt-BR') : '-';
-
-// LISTENERS
-window.escutarClientes = function() {
-  db.collection('clientes').where('tenantId','==',J.tid).onSnapshot(snap => {
-    J.clientes = snap.docs.map(d=>({id:d.id,...d.data()}));
-    window.renderClientes(); window.popularSelects();
-  });
-}
-window.escutarVeiculos = function() {
-  db.collection('veiculos').where('tenantId','==',J.tid).onSnapshot(snap => {
-    J.veiculos = snap.docs.map(d=>({id:d.id,...d.data()}));
-    window.renderVeiculos(); window.popularSelects();
-  });
-}
-window.escutarEstoque = function() {
-  db.collection('estoqueItems').where('tenantId','==',J.tid).onSnapshot(snap => {
-    J.estoque = snap.docs.map(d=>({id:d.id,...d.data()}));
-    window.renderEstoque(); window.renderDashboard();
-  });
-}
-window.escutarFinanceiro = function() {
-  db.collection('financeiro').where('tenantId','==',J.tid).onSnapshot(snap => {
-    J.financeiro = snap.docs.map(d=>({id:d.id,...d.data()}));
-    if(typeof window.renderFinanceiro === 'function') window.renderFinanceiro(); 
-    window.renderDashboard();
-  });
-}
-window.escutarEquipe = function() {
-  db.collection('funcionarios').where('tenantId','==',J.tid).onSnapshot(snap => {
-    J.equipe = snap.docs.map(d=>({id:d.id,...d.data()}));
-    window.renderEquipe(); window.popularSelects(); 
-    if(typeof window.calcComissoes === 'function') window.calcComissoes();
-  });
-}
-window.escutarFornecedores = function() {
-  db.collection('fornecedores').where('tenantId','==',J.tid).onSnapshot(snap => {
-    J.fornecedores = snap.docs.map(d=>({id:d.id,...d.data()}));
-    window.renderFornecedores(); window.popularSelects();
-  });
-}
-window.escutarMensagens = function() {
-  db.collection('mensagens').where('tenantId','==',J.tid).onSnapshot(snap => {
-    J.mensagens = snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.ts||0)-(b.ts||0));
-    window.renderChatLista();
-    const naoLidas = J.mensagens.filter(m=>m.sender==='cliente'&&!m.lidaAdmin).length;
-    const badge = $('chatBadge');
-    if(naoLidas>0){badge.style.display='block';badge.innerText=naoLidas;}else badge.style.display='none';
-    if(J.chatAtivo) window.renderChatMsgs(J.chatAtivo);
-  });
-}
-window.escutarAgendamentos = function() {
-  db.collection('agendamentos').where('tenantId','==',J.tid).onSnapshot(snap => {
-    J.agendamentos = snap.docs.map(d=>({id:d.id,...d.data()}));
-    window.renderAgenda();
-  });
-}
-window.escutarAuditoria = function() {
-  db.collection('lixeira_auditoria').where('tenantId','==',J.tid).onSnapshot(snap => {
-    J.auditoria = snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>b.ts>a.ts?1:-1);
-    window.renderAuditoria();
-  });
-}
-
-window.popularSelects = function() {
-  const cOpts = '<option value="">Selecione...</option>' + J.clientes.map(c=>`<option value="${c.id}">${c.nome}</option>`).join('');
-  ['osCliente','agdCliente','veicDono'].forEach(id => { if($(id)) $(id).innerHTML = cOpts; });
-
-  const mOpts = '<option value="">Não atribuído</option>' + J.equipe.map(f=>`<option value="${f.id}">${f.nome} (${f.cargo||''})</option>`).join('');
-  ['osMec','agdMec'].forEach(id => { if($(id)) $(id).innerHTML = mOpts; });
-
-  if($('nfFornec')) $('nfFornec').innerHTML = '<option value="">Selecione...</option>' + J.fornecedores.map(f=>`<option value="${f.id}">${f.nome}</option>`).join('');
-  
-  if($('optFornec')) $('optFornec').innerHTML = J.fornecedores.map(f=>`<option value="F_${f.id}">${f.nome}</option>`).join('');
-  if($('optEquipe')) $('optEquipe').innerHTML = J.equipe.map(f=>`<option value="E_${f.id}">${f.nome}</option>`).join('');
-}
-
-window.filtrarVeiculosOS = function() {
-  const cid = $v('osCliente'); const tipo = $v('osTipoVeiculo');
-  let veics = J.veiculos.filter(v=>v.clienteId===cid);
-  if(tipo) veics = veics.filter(v=>v.tipo===tipo);
-  if($('osVeiculo')) $('osVeiculo').innerHTML = '<option value="">Selecione...</option>' + veics.map(v=>`<option value="${v.id}">${v.modelo} (${v.placa})</option>`).join('');
-}
-window.filtrarVeicsAgenda = function() {
-  const cid = $v('agdCliente'); const veics = J.veiculos.filter(v=>v.clienteId===cid);
-  if($('agdVeiculo')) $('agdVeiculo').innerHTML = '<option value="">Selecione...</option>' + veics.map(v=>`<option value="${v.id}">${v.modelo} (${v.placa})</option>`).join('');
-}
-
-// DASHBOARD
-window.renderDashboard = function() {
-  const agora = new Date(); const mesAtual = agora.getMonth(); const anoAtual = agora.getFullYear();
-  const fat = J.os.filter(o=>((o.status||'').toLowerCase()==='pronto'||(o.status||'').toLowerCase()==='entregue'||(o.status||'').toLowerCase()==='faturado')&&o.updatedAt).reduce((acc,o)=>{
-    const d = new Date(o.updatedAt);
-    if(d.getMonth()===mesAtual&&d.getFullYear()===anoAtual) return acc+(o.total||0);
-    return acc;
-  }, 0);
-  if($('kFat')) $('kFat').innerText = moeda(fat);
-  if($('kPatio')) $('kPatio').innerText = J.os.filter(o=>!['cancelado','pronto','entregue'].includes((o.status || '').toLowerCase())).length;
-  if($('kStock')) $('kStock').innerText = J.estoque.filter(p=>(p.qtd||0)<=(p.min||0)).length;
-  if($('kVenc')) $('kVenc').innerText = J.financeiro.filter(f=>f.status==='Pendente'&&f.venc&&new Date(f.venc)<agora).length;
-
-  const recOS = J.os.sort((a,b)=>b.updatedAt>a.updatedAt?1:-1).slice(0,5);
-  if($('dashRecentOS')) {
-      $('dashRecentOS').innerHTML = recOS.map(o=>{
-        const v = J.veiculos.find(x=>x.id===o.veiculoId) || {placa: o.placa};
-        const c = J.clientes.find(x=>x.id===o.clienteId) || {nome: o.cliente};
-        return `<tr><td><span class="placa-badge">${v?.placa||'-'}</span></td><td>${c?.nome||'-'}</td><td><span class="pill pill-cyan">${(o.status||'').toUpperCase()}</span></td><td style="color:var(--success);font-family:var(--fm);font-weight:700">${moeda(o.total)}</td></tr>`;
-      }).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:20px;font-family:var(--fm);">Nenhuma O.S.</td></tr>';
+    el.classList.add('active');
+    el.style.color = 'var(--cyan)';
+    
+    document.querySelectorAll('.chat-list-content').forEach(c => c.style.display = 'none');
+    document.getElementById(targetId).style.display = 'block';
   }
 
-  const criticos = J.estoque.filter(p=>(p.qtd||0)<=(p.min||0)).slice(0,5);
-  if($('dashAlertStock')) {
-      $('dashAlertStock').innerHTML = criticos.map(p=>`<tr class="stock-critical"><td>${p.desc||p.codigo}</td><td style="font-family:var(--fm);color:var(--danger);font-weight:700">${p.qtd||0}</td><td style="font-family:var(--fm);color:var(--muted)">${p.min||0}</td><td><span class="pill pill-danger">CRÍTICO</span></td></tr>`).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--success);padding:20px;font-family:var(--fm);">✓ ESTOQUE OK</td></tr>';
-  }
-}
+  window.renderChatLista = function() {
+    const container = $('chatLista');
+    if(!container) return;
+    container.innerHTML = J.clientes.map(c=>{
+      const msgs = J.mensagens.filter(m=>m.clienteId===c.id);
+      const ultima = msgs[msgs.length-1];
+      const naoLidas = msgs.filter(m=>m.sender==='cliente'&&!m.lidaAdmin).length;
+      return `<div class="chat-item ${J.chatAtivo===c.id?'active':''}" onclick="window.abrirChatCRM('${c.id}','${c.nome}')">
+        <div class="chat-item-name">${c.nome} ${naoLidas>0?`<span class="chat-unread">${naoLidas}</span>`:''}</div>
+        <div class="chat-item-last">${ultima?ultima.msg:'Sem mensagens'}</div>
+      </div>`;
+    }).join('');
 
-// CLIENTES E VEICULOS
-window.prepCliente = function(mode, id=null) {
-  ['cliId','cliNome','cliWpp','cliDoc','cliEmail','cliCep','cliRua','cliNum','cliBairro','cliCidade','cliLogin','cliPin'].forEach(f=>{if($(f)) $(f).value='';});
-  $('cliPin').value=Math.random().toString(36).slice(-6);
-  if(mode==='edit'&&id){
-    const c=J.clientes.find(x=>x.id===id); if(!c) return;
-    $('cliId').value=c.id; $('cliNome').value=c.nome||''; $('cliWpp').value=c.wpp||'';
-    $('cliDoc').value=c.doc||''; $('cliEmail').value=c.email||'';
-    $('cliCep').value=c.cep||''; $('cliRua').value=c.rua||''; 
-    $('cliNum').value=c.num||''; $('cliBairro').value=c.bairro||''; 
-    $('cliCidade').value=c.cidade||'';
-    $('cliLogin').value=c.login||''; $('cliPin').value=c.pin||'';
-  }
-}
-window.salvarCliente = async function() {
-  if(!$v('cliNome')) { window.toast('⚠ Nome obrigatório','warn'); return; }
-  const p = {tenantId:J.tid,nome:$v('cliNome'),wpp:$v('cliWpp'),doc:$v('cliDoc'),email:$v('cliEmail'),cep:$v('cliCep'),rua:$v('cliRua'),num:$v('cliNum'),bairro:$v('cliBairro'),cidade:$v('cliCidade'),login:$v('cliLogin'),pin:$v('cliPin'),updatedAt:new Date().toISOString()};
-  const id=$v('cliId');
-  if(id) await db.collection('clientes').doc(id).update(p);
-  else { p.createdAt=new Date().toISOString(); await db.collection('clientes').add(p); }
-  window.toast('✓ CLIENTE SALVO'); fecharModal('modalCliente'); audit('CLIENTES','Salvou cliente '+p.nome);
-}
-window.renderClientes = function() {
-  if(!$('tbClientes')) return;
-  $('tbClientes').innerHTML = J.clientes.map(c=>{
-    const nVeics = J.veiculos.filter(v=>v.clienteId===c.id).length;
-    return `<tr><td><strong>${c.nome}</strong></td><td style="font-family:var(--fm);font-size:0.75rem">${c.wpp||'-'}</td><td><span class="pill pill-cyan">${nVeics}</span></td><td style="white-space:nowrap"><button class="btn-ghost" style="margin-right:4px" onclick="window.prepCliente('edit','${c.id}');abrirModal('modalCliente')">✏</button><button class="btn-danger" onclick="window.deletarCliente('${c.id}')">🗑</button></td></tr>`;
-  }).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:20px;">Nenhum cliente</td></tr>';
-}
-window.deletarCliente = async function(id) { if(confirm('Deletar este cliente?')){ await db.collection('clientes').doc(id).delete(); window.toast('✓ REMOVIDO'); audit('CLIENTES','Deletou cliente'); } }
-
-window.buscarCEP = async function(cep) {
-  const c = cep.replace(/\D/g,''); if(c.length!==8) return;
-  try {
-    const r = await fetch(`https://viacep.com.br/ws/${c}/json/`);
-    const d = await r.json();
-    if(!d.erro) {
-      $('cliRua').value = d.logradouro; $('cliBairro').value = d.bairro; $('cliCidade').value = d.localidade; $('cliNum').focus();
+    const containerEq = $('chatListaEquipe');
+    if(containerEq) {
+      containerEq.innerHTML = J.equipe.map(f=>{
+        const msgs = J.chatEquipe.filter(m=>m.de===f.id || m.para===f.id);
+        const ultima = msgs[msgs.length-1];
+        const naoLidas = msgs.filter(m=>m.sender==='equipe'&&!m.lidaAdmin&&m.de===f.id).length;
+        return `<div class="chat-item ${J.chatAtivo===f.id?'active':''}" onclick="window.abrirChatEquipe('${f.id}','${f.nome}')">
+          <div class="chat-item-name">${f.nome} ${naoLidas>0?`<span class="chat-unread">${naoLidas}</span>`:''}</div>
+          <div class="chat-item-last">${ultima?ultima.msg:'Sem mensagens'}</div>
+        </div>`;
+      }).join('');
     }
-  } catch(e){}
-}
-
-window.prepVeiculo = function(mode, id=null) {
-  ['veicId','veicPlaca','veicModelo','veicAno','veicCor','veicKm','veicObs'].forEach(f=>{if($(f)) $(f).value='';});
-  $('veicTipo').value='carro'; if($('veicDono')) window.popularSelects();
-  if(mode==='edit'&&id){
-    const v=J.veiculos.find(x=>x.id===id); if(!v) return;
-    $('veicId').value=v.id; $('veicTipo').value=v.tipo||'carro';
-    $('veicDono').value=v.clienteId||''; $('veicPlaca').value=v.placa||'';
-    $('veicModelo').value=v.modelo||''; $('veicAno').value=v.ano||'';
-    $('veicCor').value=v.cor||''; $('veicKm').value=v.km||''; $('veicObs').value=v.obs||'';
   }
-}
-window.salvarVeiculo = async function() {
-  if(!$v('veicPlaca')||!$v('veicModelo')) { window.toast('⚠ Placa e modelo obrigatórios','warn'); return; }
-  const p={tenantId:J.tid,tipo:$v('veicTipo'),clienteId:$v('veicDono'),placa:$v('veicPlaca').toUpperCase(),modelo:$v('veicModelo'),ano:$v('veicAno'),cor:$v('veicCor'),km:$v('veicKm'),obs:$v('veicObs'),updatedAt:new Date().toISOString()};
-  const id=$v('veicId');
-  if(id) await db.collection('veiculos').doc(id).update(p); else { p.createdAt=new Date().toISOString(); await db.collection('veiculos').add(p); }
-  window.toast('✓ VEÍCULO SALVO'); fecharModal('modalVeiculo'); audit('VEÍCULOS','Salvou veículo '+p.placa);
-}
-window.renderVeiculos = function() {
-  if(!$('tbVeiculos')) return;
-  const tipos = {carro:'🚗',moto:'🏍️',bicicleta:'🚲'};
-  $('tbVeiculos').innerHTML = J.veiculos.map(v=>{
-    const c=J.clientes.find(x=>x.id===v.clienteId);
-    return `<tr><td><span class="placa-badge">${v.placa||'-'}</span></td><td>${tipos[v.tipo]||'🚗'}</td><td>${v.modelo||'-'}</td><td>${c?.nome||'-'}</td><td style="font-family:var(--fm);">${v.km||'-'}</td><td><button class="btn-ghost" onclick="window.prepVeiculo('edit','${v.id}');abrirModal('modalVeiculo')">✏</button></td></tr>`;
-  }).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px;">Nenhum veículo</td></tr>';
-}
 
-// ESTOQUE
-window.prepPeca = function(mode, id=null) {
-  ['pecaId','pecaCodigo','pecaDesc','pecaCusto','pecaVenda','pecaQtd','pecaMin'].forEach(f=>{if($(f)) $(f).value='';});
-  $('pecaUnd').value='UN'; $('pecaMargem').innerText='—';
-  if(mode==='edit'&&id){
-    const p=J.estoque.find(x=>x.id===id); if(!p) return;
-    $('pecaId').value=p.id; $('pecaCodigo').value=p.codigo||''; $('pecaDesc').value=p.desc||'';
-    $('pecaCusto').value=p.custo||0; $('pecaVenda').value=p.venda||0;
-    $('pecaQtd').value=p.qtd||0; $('pecaMin').value=p.min||0; $('pecaUnd').value=p.und||'UN';
-    window.calcMargem();
+  window.abrirChatCRM = function(cid, nome) {
+    J.chatAtivo = cid; J.tipoChatAtivo = 'cliente';
+    $('chatHead').innerText = 'CLIENTE: ' + nome.toUpperCase();
+    $('chatFoot').style.display = 'flex';
+    window.renderChatMsgs(cid);
+    J.mensagens.filter(m=>m.clienteId===cid && m.sender==='cliente' && !m.lidaAdmin).forEach(m=>db.collection('mensagens').doc(m.id).update({lidaAdmin:true}));
   }
-}
-window.calcMargem = function() {
-  const c=parseFloat($v('pecaCusto')||0), v=parseFloat($v('pecaVenda')||0);
-  if(c>0&&v>0){ const m=((v-c)/c*100).toFixed(1); $('pecaMargem').innerText=m+'% MARGEM'; $('pecaMargem').style.color=m>=0?'var(--success)':'var(--danger)'; }
-  else $('pecaMargem').innerText='—';
-}
-window.salvarPeca = async function() {
-  if(!$v('pecaDesc')) { window.toast('⚠ Descrição obrigatória','warn'); return; }
-  const p={tenantId:J.tid,codigo:$v('pecaCodigo'),desc:$v('pecaDesc'),custo:parseFloat($v('pecaCusto')||0),venda:parseFloat($v('pecaVenda')||0),qtd:parseInt($v('pecaQtd')||0),min:parseInt($v('pecaMin')||0),und:$v('pecaUnd'),updatedAt:new Date().toISOString()};
-  const id=$v('pecaId');
-  if(id) await db.collection('estoqueItems').doc(id).update(p); else { p.createdAt=new Date().toISOString(); await db.collection('estoqueItems').add(p); }
-  window.toast('✓ PEÇA SALVA'); fecharModal('modalPeca'); audit('ESTOQUE','Salvou peça '+p.desc);
-}
-window.renderEstoque = function() {
-  if(!$('tbEstoque')) return;
-  $('tbEstoque').innerHTML = J.estoque.map(p=>{
-    const crit=(p.qtd||0)<=(p.min||0);
-    return `<tr class="${crit?'stock-critical':''}"><td style="font-family:var(--fm);font-size:0.75rem;color:var(--muted)">${p.codigo||'-'}</td><td><strong>${p.desc}</strong></td><td style="font-family:var(--fm)">${moeda(p.custo)}</td><td style="font-family:var(--fm);color:var(--success)">${moeda(p.venda)}</td><td style="font-family:var(--fm);font-weight:700;color:${crit?'var(--danger)':'var(--text)'}">${p.qtd||0}</td><td style="font-family:var(--fm);color:var(--muted)">${p.min||0}</td><td>${crit?'<span class="pill pill-danger">CRÍTICO</span>':'<span class="pill pill-green">OK</span>'}</td><td><button class="btn-ghost" onclick="window.prepPeca('edit','${p.id}');abrirModal('modalPeca')">✏</button></td></tr>`;
-  }).join('') || '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:20px;">Nenhum item</td></tr>';
-}
 
-window.salvarFornec = async function() {
-  if(!$v('fornecNome')) return;
-  const p={tenantId:J.tid,nome:$v('fornecNome'),segmento:$v('fornecSeg'),wpp:$v('fornecWpp'),createdAt:new Date().toISOString()};
-  const id=$v('fornecId');
-  if(id) await db.collection('fornecedores').doc(id).update(p); else await db.collection('fornecedores').add(p);
-  window.toast('✓ FORNECEDOR SALVO'); fecharModal('modalFornec');
-}
-window.renderFornecedores = function() { 
-  if($('tbFornec')) $('tbFornec').innerHTML = J.fornecedores.map(f=>`<tr><td>${f.nome}</td><td>${f.segmento||'-'}</td><td><button class="btn-danger" onclick="db.collection('fornecedores').doc('${f.id}').delete()">🗑</button></td></tr>`).join(''); 
-}
-
-// EQUIPE
-window.prepFunc = function(mode, id=null) {
-  ['funcId','funcNome','funcWpp','funcComissaoServico','funcComissaoPeca','funcUser','funcPass'].forEach(f=>{if($(f)) $(f).value='';});
-  $('funcCargo').value='mecanico';
-  if(mode==='edit'&&id){
-    const f=J.equipe.find(x=>x.id===id); if(!f) return;
-    $('funcId').value=f.id; $('funcNome').value=f.nome||''; $('funcWpp').value=f.wpp||'';
-    $('funcCargo').value=f.cargo||'mecanico'; 
-    $('funcComissaoServico').value=f.comissaoServico||f.comissao||0;
-    $('funcComissaoPeca').value=f.comissaoPeca||0;
-    $('funcUser').value=f.usuario||''; $('funcPass').value=f.senha||'';
+  window.abrirChatEquipe = function(fid, nome) {
+    J.chatAtivo = fid; J.tipoChatAtivo = 'equipe';
+    $('chatHead').innerText = 'EQUIPE: ' + nome.toUpperCase();
+    $('chatFoot').style.display = 'flex';
+    window.renderChatMsgs(fid);
+    J.chatEquipe.filter(m=>m.de===fid && m.sender==='equipe' && !m.lidaAdmin).forEach(m=>db.collection('chat_equipe').doc(m.id).update({lidaAdmin:true}));
   }
-}
-window.salvarFunc = async function() {
-  if(!$v('funcNome')||!$v('funcUser')||!$v('funcPass')) { window.toast('⚠ Preencha nome, usuário e senha','warn'); return; }
-  const p={tenantId:J.tid,nome:$v('funcNome'),wpp:$v('funcWpp'),cargo:$v('funcCargo'),
-           comissaoServico:parseFloat($v('funcComissaoServico')||0),
-           comissaoPeca:parseFloat($v('funcComissaoPeca')||0),
-           usuario:$v('funcUser'),senha:$v('funcPass'),updatedAt:new Date().toISOString()};
-  const id=$v('funcId');
-  if(id) await db.collection('funcionarios').doc(id).update(p); else { p.createdAt=new Date().toISOString(); await db.collection('funcionarios').add(p); }
-  window.toast('✓ COLABORADOR SALVO'); fecharModal('modalFunc'); audit('EQUIPE','Salvou colaborador '+p.nome);
-}
-window.renderEquipe = function() {
-  if(!$('tbEquipe')) return;
-  $('tbEquipe').innerHTML = J.equipe.map(f=>`<tr><td><strong>${f.nome}</strong></td><td><span class="pill pill-cyan">${f.cargo.toUpperCase()}</span></td><td style="font-family:var(--fm)">${f.usuario}</td>
-    <td><span style="font-family:var(--fm);font-size:0.75rem;color:var(--success)">MO: ${f.comissaoServico||f.comissao||0}%<br>PC: ${f.comissaoPeca||0}%</span></td>
-    <td><button class="btn-ghost" onclick="window.prepFunc('edit','${f.id}');abrirModal('modalFunc')">✏</button><button class="btn-danger" onclick="window.deletarFunc('${f.id}')">🗑</button></td></tr>`).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px;">Nenhum colaborador</td></tr>';
-}
-window.deletarFunc = async function(id) { if(confirm('Remover?')){ await db.collection('funcionarios').doc(id).delete(); window.toast('✓ REMOVIDO'); audit('EQUIPE','Removeu colaborador'); } }
 
-// CHAT CRM
-window.renderChatLista = function() {
-  if(!$('chatLista')) return;
-  $('chatLista').innerHTML = J.clientes.map(c=>{
-    const msgs=J.mensagens.filter(m=>m.clienteId===c.id); const ultima=msgs[msgs.length-1]; const nLidas=msgs.filter(m=>m.sender==='cliente'&&!m.lidaAdmin).length;
-    return `<div class="chat-item ${J.chatAtivo===c.id?'active':''}" onclick="window.abrirChat('${c.id}','${c.nome}')"><div class="chat-item-name">${c.nome} ${nLidas>0?`<span class="chat-unread">${nLidas}</span>`:''}</div><div class="chat-item-last">${ultima?.msg||'Sem mensagens'}</div></div>`;
-  }).join('');
-}
-window.abrirChat = function(cid, nome) {
-  J.chatAtivo=cid; $('chatHead').innerText='ATENDIMENTO: '+nome.toUpperCase(); $('chatFoot').style.display='flex'; window.renderChatMsgs(cid);
-  J.mensagens.filter(m=>m.clienteId===cid&&m.sender==='cliente'&&!m.lidaAdmin).forEach(m=>{ db.collection('mensagens').doc(m.id).update({lidaAdmin:true}); });
-}
-window.renderChatMsgs = function(cid) {
-  const msgs=J.mensagens.filter(m=>m.clienteId===cid);
-  if(!$('chatMsgs')) return;
-  $('chatMsgs').innerHTML=msgs.map(m=>`<div class="chat-msg ${m.sender==='admin'?'admin':'cliente'}">${m.msg}<div class="ts">${m.ts?new Date(m.ts).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):''}</div></div>`).join('');
-  $('chatMsgs').scrollTop=$('chatMsgs').scrollHeight;
-}
-window.enviarChat = async function(txt) {
-  const msg= txt || $v('chatInput'); if(!msg||!J.chatAtivo) return;
-  await db.collection('mensagens').add({tenantId:J.tid,clienteId:J.chatAtivo,sender:'admin',msg,lidaCliente:false,ts:Date.now()});
-  if($('chatInput')) $('chatInput').value='';
-}
-document.getElementById('chatInput')?.addEventListener('keydown',e=>{if(e.key==='Enter')window.enviarChat();});
-
-window.enviarArquivoChat = function(input) {
-  const file = input.files[0]; if(!file || !J.chatAtivo) return;
-  window.toast("Enviando arquivo: " + file.name);
-  window.enviarChat("📎 Arquivo: " + file.name);
-}
-
-// AGENDA
-window.prepAgenda = function(mode, id=null) {
-  ['agdId','agdServico'].forEach(f=>{if($(f)) $(f).value='';});
-  $('agdData').value=new Date().toISOString().split('T')[0]; $('agdHora').value='09:00'; window.popularSelects();
-  if(mode==='edit'&&id){
-    const a=J.agendamentos.find(x=>x.id===id); if(!a) return;
-    $('agdId').value=a.id; $('agdCliente').value=a.clienteId||''; window.filtrarVeicsAgenda(); setTimeout(()=>$('agdVeiculo').value=a.veiculoId||'',100);
-    $('agdData').value=a.data||''; $('agdHora').value=a.hora||''; $('agdServico').value=a.servico||''; $('agdMec').value=a.mecId||'';
+  window.renderChatMsgs = function(id) {
+    const container = $('chatMsgs');
+    if(!container) return;
+    const msgs = J.tipoChatAtivo === 'cliente' ? J.mensagens.filter(m=>m.clienteId===id) : J.chatEquipe.filter(m=>m.de===id || m.para===id);
+    if(msgs.length===0) {
+      container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-family:var(--fm);font-size:0.75rem;">Sem mensagens</div>';
+      return;
+    }
+    container.innerHTML = msgs.map(m=>{
+      const t = m.ts ? new Date(m.ts).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) : '';
+      const dir = m.sender==='admin' ? 'admin' : 'cliente';
+      const remetente = m.sender === 'admin' ? 'Você' : (J.tipoChatAtivo === 'cliente' ? 'Cliente' : 'Equipe');
+      return `<div class="chat-msg ${dir}"><small style="opacity:0.5; font-size:0.6rem; display:block; margin-bottom:2px;">${remetente}</small>${m.msg}<div class="ts">${t}</div></div>`;
+    }).join('');
+    container.scrollTop = container.scrollHeight;
   }
-}
-window.salvarAgenda = async function() {
-  if(!$v('agdCliente')||!$v('agdData')) return;
-  const p={tenantId:J.tid,clienteId:$v('agdCliente'),veiculoId:$v('agdVeiculo'),data:$v('agdData'),hora:$v('agdHora'),servico:$v('agdServico'),mecId:$v('agdMec'),status:'Agendado',updatedAt:new Date().toISOString()};
-  const id=$v('agdId');
-  if(id) await db.collection('agendamentos').doc(id).update(p); else { p.createdAt=new Date().toISOString(); await db.collection('agendamentos').add(p); }
-  window.toast('✓ AGENDAMENTO SALVO'); fecharModal('modalAgenda'); audit('AGENDA','Agendou '+p.servico);
-}
-window.renderAgenda = function() {
-  if(!$('tbAgenda')) return;
-  const lista=[...J.agendamentos].sort((a,b)=>a.data>b.data?1:-1);
-  $('tbAgenda').innerHTML = lista.map(a=>{
-    const c=J.clientes.find(x=>x.id===a.clienteId); const v=J.veiculos.find(x=>x.id===a.veiculoId); const m=J.equipe.find(x=>x.id===a.mecId);
-    const hoje=new Date().toISOString().split('T')[0]; const passado=a.data<hoje&&a.status==='Agendado';
-    return `<tr style="${passado?'background:rgba(255,59,59,0.04);':''}"><td style="font-family:var(--fm)">${dtBr(a.data)} ${a.hora||''}</td><td>${c?.nome||'-'}</td><td>${v?.placa||'-'}</td><td>${a.servico||'-'}</td><td>${m?.nome||'-'}</td><td>${passado?'<span class="pill pill-danger">VENCIDO</span>':'<span class="pill pill-cyan">AGENDADO</span>'}</td><td><button class="btn-ghost" onclick="window.prepAgenda('edit','${a.id}');abrirModal('modalAgenda')">✏</button><button class="btn-primary" onclick="window.converterAgendaOS('${a.id}')" style="font-size:0.65rem;padding:5px 10px;">→ ABRIR O.S.</button></td></tr>`;
-  }).join('');
-}
-window.converterAgendaOS = async function(agdId) {
-  const a=J.agendamentos.find(x=>x.id===agdId); if(!a) return;
-  await db.collection('agendamentos').doc(agdId).update({status:'Convertido',updatedAt:new Date().toISOString()});
-  window.prepOS('add');
-  setTimeout(()=>{
-    $('osCliente').value=a.clienteId; window.filtrarVeiculosOS();
-    setTimeout(()=>{ $('osVeiculo').value=a.veiculoId; },100);
-    $('osDescricao').value=a.servico||''; $('osData').value=a.data||new Date().toISOString().split('T')[0];
-    abrirModal('modalOS');
-  },100);
-}
 
-// AUDITORIA
-window.renderAuditoria = function() {
-  if(!$('tbAuditoria')) return;
-  $('tbAuditoria').innerHTML = J.auditoria.slice(0,100).map(a=>`<tr><td style="font-family:var(--fm);font-size:0.72rem;color:var(--muted)">${dtHrBr(a.ts)}</td><td><span class="pill pill-cyan">${a.modulo||'-'}</span></td><td style="font-family:var(--fm);color:var(--cyan)">${a.usuario||'-'}</td><td>${a.acao||'-'}</td></tr>`).join('');
-}
-
-// GEMINI IA
-let iaHistorico = [];
-window.iaPerguntar = async function() {
-  const inp=$('iaInput'); const msg=$v('iaInput'); if(!msg) return; inp.value='';
-  window.adicionarMsgIA('user',msg); window.adicionarMsgIA('bot','<span style="color:var(--muted)">⏳ Processando...</span>');
-  const key=J.gemini; if(!key){window.adicionarMsgIA('bot','⚠ Configure a API Key Gemini no Superadmin.');return;}
-  const ctx = `Oficina: ${J.tnome}. Mecânicos: ${J.equipe.map(f=>f.nome).join(', ')}. Veículos: ${J.veiculos.length}. O.S. Pátio: ${J.os.filter(o=>!['Cancelado','Pronto','Entregue'].includes(o.status)).length}. Peças críticas: ${J.estoque.filter(p=>(p.qtd||0)<=(p.min||0)).map(p=>p.desc).join(', ')}.`;
-  const histOS = J.os.slice(-10).map(o=>{const v=J.veiculos.find(x=>x.id===o.veiculoId);return `OS: ${v?.placa}, Sts: ${o.status}, Tot: ${moeda(o.total)}`;}).join('\n');
-  const systemPrompt = `Você é o thIAguinho, IA para gestão de oficinas.\n\nCONTEXTO:\n${ctx}\n\nÚLTIMAS O.S.:\n${histOS}\n\nResponda em português de forma técnica e direta. Não alucine dados.`;
-  iaHistorico.push({role:'user',text:msg});
-  try {
-    const contents=iaHistorico.map(h=>({role:h.role==='user'?'user':'model',parts:[{text:h.text}]}));
-    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents,systemInstruction:{parts:[{text:systemPrompt}]}})});
-    const data=await res.json(); if(!res.ok) throw new Error(data.error?.message||'Erro API');
-    const resp=data.candidates?.[0]?.content?.parts?.[0]?.text||'Sem resposta';
-    iaHistorico.push({role:'model',text:resp});
-    $('iaMsgs').lastChild?.remove(); window.adicionarMsgIA('bot',resp.replace(/\n/g,'<br>'));
-  } catch(e){ $('iaMsgs').lastChild?.remove(); window.adicionarMsgIA('bot','⚠ Erro: '+e.message); }
-}
-window.iaAnalisarDRE = async function() { $('iaInput').value='Analise o financeiro atual e sugira melhorias.'; ir('ia',document.querySelector('.nav-item:last-child')); await window.iaPerguntar(); }
-window.iaAnalisarEstoque = async function() { $('iaInput').value='Quais peças estão em nível crítico para reposição?'; ir('ia',document.querySelector('.nav-item:last-child')); await window.iaPerguntar(); }
-window.adicionarMsgIA = function(role, html) {
-  if(!$('iaMsgs')) return;
-  const div=document.createElement('div'); div.className='ia-msg '+role;
-  if(role==='bot') div.innerHTML='<strong>thIAguinho:</strong> '+html; else div.innerHTML=html;
-  $('iaMsgs').appendChild(div); $('iaMsgs').scrollTop=$('iaMsgs').scrollHeight;
-}
-document.getElementById('iaInput')?.addEventListener('keydown',e=>{if(e.key==='Enter')window.iaPerguntar();});
+  window.enviarChat = async function() {
+    const msg = $v('chatInput'); if(!msg || !J.chatAtivo) return;
+    if(J.tipoChatAtivo === 'cliente') {
+      await db.collection('mensagens').add({tenantId:J.tid, clienteId:J.chatAtivo, sender:'admin', msg, lidaCliente:false, lidaAdmin:true, ts:Date.now()});
+    } else {
+      await db.collection('chat_equipe').add({tenantId:J.tid, de:'admin', para:J.chatAtivo, sender:'admin', msg, lidaAdmin:true, lidaEquipe:false, ts:Date.now()});
+    }
+    $('chatInput').value = '';
+  }
 </script>
-<script src="js/financeiro.js"></script>
-<script src="js/os.js"></script>
 </body>
 </html>
