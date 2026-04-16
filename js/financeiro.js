@@ -214,31 +214,48 @@ window.salvarPgtoRH = async function() {
   const tipo=_v('rhPgtoTipo'); const obs=_v('rhPgtoObs');
   const batch=J.db.batch();
 
-  if(tipo==='Pagamento Comissão'){
-    let restante=valor;
-    const comPend=J.financeiro.filter(f=>f.isComissao&&f.mecId===func.id&&f.status==='Pendente').sort((a,b)=>a.venc>b.venc?1:-1);
-    for(const c of comPend){
-      if(restante<=0) break;
-      if(c.valor<=restante){batch.update(J.db.collection('financeiro').doc(c.id),{status:'Pago',updatedAt:new Date().toISOString()});restante-=c.valor;}
-      else{batch.update(J.db.collection('financeiro').doc(c.id),{valor:c.valor-restante,updatedAt:new Date().toISOString()});restante=0;}
+  let restante = valor;
+
+  // 1. Abater de comissões pendentes (Seja Vale ou Comissão, abate do saldo a receber do funcionário)
+  const comPend = J.financeiro.filter(f => f.isComissao && f.mecId === func.id && f.status === 'Pendente').sort((a,b)=>a.venc>b.venc?1:-1);
+
+  for (const c of comPend) {
+    if (restante <= 0) break;
+    if (c.valor <= restante) {
+      // Paga a comissão integralmente
+      batch.update(J.db.collection('financeiro').doc(c.id), {status: 'Pago', pgto: _v('rhPgtoForma'), updatedAt: new Date().toISOString()});
+      restante -= c.valor;
+    } else {
+      // Pagamento parcial (corta o valor da pendente e cria um recibo pago para a diferença)
+      batch.update(J.db.collection('financeiro').doc(c.id), {valor: c.valor - restante, updatedAt: new Date().toISOString()});
+      batch.set(J.db.collection('financeiro').doc(), {
+        tenantId: J.tid, tipo: 'Saída', status: 'Pago',
+        desc: `${c.desc} (Pgto Parcial)`,
+        valor: restante, pgto: _v('rhPgtoForma'), venc: _v('rhPgtoData'),
+        isComissao: true, mecId: func.id, vinculo: `E_${func.id}`,
+        createdAt: new Date().toISOString()
+      });
+      restante = 0;
     }
   }
 
-  batch.set(J.db.collection('financeiro').doc(),{
-    tenantId:J.tid,tipo:'Saída',status:'Pago',
-    desc:`RH: ${tipo} — ${func.nome}${obs?` (${obs})`:''}`,
-    valor,pgto:_v('rhPgtoForma'),venc:_v('rhPgtoData'),
-    isRH:true,mecId:func.id,vinculo:`E_${func.id}`,
-    createdAt:new Date().toISOString()
-  });
+  // 2. Se o Vale for maior que as comissões pendentes (ou se for um Salário Fixo sem saldo)
+  if (restante > 0) {
+    batch.set(J.db.collection('financeiro').doc(), {
+      tenantId: J.tid, tipo: 'Saída', status: 'Pago',
+      desc: `RH: ${tipo} — ${func.nome}${obs ? ` (${obs})` : ''}`,
+      valor: restante, pgto: _v('rhPgtoForma'), venc: _v('rhPgtoData'),
+      isRH: true, isComissao: true, mecId: func.id, vinculo: `E_${func.id}`,
+      createdAt: new Date().toISOString()
+    });
+  }
 
   await batch.commit();
   toastOk('✓ Pagamento RH registrado no caixa');
   audit('RH',`${tipo} de ${moeda(valor)} para ${func.nome}`);
   fecharModal('modalPgtoRH');
-  calcComissoes && calcComissoes();
+  if (window.calcComissoes) calcComissoes();
 };
-
 // ── EXPORTAR CSV ───────────────────────────────────────────
 window.exportarFinanceiro = function() {
   if(!J.financeiro.length){toastWarn('⚠ Nenhum dado para exportar');return;}
