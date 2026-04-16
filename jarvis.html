@@ -103,8 +103,9 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 .j-card-title svg{width:16px;height:16px;fill:var(--cyan);}
 .j-card-body{padding:18px; overflow-x: auto;}
 
-.kanban-wrap{display:flex;gap:14px;overflow-x:auto;padding-bottom:8px;align-items:flex-start;}
-.k-col{background:var(--surf2);border:1px solid var(--border);border-radius:3px;min-width:270px;width:270px;display:flex;flex-direction:column;max-height:calc(100vh - 220px);}
+.kanban-wrap{display:flex;gap:14px;overflow-x:auto;padding-bottom:16px;align-items:flex-start;min-height:calc(100vh - 220px);-webkit-overflow-scrolling:touch;}
+.k-col{background:var(--surf2);border:1px solid var(--border);border-radius:4px;min-width:300px;width:300px;display:flex;flex-direction:column;max-height:calc(100vh - 220px);flex-shrink:0;transition:transform 0.2s;}
+.k-col:hover{border-color:var(--border2);transform:translateY(-2px);}
 .k-col-head{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
 .k-col-label{font-family:var(--fd);font-size:0.85rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;}
 .k-col-count{font-family:var(--fm);font-size:0.65rem;color:var(--muted);padding:2px 8px;border:1px solid var(--border);border-radius:10px;}
@@ -245,8 +246,9 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
   .kpi-grid{grid-template-columns:1fr 1fr;}
   .dre-grid{grid-template-columns:1fr;}
   .form-row.cols-2, .form-row.cols-3 { grid-template-columns: 1fr !important; gap:10px; }
-  .kanban-wrap{flex-direction:column; padding-right:0;}
-  .k-col{min-width:100%; width:100%; max-height: none; margin-bottom:14px;}
+  /* Chevron Scroll Horizontal mantido em mobile para não espremer */
+  .kanban-wrap{flex-direction:row; overflow-x:auto; padding-bottom:20px;}
+  .k-col{min-width:280px; width:280px; max-height: calc(100vh - 250px); margin-bottom:0;}
   .k-col-body{max-height: 400px;}
   .chat-layout{grid-template-columns:1fr; height: calc(100vh - 120px);}
   .chat-list { max-height: 30vh; }
@@ -497,7 +499,7 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
             <div class="j-card-title">INVENTÁRIO DE PEÇAS</div>
             <div style="display:flex;gap:8px;">
               <button class="btn-success" onclick="abrirModal('modalNF');window.prepNF()">+ ENTRADA NF</button>
-              <button class="btn-primary" onclick="abrirModal('modalPeca');prepPeca('add')">+ NOVA PEÇA</button>
+              <bu<button class="btn-primary" id="btnRegistrarOS" onclick="abrirModal('modalOS');prepOS('add')">+ NOVA O.S.</button>>
             </div>
           </div>
           <div class="j-card-body" style="padding:0;">
@@ -535,7 +537,8 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
           <div style="display:flex;gap:8px;align-items:center;">
             <select class="j-select" style="width:120px" id="filtroFinTipo" onchange="window.renderFinanceiro()"><option value="">Todos</option><option value="Entrada">Receitas</option><option value="Saída">Despesas</option></select>
             <select class="j-select" style="width:130px" id="filtroFinStatus" onchange="window.renderFinanceiro()"><option value="">Todos</option><option value="Pago">Liquidado</option><option value="Pendente">Pendente</option></select>
-            <input type="month" class="j-input" style="width:150px" id="filtroFinMes" onchange="window.renderFinanceiro()">
+            <input type="date" class="j-input" style="width:130px" id="filtroFinInicio" onchange="window.renderFinanceiro()" title="Data Início">
+            <input type="date" class="j-input" style="width:130px" id="filtroFinFim" onchange="window.renderFinanceiro()" title="Data Fim">
             <button class="btn-primary" onclick="abrirModal('modalFin');window.prepFin()">+ LANÇAMENTO</button>
           </div>
         </div>
@@ -567,9 +570,11 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
         <div class="chat-list" id="chatLista"></div>
         <div class="chat-main">
           <div class="chat-head" id="chatHead">Selecione um cliente</div>
-          <div class="chat-msgs" id="chatMsgs"></div>
+          <div class="chat-msgs" id="chatMsgs" style="display:flex;flex-direction:column;gap:8px;padding:15px;overflow-y:auto;background:rgba(0,0,0,0.2);border-radius:4px;min-height:300px;"></div>
           <div class="chat-foot" id="chatFoot" style="display:none; gap:8px; align-items:center;">
-            <button class="btn-ghost" id="btnPTT" title="Gravar Áudio" style="padding:8px; border-radius:50%;"><svg style="width:18px;height:18px;"><path fill="currentColor" d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path fill="currentColor" d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg></button>
+            <button class="btn-ghost" id="btnPTT" title="Gravar Áudio" style="padding:8px; border-radius:50%; transition:all 0.2s;" onclick="toggleMicrofone()">
+              <svg id="micIcon" style="width:18px;height:18px;"><path fill="currentColor" d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path fill="currentColor" d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
+            </button>
             <button class="btn-ghost" onclick="document.getElementById('chatFile').click()" title="Anexar Arquivo" style="padding:8px; border-radius:50%;"><svg style="width:18px;height:18px;"><path fill="currentColor" d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V5c0-2.21-1.79-4-4-4S7 2.79 7 5v12.5c0 3.31 2.69 6 6 6s6-2.69 6-6V6h-1.5z"/></svg></button>
             <input type="file" id="chatFile" style="display:none" onchange="enviarArquivoChat(this)">
             <input class="j-input" id="chatInput" placeholder="Responder..." style="flex:1;">
