@@ -42,7 +42,7 @@ body { background: var(--bg); }
     <div id="cliLoginErr" class="login-err">Login ou PIN incorretos.</div>
     <div class="form-group">
       <label class="j-label">Login / E-mail</label>
-      <input class="j-input input-mono" id="cliLoginInput" placeholder="Seu login" autocomplete="off" spellcheck="false" autocapitalize="off">
+      <input class="j-input input-mono" id="cliLoginInput" placeholder="Seu login">
     </div>
     <div class="form-group">
       <label class="j-label">PIN de Acesso</label>
@@ -136,10 +136,9 @@ document.getElementById('cliLoginInput').addEventListener('keydown',e=>{if(e.key
 
 async function clienteLogin() {
   const login = document.getElementById('cliLoginInput').value.trim();
-  const pin   = document.getElementById('cliPinInput').value.trim().toUpperCase();
+  const pin   = document.getElementById('cliPinInput').value.trim();
   const errEl = document.getElementById('cliLoginErr');
   errEl.style.display='none';
-  
   if(!login||!pin){errEl.textContent='Preencha login e PIN.';errEl.style.display='block';return;}
 
   const btn=document.getElementById('btnCliLogin');
@@ -151,30 +150,26 @@ async function clienteLogin() {
     let cliDoc=null, tid=null;
 
     for(const ofc of oficinas.docs) {
-      // 1. Tenta pelo campo login
       const snap=await db.collection('clientes')
         .where('tenantId','==',ofc.id)
         .where('login','==',login)
         .get();
       if(!snap.empty){
         const c=snap.docs[0].data();
-        if((c.pin||'').toUpperCase() === pin){cliDoc=snap.docs[0];tid=ofc.id;break;}
+        if((c.pin||'')===pin){cliDoc=snap.docs[0];tid=ofc.id;break;}
       }
-      
-      // 2. Fallback: buscar por email ou documento (CPF) ou por telefone
-      if(!cliDoc) {
-        const snap2=await db.collection('clientes').where('tenantId','==',ofc.id).get();
-        for(let docSnap of snap2.docs) {
-          const c = docSnap.data();
-          if(c.email === login || c.doc === login || c.wpp === login) {
-             if((c.pin||'').toUpperCase() === pin){cliDoc=docSnap;tid=ofc.id;break;}
-          }
-        }
+      // Fallback: buscar por email
+      const snap2=await db.collection('clientes')
+        .where('tenantId','==',ofc.id)
+        .where('email','==',login)
+        .get();
+      if(!snap2.empty){
+        const c=snap2.docs[0].data();
+        if((c.pin||'')===pin){cliDoc=snap2.docs[0];tid=ofc.id;break;}
       }
-      if(cliDoc) break;
     }
 
-    if(!cliDoc){throw new Error('As Credenciais estão incorretas. Verifique seu Loin e PIN.');}
+    if(!cliDoc){throw new Error('Login ou PIN incorretos.');}
 
     _cliData = {id:cliDoc.id,...cliDoc.data()};
     _cliTid  = tid;
@@ -255,8 +250,7 @@ function _renderOS() {
     const stBar = STATUS_ORDEM.map((s,i)=>`
       <div class="status-step ${i<stIdx?'done':i===stIdx?'active':''}">${STATUS_LABELS[s]||s}</div>`).join('');
     const mediaHtml = (os.media||[]).slice(0,4).map(m=>
-      m.type==='video' ? `<video src="${m.url}" class="media-thumb" controls></video>` : `<img src="${m.url}" class="media-thumb" onclick="window.open('${m.url}')" alt="Foto" loading="lazy">`
-    ).join('');
+      `<img src="${m.url}" class="media-thumb" onclick="window.open('${m.url}')" alt="Foto" loading="lazy">`).join('');
     const tlHtml = os.timeline?.length ? [...os.timeline].reverse().slice(0,3).map(e=>
       `<div style="font-family:var(--fm);font-size:.68rem;padding:4px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text-muted)">${dtHrBr(e.dt)}</span> — ${e.acao||''}</div>`).join('') : '';
     const approveBtn = os.status==='Orcamento_Enviado' ? `
@@ -318,27 +312,15 @@ function _renderHistorico() {
   </div>`).join('');
 }
 
-// ── CHAT (COM RENDER DE ARQUIVOS E ÁUDIO CORRIGIDO) ────────
+// ── CHAT ───────────────────────────────────────────────────
 function _renderChat() {
   const container=document.getElementById('cliChatMsgs'); if(!container) return;
   if(!_cliMsgs.length){container.innerHTML='<div class="empty-state"><div class="empty-state-icon">💬</div><div class="empty-state-sub">Sem mensagens ainda</div></div>';return;}
-  
   container.innerHTML=_cliMsgs.map(m=>{
     const t=m.ts?new Date(m.ts).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'';
     const dir=m.sender==='cliente'?'saida':'entrada';
-    
-    let contentHtml = m.msg || '';
-    if(m.fileUrl) {
-       if(m.fileType === 'audio' || m.msg === '🎤 Áudio') {
-           contentHtml += `<br><audio controls src="${m.fileUrl}" style="max-width:200px;margin-top:5px;height:35px;"></audio>`;
-       } else if (m.fileType === 'video') {
-           contentHtml += `<br><video controls src="${m.fileUrl}" style="max-width:200px;margin-top:5px;"></video>`;
-       } else {
-           contentHtml += `<br><a href="${m.fileUrl}" target="_blank" style="color:var(--brand);font-size:0.8rem;text-decoration:underline;">📎 Visualizar / Baixar</a>`;
-       }
-    }
-
-    return `<div class="msg-c ${dir}">${contentHtml}<div class="msg-time">${t}</div></div>`;
+    return `<div class="msg-c ${dir}">${m.msg||''}${m.fileUrl?`<br><a href="${m.fileUrl}" target="_blank" style="color:var(--brand)">📎 Ver Arquivo</a>`:''}
+      <div class="msg-time">${t}</div></div>`;
   }).join('');
   container.scrollTop=container.scrollHeight;
   // Marcar como lidas

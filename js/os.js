@@ -7,8 +7,8 @@
 
 const OS_STATUSES = ['Triagem','Orcamento','Orcamento_Enviado','Aprovado','Andamento','Pronto','Entregue'];
 
-// Correção Bug Crítico 1 (Tela de Loader Infinita): Usa objeto de janela global para evitar re-declaração duplicada da constante `STATUS_LEGADO` entre arquivos.
-window.STATUS_LEGADO = window.STATUS_LEGADO || {
+// Mapa de compatibilidade com dados legados
+const STATUS_LEGADO = {
   'Aguardando':'Triagem','patio':'Triagem','box':'Andamento',
   'aprovacao':'Orcamento_Enviado','faturado':'Pronto','cancelado':'Cancelado',
   'concluido':'Entregue','Concluido':'Entregue',
@@ -19,30 +19,22 @@ window.STATUS_LEGADO = window.STATUS_LEGADO || {
 // ── KANBAN ─────────────────────────────────────────────────
 window.renderKanban = function() {
   const busca       = (_v('searchOS') || '').toLowerCase();
-  const filtroNicho = _v('filtroNichoKanban') || '';
+  const filtroNicho = _v('filtroNichoKanban');
 
   const cols = {}, cnts = {};
   OS_STATUSES.forEach(s => { cols[s] = []; cnts[s] = 0; });
 
   J.os.filter(o => {
-    const st = window.STATUS_LEGADO[o.status] || o.status;
-    if (st === 'Cancelado') return false;
-    
-    if ((J.role === 'mecanico' || J.role === 'equipe') && o.mecId !== J.fid) {
-      return false;
-    }
-    return true;
+    const st = STATUS_LEGADO[o.status] || o.status;
+    return st !== 'Cancelado';
   }).forEach(o => {
-    const st  = window.STATUS_LEGADO[o.status] || o.status || 'Triagem';
+    const st  = STATUS_LEGADO[o.status] || o.status || 'Triagem';
     const v   = J.veiculos.find(x => x.id === o.veiculoId) || { placa: o.placa, modelo: o.veiculo, tipo: o.tipoVeiculo };
     const c   = J.clientes.find(x => x.id === o.clienteId) || { nome: o.cliente };
-    
-    if (busca && !(v.placa||'').toLowerCase().includes(busca) &&
-        !(c.nome||'').toLowerCase().includes(busca) &&
+    if (busca && !(v?.placa||'').toLowerCase().includes(busca) &&
+        !(c?.nome||'').toLowerCase().includes(busca) &&
         !(o.placa||'').toLowerCase().includes(busca)) return;
-    
-    if (filtroNicho && (v.tipo||'') !== filtroNicho) return;
-    
+    if (filtroNicho && (v?.tipo||'') !== filtroNicho) return;
     if (cols[st]) { cols[st].push({ os: o, v, c }); cnts[st]++; }
   });
 
@@ -92,7 +84,7 @@ function _buildCard(os, v, c, status) {
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;border-top:1px solid rgba(255,255,255,0.05);padding-top:4px;">
       ${btnPrev}
-      <span class="k-date">${window.dtBr ? dtBr(os.createdAt||os.data) : (os.createdAt||os.data)}</span>
+      <span class="k-date">${dtBr(os.createdAt||os.data)}</span>
       ${btnNext}
     </div>
   </div>`;
@@ -103,20 +95,26 @@ window.moverStatusOS = async function(id, novoStatus) {
   const os = J.os.find(x => x.id === id);
   if (!os) return;
 
-  const st = window.STATUS_LEGADO[os.status] || os.status || 'Triagem';
-  
+  // Validações de negócio
+  const st = STATUS_LEGADO[os.status] || os.status || 'Triagem';
+  const idxAtual = OS_STATUSES.indexOf(st);
+  const idxNovo  = OS_STATUSES.indexOf(novoStatus);
+
   if (novoStatus === 'Orcamento' && !os.desc && !os.relato) {
-    window.toastWarn && toastWarn('⚠ Preencha o defeito/serviço antes de mover para Orçamento.');
+    toastWarn('⚠ Preencha o defeito/serviço antes de mover para Orçamento.');
     return;
   }
-  if (novoStatus === 'Andamento' && !['Aprovado','Orcamento_Enviado'].includes(window.STATUS_LEGADO[os.status]||os.status)) {
-    window.toastWarn && toastWarn('⚠ A O.S. precisa estar Aprovada antes de ir para Em Serviço.');
+  if (novoStatus === 'Aprovado' && os.status !== 'Orcamento_Enviado') {
+    // Permite aprovação direta pela equipe
+  }
+  if (novoStatus === 'Andamento' && !['Aprovado','Orcamento_Enviado'].includes(STATUS_LEGADO[os.status]||os.status)) {
+    toastWarn('⚠ A O.S. precisa estar Aprovada antes de ir para Em Serviço.');
     return;
   }
   if (novoStatus === 'Pronto') {
     const temItens = (os.servicos||[]).length > 0 || (os.pecas||[]).length > 0 || os.maoObra > 0 || os.total > 0;
     if (!temItens) {
-      window.toastWarn && toastWarn('⚠ Adicione serviços ou peças antes de finalizar.');
+      toastWarn('⚠ Adicione serviços ou peças antes de finalizar.');
       return;
     }
   }
@@ -130,9 +128,9 @@ window.moverStatusOS = async function(id, novoStatus) {
     updatedAt: new Date().toISOString()
   });
 
-  window.audit && audit('KANBAN', `OS ${(os.placa||id.slice(-6)).toUpperCase()} → ${novoStatus}`);
-  window.notificarEquipe && notificarEquipe(`O.S. ${os.placa||id.slice(-6)} movida para ${novoStatus.replace('_',' ')} por ${J.nome}`);
-  window.toastOk && toastOk(`✓ Movido para ${novoStatus.replace('_',' ')}`);
+  audit('KANBAN', `OS ${(os.placa||id.slice(-6)).toUpperCase()} → ${novoStatus}`);
+  notificarEquipe(`O.S. ${os.placa||id.slice(-6)} movida para ${novoStatus.replace('_',' ')} por ${J.nome}`);
+  toastOk(`✓ Movido para ${novoStatus.replace('_',' ')}`);
 
   if (novoStatus === 'Orcamento_Enviado') {
     setTimeout(() => window.enviarWppB2C && enviarWppB2C(id), 300);
@@ -145,21 +143,14 @@ window.enviarWppB2C = function(id) {
   const c  = J.clientes.find(x => x.id === os.clienteId);
   const v  = J.veiculos.find(x => x.id === os.veiculoId);
   const cel = os.celular || c?.wpp || '';
-  
-  if (!cel) { window.toastWarn && toastWarn('⚠ Cliente sem WhatsApp'); return; }
-  
-  const pin      = c?.pin || os.pin || '1234';
-  const loginApp = c?.login || c?.email || c?.doc || 'seu login';
-  const link     = 'https://tsvalencio-ia.github.io/of/clientes.html';
-  
-  const cliNome  = (c?.nome || os.cliente || 'Cliente').split(' ')[0];
+  if (!cel) { toastWarn('⚠ Cliente sem WhatsApp'); return; }
+  const pin    = os.pin || randId(6);
+  const link   = window.location.origin + '/cliente.html';
+  const cliNome = (c?.nome || os.cliente || 'Cliente').split(' ')[0];
   const veicNome = v?.modelo || os.veiculo || 'veículo';
-  const totalFmt = (os.total||0).toFixed(2).replace('.',',');
-
-  const msg = `Olá ${cliNome}! 👋\n\nO orçamento do seu *${veicNome}* está pronto na *${J.tnome}*.\n\n💰 *Total: R$ ${totalFmt}*\n\nAcesse seu portal exclusivo para aprovar ou recusar o serviço diretamente:\n🔗 ${link}\n\n👤 *Seu Login:* ${loginApp}\n🔑 *PIN de Acesso:* ${pin}`;
-
+  const msg = JARVIS_CONST.WPP_MSGS.orcamento(cliNome, veicNome, J.tnome, (os.total||0).toFixed(2).replace('.',','), link, pin);
   window.open(`https://wa.me/55${cel.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`, '_blank');
-  window.audit && audit('WHATSAPP', `Enviou orçamento B2C para ${os.placa||veicNome}`);
+  audit('WHATSAPP', `Enviou orçamento B2C para ${os.placa||veicNome}`);
 };
 
 // ── PREPARAR MODAL OS ──────────────────────────────────────
@@ -178,8 +169,8 @@ window.prepOS = function(mode, id=null) {
   if(document.getElementById('areaPgtoOS'))   document.getElementById('areaPgtoOS').style.display='none';
   if(document.getElementById('btnEnviarWppOS')) document.getElementById('btnEnviarWppOS').style.display='none';
 
-  window.popularSelects && popularSelects();
-  if (mode==='add') { window.adicionarServicoOS && adicionarServicoOS(); return; }
+  popularSelects && popularSelects();
+  if (mode==='add') { adicionarServicoOS && adicionarServicoOS(); return; }
 
   if (mode==='edit' && id) {
     const o = J.os.find(x => x.id === id); if (!o) return;
@@ -195,33 +186,38 @@ window.prepOS = function(mode, id=null) {
     _sv('osData',      o.data   || '');
     _sv('osKm',        o.km     || '');
     _sv('osMec',       o.mecId  || '');
-    _sv('osStatus', window.STATUS_LEGADO[o.status] || o.status || 'Triagem');
+    _sv('osStatus', STATUS_LEGADO[o.status] || o.status || 'Triagem');
 
     _sv('osCliente', o.clienteId||'');
-    window.filtrarVeiculosOS && filtrarVeiculosOS();
+    filtrarVeiculosOS && filtrarVeiculosOS();
     setTimeout(()=>{ _sv('osVeiculo', o.veiculoId||''); }, 80);
 
-    if (o.servicos?.length) o.servicos.forEach(s => window.adicionarServicoOS && adicionarServicoOS(s));
-    else if ((o.maoObra||0) > 0) window.adicionarServicoOS && adicionarServicoOS({desc:'Mão de Obra', valor:o.maoObra});
+    // Serviços
+    if (o.servicos?.length) o.servicos.forEach(s => adicionarServicoOS && adicionarServicoOS(s));
+    else if ((o.maoObra||0) > 0) adicionarServicoOS && adicionarServicoOS({desc:'Mão de Obra', valor:o.maoObra});
 
-    if (o.pecas?.length) o.pecas.forEach(p => window.adicionarPecaOS && adicionarPecaOS(p));
+    // Peças
+    if (o.pecas?.length) o.pecas.forEach(p => adicionarPecaOS && adicionarPecaOS(p));
 
+    // Checklist
     _sv('chkComb', o.chkComb||'N/A'); _sv('chkPneuDia', o.chkPneuDia||'');
     _sv('chkPneuTra', o.chkPneuTra||''); _sv('chkObs', o.chkObs||'');
-    window._ck && _ck('chkPainel', o.chkPainel); _ck('chkPressao', o.chkPressao);
+    _ck('chkPainel', o.chkPainel); _ck('chkPressao', o.chkPressao);
     _ck('chkCarroceria', o.chkCarroceria); _ck('chkDocumentos', o.chkDocumentos);
 
+    // Timeline
     if (o.timeline) {
       _sv('osTimelineData', JSON.stringify(o.timeline));
-      window.renderTimelineOS && renderTimelineOS();
+      renderTimelineOS();
     }
 
+    // Mídia
     const media = o.media || o.fotos || [];
     _sv('osMediaArray', JSON.stringify(media));
-    window.renderMediaOS && renderMediaOS();
+    renderMediaOS && renderMediaOS();
 
-    window.calcOSTotal && calcOSTotal();
-    window.verificarStatusOS && verificarStatusOS();
+    calcOSTotal && calcOSTotal();
+    verificarStatusOS && verificarStatusOS();
 
     if (document.getElementById('btnGerarPDFOS')) document.getElementById('btnGerarPDFOS').style.display='block';
   }
@@ -236,7 +232,7 @@ window.adicionarServicoOS = function(s=null) {
     <input type="number" class="j-input serv-valor" value="${s?.valor||0}" step="0.01" placeholder="R$ 0,00" oninput="calcOSTotal()">
     <button type="button" onclick="this.parentElement.remove();calcOSTotal()" style="background:var(--danger-dim);border:1px solid rgba(255,59,59,.3);color:var(--danger);cursor:pointer;width:36px;height:36px;font-size:1rem;line-height:1;">✕</button>`;
   document.getElementById('containerServicosOS')?.appendChild(div);
-  window.calcOSTotal && calcOSTotal();
+  calcOSTotal && calcOSTotal();
 };
 
 // ── PEÇAS ──────────────────────────────────────────────────
@@ -245,7 +241,7 @@ window.adicionarPecaOS = function(p=null) {
   div.className = 'grid-pecas';
   const opts = '<option value="">Selecionar peça...</option>' +
     J.estoque.filter(x => (x.qtd||0) > 0 || (p && p.estoqueId === x.id))
-    .map(x => `<option value="${x.id}" data-v="${x.venda||0}" data-c="${x.custo||0}" data-d="${x.desc||''}" ${p?.estoqueId===x.id?'selected':''}>[${x.qtd}] ${x.desc} — ${window.moeda?moeda(x.venda):'R$ '+(x.venda||0)}</option>`).join('');
+    .map(x => `<option value="${x.id}" data-v="${x.venda||0}" data-c="${x.custo||0}" data-d="${x.desc||''}" ${p?.estoqueId===x.id?'selected':''}>[${x.qtd}] ${x.desc} — ${moeda(x.venda)}</option>`).join('');
   div.innerHTML = `
     <select class="j-select peca-sel" onchange="selecionarPecaOS(this)">${opts}</select>
     <input type="number" class="j-input peca-qtd" value="${p?.qtd||p?.q||1}" min="1" oninput="calcOSTotal()">
@@ -253,7 +249,7 @@ window.adicionarPecaOS = function(p=null) {
     <input type="number" class="j-input peca-venda" value="${p?.venda||p?.v||0}" step="0.01" placeholder="Venda" oninput="calcOSTotal()">
     <button type="button" onclick="this.parentElement.remove();calcOSTotal()" style="background:var(--danger-dim);border:1px solid rgba(255,59,59,.3);color:var(--danger);cursor:pointer;width:36px;height:36px;font-size:1rem;line-height:1;">✕</button>`;
   document.getElementById('containerPecasOS')?.appendChild(div);
-  window.calcOSTotal && calcOSTotal();
+  calcOSTotal && calcOSTotal();
 };
 
 window.selecionarPecaOS = function(sel) {
@@ -263,7 +259,7 @@ window.selecionarPecaOS = function(sel) {
   const custoEl = row.querySelector('.peca-custo');
   if (vendaEl && opt.dataset.v) vendaEl.value = opt.dataset.v;
   if (custoEl && opt.dataset.c) custoEl.value = opt.dataset.c;
-  window.calcOSTotal && calcOSTotal();
+  calcOSTotal && calcOSTotal();
 };
 
 // ── CÁLCULO TOTAL ──────────────────────────────────────────
@@ -300,26 +296,29 @@ window.checkPgtoOS = function() {
 window.salvarOS = async function() {
   const osId = _v('osId');
 
+  // Validações obrigatórias
   const placa = _v('osPlaca');
   const cliId = _v('osCliente');
   const veicId= _v('osVeiculo');
   const desc  = _v('osDescricao') || _v('osRelato');
   const status= _v('osStatus');
 
-  if (!placa && !cliId) { window.toastWarn && toastWarn('⚠ Informe a placa ou selecione o cliente'); return; }
+  if (!placa && !cliId) { toastWarn('⚠ Informe a placa ou selecione o cliente'); return; }
 
+  // Regra: Orçamento precisa de diagnóstico ou desc
   if (status === 'Orcamento' && !desc && !_v('osDiagnostico')) {
-    window.toastWarn && toastWarn('⚠ Preencha o defeito reclamado antes de gerar orçamento'); return;
+    toastWarn('⚠ Preencha o defeito reclamado antes de gerar orçamento'); return;
   }
-  
+  // Regra: Execução exige aprovação
   if (status === 'Andamento') {
     const osAtual = J.os.find(x => x.id === osId);
-    const stAtual = osAtual ? (window.STATUS_LEGADO[osAtual.status]||osAtual.status) : 'Triagem';
+    const stAtual = osAtual ? (STATUS_LEGADO[osAtual.status]||osAtual.status) : 'Triagem';
     if (!['Aprovado','Andamento','Orcamento_Enviado'].includes(stAtual) && !osId) {
-      window.toastWarn && toastWarn('⚠ A O.S. precisa ser aprovada antes de ir para execução'); return;
+      toastWarn('⚠ A O.S. precisa ser aprovada antes de ir para execução'); return;
     }
   }
 
+  // Coletar serviços
   const servicos = []; let totalMO = 0;
   document.querySelectorAll('#containerServicosOS > div').forEach(row => {
     const desc2 = row.querySelector('.serv-desc')?.value||'';
@@ -327,6 +326,7 @@ window.salvarOS = async function() {
     if (desc2||val>0) { servicos.push({desc:desc2,valor:val}); totalMO+=val; }
   });
 
+  // Coletar peças (com validação de estoque negativo)
   const pecas = []; let totalPecas = 0;
   let estoqueInsuficiente = false;
   document.querySelectorAll('#containerPecasOS > div').forEach(row => {
@@ -337,10 +337,11 @@ window.salvarOS = async function() {
     const custo = parseFloat(row.querySelector('.peca-custo')?.value||0);
     const estoqueId = sel?.value;
 
+    // Validação estoque negativo apenas na conclusão
     if (estoqueId && ['Pronto','Entregue'].includes(status) && !osId) {
       const item = J.estoque.find(x => x.id === estoqueId);
       if (item && (item.qtd||0) < qtd) {
-        window.toastWarn && toastWarn(`⚠ Estoque insuficiente: ${item.desc} (${item.qtd||0} disponível)`);
+        toastWarn(`⚠ Estoque insuficiente: ${item.desc} (${item.qtd||0} disponível)`);
         estoqueInsuficiente = true;
       }
     }
@@ -353,14 +354,16 @@ window.salvarOS = async function() {
   });
   if (estoqueInsuficiente) return;
 
+  // Validação: concluir sem itens
   if (['Pronto','Entregue'].includes(status) && servicos.length === 0 && pecas.length === 0 && totalMO === 0) {
-    window.toastWarn && toastWarn('⚠ Adicione serviços ou peças antes de finalizar a O.S.'); return;
+    toastWarn('⚠ Adicione serviços ou peças antes de finalizar a O.S.'); return;
   }
 
   const total = parseFloat(_v('osTotalHidden')||0);
 
+  // Montar timeline
   const tl = JSON.parse(document.getElementById('osTimelineData')?.value||'[]');
-  const stAtualTL = osId ? (window.STATUS_LEGADO[J.os.find(x=>x.id===osId)?.status]||status) : 'Nova';
+  const stAtualTL = osId ? (STATUS_LEGADO[J.os.find(x=>x.id===osId)?.status]||status) : 'Nova';
   const acaoTL    = osId ? `Editou O.S. | Status: ${stAtualTL} → ${status}` : `Abriu nova O.S. | Status: ${status}`;
   tl.push({ dt: new Date().toISOString(), user: J.nome, role: J.role, acao: acaoTL, tipo: 'edicao', antes: stAtualTL, depois: status });
 
@@ -373,7 +376,7 @@ window.salvarOS = async function() {
     veiculoId:   veicId,
     celular:     _v('osCelular'),
     cpf:         _v('osCpf'),
-    desc:        (_v('osDescricao') || _v('osRelato'))+'',
+    desc:        _v('osDescricao') || _v('osRelato'),
     diagnostico: _v('osDiagnostico'),
     mecId:       _v('osMec'),
     data:        _v('osData'),
@@ -383,10 +386,8 @@ window.salvarOS = async function() {
     timeline:    tl,
     chkComb:     _v('chkComb'), chkPneuDia: _v('chkPneuDia'),
     chkPneuTra:  _v('chkPneuTra'), chkObs: _v('chkObs'),
-    chkPainel:   window._chk ? _chk('chkPainel') : false, 
-    chkPressao:  window._chk ? _chk('chkPressao') : false,
-    chkCarroceria: window._chk ? _chk('chkCarroceria') : false, 
-    chkDocumentos: window._chk ? _chk('chkDocumentos') : false,
+    chkPainel:   _chk('chkPainel'), chkPressao: _chk('chkPressao'),
+    chkCarroceria:_chk('chkCarroceria'), chkDocumentos: _chk('chkDocumentos'),
     pgtoForma:   _v('osPgtoForma'), pgtoData: _v('osPgtoData'),
     proxRevData: _v('osProxRev'), proxRevKm: _v('osProxKm'),
     updatedAt:   new Date().toISOString()
@@ -396,26 +397,27 @@ window.salvarOS = async function() {
   if (btnSalvar) { btnSalvar.disabled=true; btnSalvar.innerHTML='<span class="spinner"></span> Salvando...'; }
 
   try {
+    // ── GERAÇÃO FINANCEIRA AO FECHAR A OS ──────────────────
     if (['Pronto','Entregue'].includes(status) && _v('osPgtoForma') && _v('osPgtoData')) {
       await _gerarFinanceiroOS(payload, pecas, totalMO, totalPecas, osId);
     }
 
     if (osId) {
       await J.db.collection('ordens_servico').doc(osId).update(payload);
-      window.toastOk && toastOk('✓ O.S. ATUALIZADA');
-      window.audit && audit('OS', `Editou OS ${osId.slice(-6).toUpperCase()} — ${placa||cliId}`);
+      toastOk('✓ O.S. ATUALIZADA');
+      audit('OS', `Editou OS ${osId.slice(-6).toUpperCase()} — ${placa||cliId}`);
     } else {
       payload.createdAt = new Date().toISOString();
       payload.pin = Math.floor(1000 + Math.random()*9000).toString();
-      await J.db.collection('ordens_servico').add(payload);
-      window.toastOk && toastOk('✓ O.S. CRIADA');
-      window.audit && audit('OS', `Criou OS para ${placa||J.clientes.find(c=>c.id===cliId)?.nome||'?'}`);
-      window.notificarEquipe && notificarEquipe(`Nova O.S. — ${placa||''} criada por ${J.nome}`);
+      const ref = await J.db.collection('ordens_servico').add(payload);
+      toastOk('✓ O.S. CRIADA');
+      audit('OS', `Criou OS para ${placa||J.clientes.find(c=>c.id===cliId)?.nome||'?'}`);
+      notificarEquipe(`Nova O.S. — ${placa||''} criada por ${J.nome}`);
     }
 
-    window.fecharModal && fecharModal('modalOS');
+    fecharModal('modalOS');
   } catch(e) {
-    window.toastErr && toastErr('Erro ao salvar O.S.: ' + e.message);
+    toastErr('Erro ao salvar O.S.: ' + e.message);
     console.error(e);
   } finally {
     if (btnSalvar) { btnSalvar.disabled=false; btnSalvar.innerHTML='REGISTRAR O.S.'; }
@@ -436,6 +438,7 @@ async function _gerarFinanceiroOS(payload, pecas, totalMO, totalPecas, osId) {
   const nomeCliente = c?.nome || payload.cliente || '';
   const valorParc = payload.total / Math.max(parcelas,1);
 
+  // Gera parcelas financeiras
   for (let i = 0; i < parcelas; i++) {
     const d = new Date(pgtoData); d.setMonth(d.getMonth() + i);
     const ref = J.db.collection('financeiro').doc();
@@ -449,6 +452,7 @@ async function _gerarFinanceiroOS(payload, pecas, totalMO, totalPecas, osId) {
     });
   }
 
+  // Comissão do mecânico
   const mec = J.equipe.find(f => f.id === payload.mecId);
   if (mec && payload.total > 0) {
     const percMO  = parseFloat(mec.comissaoServico || mec.comissao || 0);
@@ -460,7 +464,7 @@ async function _gerarFinanceiroOS(payload, pecas, totalMO, totalPecas, osId) {
       const ref = J.db.collection('financeiro').doc();
       batch.set(ref, {
         tenantId: J.tid, tipo: 'Saída', status: 'Pendente',
-        desc: `Comissão ${mec.nome} — OS ${placa} (MO: ${window.moeda?moeda(valMO):valMO}, Peça: ${window.moeda?moeda(valPec):valPec})`,
+        desc: `Comissão ${mec.nome} — OS ${placa} (MO: ${moeda(valMO)}, Peça: ${moeda(valPec)})`,
         valor: parseFloat(valCom.toFixed(2)),
         pgto: 'A Combinar', venc: new Date().toISOString().split('T')[0],
         isComissao: true, mecId: payload.mecId, vinculo: `E_${payload.mecId}`,
@@ -469,6 +473,7 @@ async function _gerarFinanceiroOS(payload, pecas, totalMO, totalPecas, osId) {
     }
   }
 
+  // Baixar estoque
   for (const p of pecas) {
     if (!p.estoqueId || !p.qtd) continue;
     const item = J.estoque.find(x => x.id === p.estoqueId);
@@ -481,13 +486,12 @@ async function _gerarFinanceiroOS(payload, pecas, totalMO, totalPecas, osId) {
   }
 
   await batch.commit();
-  window.audit && audit('FINANCEIRO', `Gerou ${parcelas}x parcela(s) para OS ${placa}`);
+  audit('FINANCEIRO', `Gerou ${parcelas}x parcela(s) para OS ${placa}`);
 }
 
 // ── UPLOAD MÍDIA ───────────────────────────────────────────
 window.uploadOsMedia = async function() {
-  const input = document.getElementById('osFileInput');
-  const f = input?.files[0]; if (!f) return;
+  const f = document.getElementById('osFileInput')?.files[0]; if (!f) return;
   const btn = document.getElementById('btnUploadMedia');
   if (btn) { btn.innerHTML='<span class="spinner"></span> Enviando...'; btn.disabled=true; }
   try {
@@ -498,13 +502,9 @@ window.uploadOsMedia = async function() {
       const media = JSON.parse(document.getElementById('osMediaArray').value||'[]');
       media.push({ url: data.secure_url, type: data.resource_type });
       _sv('osMediaArray', JSON.stringify(media));
-      if(input) input.value = '';
-      window.renderMediaOS && renderMediaOS(); 
-      window.toastOk && toastOk('✓ Mídia enviada com sucesso');
-    } else {
-        throw new Error(data.error?.message || "Erro desconhecido Cloudinary");
+      renderMediaOS(); toastOk('✓ Mídia enviada');
     }
-  } catch(e) { window.toastErr && toastErr('Erro no upload: '+e.message); }
+  } catch(e) { toastErr('Erro no upload: '+e.message); }
   finally { if (btn) { btn.innerHTML='UPLOAD'; btn.disabled=false; } }
 };
 
@@ -520,8 +520,7 @@ window.renderMediaOS = function() {
 
 window.removerMediaOS = function(idx) {
   const media = JSON.parse(document.getElementById('osMediaArray').value||'[]');
-  media.splice(idx,1); _sv('osMediaArray', JSON.stringify(media)); 
-  window.renderMediaOS && renderMediaOS();
+  media.splice(idx,1); _sv('osMediaArray', JSON.stringify(media)); renderMediaOS();
 };
 
 // ── TIMELINE ───────────────────────────────────────────────
@@ -531,7 +530,7 @@ window.renderTimelineOS = function() {
   if (!tl.length) { el.innerHTML = '<div class="empty-state-sub" style="padding:20px">Nenhum registro na timeline.</div>'; return; }
   el.innerHTML = '<div class="timeline">' + [...tl].reverse().map(e => `
     <div class="tl-item">
-      <div class="tl-date">${window.dtHrBr?dtHrBr(e.dt):e.dt}</div>
+      <div class="tl-date">${dtHrBr(e.dt)}</div>
       <div class="tl-user">${e.user||'—'}</div>
       <div class="tl-action">${e.acao||'—'}</div>
     </div>`).join('') + '</div>';

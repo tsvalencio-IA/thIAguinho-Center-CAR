@@ -80,7 +80,7 @@
 
   <div class="sb-user">
     <div class="sb-user-info">
-      <div class="avatar" id="sbAvatar">A</div>
+      <div class="avatar" id="sbAvatar">G</div>
       <div>
         <div class="user-name" id="sbUserNome">Carregando</div>
         <div class="user-role" id="sbUserRole">ADMIN</div>
@@ -93,6 +93,7 @@
 <!-- ── MAIN ─────────────────────────────────────────────── -->
 <div class="main">
 
+  <!-- Painel de Atenção (Chevron-style) -->
   <div id="painelAtencaoWrap" class="atencao-panel">
     <div class="atencao-inner" id="painelAtencao"></div>
   </div>
@@ -107,6 +108,7 @@
       </div>
     </div>
 
+    <!-- Busca Global -->
     <div id="buscaGlobalWrap" style="flex:1;max-width:360px;position:relative;margin:0 16px">
       <div class="search-wrap" style="width:100%">
         <svg viewBox="0 0 16 16" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;fill:var(--text-muted);pointer-events:none"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.099zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/></svg>
@@ -120,6 +122,7 @@
       <div class="topbar-badge" id="tbNicho" style="color:var(--brand)">🚗 CARROS</div>
     </div>
   </div>
+
   <div class="content">
 
     <!-- ── DASHBOARD ──────────────────────────────────── -->
@@ -133,15 +136,11 @@
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
         <div class="j-card">
           <div class="j-card-header"><div class="j-card-title">ÚLTIMAS O.S.</div></div>
-          <div class="j-card-body" style="padding:0">
-            <table class="j-table"><thead><tr><th>Placa</th><th>Cliente</th><th>Status</th><th>Valor</th></tr></thead><tbody id="dashRecentOS"></tbody></table>
-          </div>
+          <div class="j-card-body" style="padding:0"><table class="j-table"><thead><tr><th>Placa</th><th>Cliente</th><th>Status</th><th>Valor</th></tr></thead><tbody id="dashRecentOS"></tbody></table></div>
         </div>
         <div class="j-card">
           <div class="j-card-header"><div class="j-card-title" style="color:var(--warn)">ALERTAS ESTOQUE</div></div>
-          <div class="j-card-body" style="padding:0">
-            <table class="j-table"><thead><tr><th>Peça</th><th>Atual</th><th>Mín</th><th>Status</th></tr></thead><tbody id="dashAlertStock"></tbody></table>
-          </div>
+          <div class="j-card-body" style="padding:0"><table class="j-table"><thead><tr><th>Peça</th><th>Atual</th><th>Mín</th><th>Status</th></tr></thead><tbody id="dashAlertStock"></tbody></table></div>
         </div>
       </div>
     </section>
@@ -155,9 +154,7 @@
         </button>
       </div>
       <div class="j-card">
-        <div class="j-card-body" style="padding:0">
-          <table class="j-table"><thead><tr><th>Data/Hora</th><th>Cliente</th><th>Veículo</th><th>Serviço</th><th>Mecânico</th><th>Status</th><th>Ações</th></tr></thead><tbody id="tbAgenda"></tbody></table>
-        </div>
+        <div class="j-card-body" style="padding:0"><table class="j-table"><thead><tr><th>Data/Hora</th><th>Cliente</th><th>Veículo</th><th>Serviço</th><th>Mecânico</th><th>Status</th><th>Ações</th></tr></thead><tbody id="tbAgenda"></tbody></table></div>
       </div>
     </section>
 
@@ -309,16 +306,15 @@
     <section class="section" id="s-auditoria">
       <div class="j-card">
         <div class="j-card-header"><div class="j-card-title">LOG GLOBAL DE AUDITORIA</div></div>
-        <div class="j-card-body" style="padding:0">
-          <table class="j-table"><thead><tr><th>Data/Hora</th><th>Módulo</th><th>Usuário</th><th>Ação</th></tr></thead><tbody id="tbAuditoria"></tbody></table>
-        </div>
+        <div class="j-card-body" style="padding:0"><table class="j-table"><thead><tr><th>Data/Hora</th><th>Módulo</th><th>Usuário</th><th>Ação</th></tr></thead><tbody id="tbAuditoria"></tbody></table></div>
       </div>
     </section>
 
   </div><!-- /content -->
 </div><!-- /main -->
 </div><!-- /layout -->
-  <!-- ══════════ MODAIS ══════════════════════════════════════ -->
+
+<!-- ══════════ MODAIS ══════════════════════════════════════ -->
 
 <!-- MODAL OS -->
 <div class="overlay" id="modalOS">
@@ -380,6 +376,7 @@
     <div class="form-group"><label class="j-label">Defeito Reclamado / Queixa do Cliente *</label><textarea class="j-textarea" id="osDescricao" rows="2" placeholder="Descreva o problema relatado pelo cliente..."></textarea></div>
     <div class="form-group"><label class="j-label">Diagnóstico Técnico (Interno)</label><textarea class="j-textarea" id="osDiagnostico" rows="2" placeholder="Diagnóstico da equipe técnica após avaliação..."></textarea></div>
 
+    <!-- Serviços -->
     <div style="background:var(--surf3);border:1px solid rgba(59,130,246,.15);padding:16px;margin-top:12px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
         <div style="font-family:var(--fd);font-weight:700;color:var(--brand)">SERVIÇOS / MÃO DE OBRA</div>
@@ -389,6 +386,7 @@
       <div id="containerServicosOS" style="display:flex;flex-direction:column;gap:6px"></div>
     </div>
 
+    <!-- Peças -->
     <div style="background:var(--surf3);border:1px solid rgba(34,211,160,.15);padding:16px;margin-top:12px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
         <div style="font-family:var(--fd);font-weight:700;color:var(--success)">PEÇAS DO ESTOQUE</div>
@@ -403,7 +401,7 @@
       </div>
     </div>
 
-    <!-- PGTO MOSTRA SÓ QUANDO PRONTO/ENTREGUE -->
+    <!-- Pagamento (aparece ao fechar) -->
     <div id="areaPgtoOS" style="display:none;background:rgba(59,130,246,.04);border:1px solid rgba(59,130,246,.2);padding:16px;margin-top:12px">
       <div style="font-family:var(--fd);font-weight:700;color:var(--brand);margin-bottom:12px">FECHO NO CAIXA E RECEBIMENTO</div>
       <div class="form-row cols-3">
@@ -431,7 +429,7 @@
     </div>
   </div>
 
-  <!-- TAB 2 (MÍDIAS) -->
+  <!-- TAB 2 -->
   <div class="tab-pane" id="tabOS2">
     <div style="background:var(--surf3);border:1px solid var(--border);padding:16px;margin-bottom:16px">
       <div style="font-family:var(--fd);font-weight:700;color:var(--brand);margin-bottom:12px">GALERIA DE PROVAS (Cloudinary)</div>
@@ -442,8 +440,6 @@
       <div class="media-grid" id="osMediaGrid"></div>
       <input type="hidden" id="osMediaArray" value="[]">
     </div>
-
-    <!-- CHECKLIST -->
     <div style="background:var(--surf3);border:1px solid var(--border);padding:16px">
       <div style="font-family:var(--fd);font-weight:700;color:var(--warn);margin-bottom:12px">CHECKLIST DE ENTREGA</div>
       <div class="form-row cols-3">
@@ -463,7 +459,7 @@
     </div>
   </div>
 
-  <!-- TAB 3 (TIMELINE) -->
+  <!-- TAB 3 -->
   <div class="tab-pane" id="tabOS3">
     <div id="osTimeline"></div>
   </div>
@@ -477,7 +473,6 @@
   <input type="hidden" id="osTimelineData" value="[]">
 </div>
 </div>
-
 
 <!-- MODAL CLIENTE -->
 <div class="overlay" id="modalCliente">
@@ -522,235 +517,243 @@
 
 <!-- MODAL VEÍCULO -->
 <div class="overlay" id="modalVeiculo">
-<div class="modal" style="max-width:480px">
+<div class="modal" style="max-width:520px">
   <div class="modal-head"><div class="modal-title">VEÍCULO</div><button class="modal-close" onclick="fecharModal('modalVeiculo')">✕</button></div>
   <div class="modal-body">
     <input type="hidden" id="veicId">
+    <div class="form-group"><label class="j-label">Tipo</label><select class="j-select" id="veicTipo"><option value="carro">🚗 Carro</option><option value="moto">🏍️ Moto</option><option value="bicicleta">🚲 Bicicleta</option></select></div>
     <div class="form-row cols-2">
-      <div class="form-group"><label class="j-label">Placa *</label><input class="j-input font-mono" id="veicPlaca" placeholder="ABC-1234"></div>
-      <div class="form-group"><label class="j-label">Tipo de Veículo</label>
-        <select class="j-select" id="veicTipo"><option value="carro">🚗 Carro</option><option value="moto">🏍️ Moto</option><option value="bicicleta">🚲 Bicicleta</option></select>
-      </div>
+      <div class="form-group"><label class="j-label">Proprietário</label><select class="j-select" id="veicDono"></select></div>
+      <div class="form-group"><label class="j-label">Placa / Identificação *</label><input class="j-input input-mono" id="veicPlaca" placeholder="ABC1234" style="text-transform:uppercase;letter-spacing:2px;font-weight:700"></div>
     </div>
-    <div class="form-group"><label class="j-label">Modelo / Marca / Detalhes</label><input class="j-input" id="veicModelo" placeholder="VW Gol 1.0"></div>
-    <div class="form-row cols-3">
-      <div class="form-group"><label class="j-label">Ano</label><input class="j-input" id="veicAno" placeholder="2020"></div>
-      <div class="form-group"><label class="j-label">Cor</label><input class="j-input" id="veicCor" placeholder="Branco"></div>
-      <div class="form-group"><label class="j-label">KM Atual</label><input type="number" class="j-input" id="veicKm" placeholder="0"></div>
+    <div class="form-row cols-2">
+      <div class="form-group"><label class="j-label">Marca / Modelo *</label><input class="j-input" id="veicModelo" placeholder="Honda CB 500F"></div>
+      <div class="form-group"><label class="j-label">Ano</label><input type="number" class="j-input" id="veicAno" placeholder="2022"></div>
     </div>
-    <div class="form-group"><label class="j-label">Cliente Proprietário *</label>
-      <select class="j-select" id="veicCliente"></select>
+    <div class="form-row cols-2">
+      <div class="form-group"><label class="j-label">Cor</label><input class="j-input" id="veicCor" placeholder="Preto Metálico"></div>
+      <div class="form-group"><label class="j-label">KM Atual</label><input type="number" class="j-input" id="veicKm" placeholder="45000"></div>
     </div>
+    <div class="form-group"><label class="j-label">Observações</label><textarea class="j-textarea" id="veicObs" rows="2" placeholder="Modificações, histórico relevante..."></textarea></div>
   </div>
-  <div class="modal-foot"><button class="btn btn-ghost" onclick="fecharModal('modalVeiculo')">CANCELAR</button><button class="btn btn-brand" onclick="salvarVeiculo()">SALVAR VÍNCULO</button></div>
+  <div class="modal-foot"><button class="btn btn-ghost" onclick="fecharModal('modalVeiculo')">CANCELAR</button><button class="btn btn-brand" onclick="salvarVeiculo()">SALVAR</button></div>
 </div>
 </div>
 
-<!-- MODAL PEÇA (Estoque) -->
+<!-- MODAL PEÇA -->
 <div class="overlay" id="modalPeca">
-<div class="modal" style="max-width:480px">
-  <div class="modal-head"><div class="modal-title">PEÇA / ITEM DE ESTOQUE</div><button class="modal-close" onclick="fecharModal('modalPeca')">✕</button></div>
+<div class="modal" style="max-width:500px">
+  <div class="modal-head"><div class="modal-title">PEÇA / PRODUTO</div><button class="modal-close" onclick="fecharModal('modalPeca')">✕</button></div>
   <div class="modal-body">
     <input type="hidden" id="pecaId">
-    <div class="form-group"><label class="j-label">Nome / Descrição da Peça *</label><input class="j-input" id="pecaDesc" placeholder="Filtro de Óleo"></div>
     <div class="form-row cols-2">
-      <div class="form-group"><label class="j-label">ID Sistema / Código OEM</label><input class="j-input font-mono" id="pecaRef" placeholder="OPCIONAL"></div>
-      <div class="form-group"><label class="j-label">Unidade</label>
-        <select class="j-select" id="pecaUn"><option value="UN">Unidade (UN)</option><option value="PAR">Par</option><option value="JOGO">Jogo / Kit</option><option value="L">Litros (L)</option></select>
-      </div>
+      <div class="form-group"><label class="j-label">Código / Referência</label><input class="j-input input-mono" id="pecaCodigo" placeholder="EX: OIL-5W30-1L"></div>
+      <div class="form-group"><label class="j-label">Descrição *</label><input class="j-input" id="pecaDesc" placeholder="Óleo Motor 5W30 1L" required></div>
+    </div>
+    <div class="form-row cols-3">
+      <div class="form-group"><label class="j-label">Custo (R$)</label><input type="number" step="0.01" class="j-input" id="pecaCusto" placeholder="0,00" oninput="calcMargem()"></div>
+      <div class="form-group"><label class="j-label">Venda (R$)</label><input type="number" step="0.01" class="j-input" id="pecaVenda" placeholder="0,00" oninput="calcMargem()"></div>
+      <div class="form-group"><label class="j-label">Margem</label><div class="j-input" id="pecaMargem" style="color:var(--success);font-weight:700">—</div></div>
     </div>
     <div class="form-row cols-2">
-      <div class="form-group"><label class="j-label">Preço Custo (R$)</label><input type="number" step="0.01" class="j-input format-moeda" id="pecaCusto" placeholder="0,00"></div>
-      <div class="form-group"><label class="j-label">Preço Venda (R$)</label><input type="number" step="0.01" class="j-input format-moeda" id="pecaVenda" placeholder="0,00"></div>
+      <div class="form-group"><label class="j-label">Quantidade Inicial</label><input type="number" class="j-input" id="pecaQtd" placeholder="0"></div>
+      <div class="form-group"><label class="j-label">Estoque Mínimo</label><input type="number" class="j-input" id="pecaMin" placeholder="2"></div>
     </div>
-    <div class="form-row cols-2">
-      <div class="form-group"><label class="j-label">Estoque Atual</label><input type="number" class="j-input" id="pecaQtd" placeholder="0"></div>
-      <div class="form-group"><label class="j-label">Estoque Mínimo (Alerta)</label><input type="number" class="j-input" id="pecaMin" placeholder="2"></div>
+    <div class="form-group"><label class="j-label">Unidade</label>
+      <select class="j-select" id="pecaUnd"><option value="UN">UN — Unidade</option><option value="PC">PC — Peça</option><option value="L">L — Litro</option><option value="ML">ML — Mililitro</option><option value="KG">KG — Quilograma</option><option value="M">M — Metro</option><option value="JG">JG — Jogo</option><option value="PAR">PAR — Par</option></select>
     </div>
-    <div class="form-group"><label class="j-label">Fornecedor Principal</label><select class="j-select" id="pecaForn"></select></div>
   </div>
   <div class="modal-foot"><button class="btn btn-ghost" onclick="fecharModal('modalPeca')">CANCELAR</button><button class="btn btn-brand" onclick="salvarPeca()">SALVAR PEÇA</button></div>
 </div>
 </div>
 
-<!-- MODAL NOTA FISCAL (XML) -->
+<!-- MODAL NF -->
 <div class="overlay" id="modalNF">
-<div class="modal" style="max-width:560px">
-  <div class="modal-head"><div class="modal-title">IMPORTAR NFe (Módulo Premium)</div><button class="modal-close" onclick="fecharModal('modalNF')">✕</button></div>
+<div class="modal" style="max-width:740px">
+  <div class="modal-head"><div class="modal-title">ENTRADA DE NF / COMPRA</div><button class="modal-close" onclick="fecharModal('modalNF')">✕</button></div>
   <div class="modal-body">
-    <div class="alert" style="background:rgba(245,158,11,.1);border-left:4px solid var(--warn);padding:12px;margin-bottom:16px;">
-      <h4 style="color:var(--warn);margin:0 0 6px 0">Funcionalidade Beta</h4>
-      <p style="font-size:.8rem;opacity:.9;margin:0">Coleção XML passará por processamento Edge Function. Para este protótipo, sugerimos uso das peças avulsas.</p>
+    <div class="form-row cols-2">
+      <div class="form-group"><label class="j-label">Fornecedor</label><select class="j-select" id="nfFornec"></select></div>
+      <div class="form-group"><label class="j-label">Importar XML da NF-e</label>
+        <div style="display:flex;gap:8px">
+          <input type="file" id="xmlInputFile" accept=".xml" style="display:none" onchange="lerXMLNFe(event)">
+          <button class="btn btn-success btn-sm" style="flex:1;justify-content:center" onclick="document.getElementById('xmlInputFile').click()">📄 SELECIONAR XML</button>
+        </div>
+      </div>
     </div>
-    <div class="form-group"><label class="j-label">Chave de Acesso (44 dígitos) ou Colete o XML</label><input class="j-input font-mono" id="nfChave" placeholder="0000 0000..."></div>
-    <div class="form-group"><label class="j-label">Conteúdo XML (Colar Conteúdo)</label><textarea class="j-textarea font-mono" id="nfXml" rows="4" style="font-size:.7rem" placeholder="<nfe>...</nfe>"></textarea></div>
-    <div id="nfItemsPreview"></div>
+    <div class="form-row cols-2">
+      <div class="form-group"><label class="j-label">Número NF</label><input class="j-input input-mono" id="nfNumero" placeholder="00001"></div>
+      <div class="form-group"><label class="j-label">Data NF</label><input type="date" class="j-input" id="nfData"></div>
+    </div>
+    <div style="background:var(--surf3);border:1px solid var(--border);padding:14px;margin-bottom:14px">
+      <div style="font-family:var(--fd);font-weight:700;margin-bottom:10px">ITENS DA NOTA FISCAL</div>
+      <div style="display:grid;grid-template-columns:1fr 80px 90px 90px 32px;gap:8px;margin-bottom:6px;font-family:var(--fm);font-size:.6rem;color:var(--text-muted);text-transform:uppercase"><div>Descrição</div><div>Qtd</div><div>Custo</div><div>Venda</div><div></div></div>
+      <div id="containerItensNF" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px"></div>
+      <button class="btn btn-outline btn-sm" onclick="adicionarItemNF()">+ ITEM MANUAL</button>
+    </div>
+    <div class="form-row cols-3">
+      <div class="form-group"><label class="j-label">Forma de Pagamento</label><select class="j-select" id="nfPgtoForma" onchange="checkPgtoNF()"><option value="PIX">PIX</option><option value="Dinheiro">Dinheiro</option><option value="Boleto">Boleto (Pendente)</option><option value="Parcelado">Parcelado</option></select></div>
+      <div class="form-group"><label class="j-label">Vencimento</label><input type="date" class="j-input" id="nfVenc"></div>
+      <div class="form-group" id="divParcelasNF" style="display:none"><label class="j-label">Parcelas</label><select class="j-select" id="nfParcelas"><option value="2">2x</option><option value="3">3x</option><option value="4">4x</option><option value="6">6x</option></select></div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;align-items:center;gap:16px;padding:12px;background:rgba(255,59,59,.04);border:1px dashed rgba(255,59,59,.2)">
+      <span style="font-family:var(--fm);font-size:.7rem;color:var(--text-muted)">TOTAL NF:</span>
+      <span style="font-family:var(--fd);font-size:1.6rem;font-weight:700;color:var(--danger)">R$ <span id="nfTotal">0,00</span></span>
+    </div>
   </div>
-  <div class="modal-foot"><button class="btn btn-ghost" onclick="fecharModal('modalNF')">CANCELAR</button><button class="btn btn-success" onclick="salvarNF()">PROCESSAR XML MOCK</button></div>
+  <div class="modal-foot"><button class="btn btn-ghost" onclick="fecharModal('modalNF')">CANCELAR</button><button class="btn btn-brand" onclick="salvarNF()">FINALIZAR ENTRADA</button></div>
+</div>
+</div>
+
+<!-- MODAL FINANCEIRO -->
+<div class="overlay" id="modalFin">
+<div class="modal" style="max-width:520px">
+  <div class="modal-head"><div class="modal-title">LANÇAMENTO FINANCEIRO</div><button class="modal-close" onclick="fecharModal('modalFin')">✕</button></div>
+  <div class="modal-body">
+    <input type="hidden" id="finId">
+    <div class="form-row cols-2">
+      <div class="form-group"><label class="j-label">Tipo</label><select class="j-select" id="finTipo"><option value="Entrada">💰 RECEITA</option><option value="Saída">💸 DESPESA</option></select></div>
+      <div class="form-group"><label class="j-label">Valor (R$)</label><input type="number" step="0.01" class="j-input" id="finValor" placeholder="0,00"></div>
+    </div>
+    <div class="form-group"><label class="j-label">Descrição *</label><input class="j-input" id="finDesc" placeholder="Ex: Mensalidade, Pagamento fornecedor..."></div>
+    <div class="form-group"><label class="j-label">Vinculado a (Opcional)</label>
+      <select class="j-select" id="finVinculo">
+        <option value="">Nenhum</option>
+        <optgroup label="Fornecedores" id="optFornec"></optgroup>
+        <optgroup label="Colaboradores" id="optEquipe"></optgroup>
+      </select>
+    </div>
+    <div class="form-row cols-2">
+      <div class="form-group"><label class="j-label">Vencimento</label><input type="date" class="j-input" id="finVenc"></div>
+      <div class="form-group"><label class="j-label">Forma de Pagamento</label><select class="j-select" id="finPgto"><option>PIX</option><option>Dinheiro</option><option>Transferência</option><option>Cartão Débito</option><option>Cartão Crédito</option><option>Boleto</option></select></div>
+    </div>
+    <div class="form-group"><label class="j-label">Status</label><select class="j-select" id="finStatus"><option value="Pago">Liquidado</option><option value="Pendente">Pendente</option></select></div>
+    <div class="form-group"><label class="j-label">Nota Interna</label><textarea class="j-textarea" id="finNota" rows="2" placeholder="Justificativa ou observação..."></textarea></div>
+  </div>
+  <div class="modal-foot"><button class="btn btn-ghost" onclick="fecharModal('modalFin')">CANCELAR</button><button class="btn btn-brand" onclick="salvarFin()">LANÇAR</button></div>
+</div>
+</div>
+
+<!-- MODAL EQUIPE -->
+<div class="overlay" id="modalFunc">
+<div class="modal" style="max-width:500px">
+  <div class="modal-head"><div class="modal-title">COLABORADOR / EQUIPE</div><button class="modal-close" onclick="fecharModal('modalFunc')">✕</button></div>
+  <div class="modal-body">
+    <input type="hidden" id="funcId">
+    <div class="form-row cols-2">
+      <div class="form-group"><label class="j-label">Nome *</label><input class="j-input" id="funcNome" placeholder="Nome completo"></div>
+      <div class="form-group"><label class="j-label">Cargo</label><select class="j-select" id="funcCargo"><option value="mecanico">Mecânico</option><option value="eletricista">Eletricista</option><option value="funileiro">Funileiro</option><option value="pintor">Pintor</option><option value="gerente">Gerente</option><option value="atendente">Atendente</option></select></div>
+    </div>
+    <div class="form-row cols-3">
+      <div class="form-group"><label class="j-label">% Com. M.O.</label><input type="number" step="0.1" class="j-input" id="funcComissaoServico" placeholder="0" min="0" max="100"></div>
+      <div class="form-group"><label class="j-label">% Com. Peças</label><input type="number" step="0.1" class="j-input" id="funcComissaoPeca" placeholder="0" min="0" max="100"></div>
+      <div class="form-group"><label class="j-label">WhatsApp</label><input type="tel" class="j-input" id="funcWpp" placeholder="11999999999"></div>
+    </div>
+    <hr class="divider">
+    <div class="section-label">CREDENCIAIS DE ACESSO (equipe.html)</div>
+    <div class="form-row cols-2">
+      <div class="form-group"><label class="j-label">Usuário de Login *</label><input class="j-input input-mono" id="funcUser" placeholder="jose.mecanico"></div>
+      <div class="form-group"><label class="j-label">Senha *</label><input type="password" class="j-input" id="funcPass" placeholder="••••••••"></div>
+    </div>
+  </div>
+  <div class="modal-foot"><button class="btn btn-ghost" onclick="fecharModal('modalFunc')">CANCELAR</button><button class="btn btn-brand" onclick="salvarFunc()">ADMITIR</button></div>
+</div>
+</div>
+
+<!-- MODAL RH -->
+<div class="overlay" id="modalPgtoRH">
+<div class="modal" style="max-width:480px">
+  <div class="modal-head"><div class="modal-title">PAGAMENTO / VALE — RH</div><button class="modal-close" onclick="fecharModal('modalPgtoRH')">✕</button></div>
+  <div class="modal-body">
+    <div class="form-group"><label class="j-label">Colaborador *</label><select class="j-select" id="rhPgtoFunc"></select></div>
+    <div class="form-row cols-2">
+      <div class="form-group"><label class="j-label">Tipo de Lançamento</label><select class="j-select" id="rhPgtoTipo"><option>Vale / Adiantamento</option><option>Pagamento Salário</option><option>Pagamento Comissão</option><option>Acerto Rescisório</option></select></div>
+      <div class="form-group"><label class="j-label">Valor (R$) *</label><input type="number" step="0.01" class="j-input" id="rhPgtoValor" placeholder="0,00"></div>
+    </div>
+    <div class="form-row cols-2">
+      <div class="form-group"><label class="j-label">Data</label><input type="date" class="j-input" id="rhPgtoData"></div>
+      <div class="form-group"><label class="j-label">Forma</label><select class="j-select" id="rhPgtoForma"><option>PIX</option><option>Dinheiro</option><option>Transferência Bancária</option></select></div>
+    </div>
+    <div class="form-group"><label class="j-label">Observação</label><input class="j-input" id="rhPgtoObs" placeholder="Ref. Mês atual, motivo..."></div>
+  </div>
+  <div class="modal-foot"><button class="btn btn-ghost" onclick="fecharModal('modalPgtoRH')">CANCELAR</button><button class="btn btn-brand" onclick="salvarPgtoRH()">REGISTRAR</button></div>
 </div>
 </div>
 
 <!-- MODAL FORNECEDOR -->
 <div class="overlay" id="modalFornec">
-<div class="modal" style="max-width:400px">
+<div class="modal" style="max-width:440px">
   <div class="modal-head"><div class="modal-title">FORNECEDOR</div><button class="modal-close" onclick="fecharModal('modalFornec')">✕</button></div>
   <div class="modal-body">
-    <input type="hidden" id="fornId">
-    <div class="form-group"><label class="j-label">Nome / Empresa *</label><input class="j-input" id="fornNome"></div>
-    <div class="form-group"><label class="j-label">CNPJ</label><input class="j-input" id="fornCnpj"></div>
-    <div class="form-group"><label class="j-label">Telefone / Vendedor</label><input class="j-input" id="fornTel"></div>
-    <div class="form-group"><label class="j-label">Segmento / Focado em</label><input class="j-input" id="fornSeg" placeholder="Ex: Autopeças Gerais, Óleo, Pneus..."></div>
+    <input type="hidden" id="fornecId">
+    <div class="form-group"><label class="j-label">Razão Social / Nome *</label><input class="j-input" id="fornecNome" placeholder="Distribuidora ABC Ltda."></div>
+    <div class="form-row cols-2">
+      <div class="form-group"><label class="j-label">Segmento</label><input class="j-input" id="fornecSeg" placeholder="Peças, Óleo, Elétrica..."></div>
+      <div class="form-group"><label class="j-label">WhatsApp</label><input class="j-input" id="fornecWpp" placeholder="17999..."></div>
+    </div>
   </div>
-  <div class="modal-foot"><button class="btn btn-ghost" onclick="fecharModal('modalFornec')">CANCELAR</button><button class="btn btn-brand" onclick="salvarFornec()">SALVAR FORNECEDOR</button></div>
+  <div class="modal-foot"><button class="btn btn-ghost" onclick="fecharModal('modalFornec')">CANCELAR</button><button class="btn btn-brand" onclick="salvarFornec()">SALVAR</button></div>
 </div>
 </div>
 
-<!-- MODAL LANÇAMENTO FINANCEIRO -->
-<div class="overlay" id="modalFin">
-<div class="modal" style="max-width:480px">
-  <div class="modal-head"><div class="modal-title">LANÇAMENTO FINANCEIRO</div><button class="modal-close" onclick="fecharModal('modalFin')">✕</button></div>
+<!-- MODAL AGENDA -->
+<div class="overlay" id="modalAgenda">
+<div class="modal" style="max-width:500px">
+  <div class="modal-head"><div class="modal-title">AGENDAMENTO</div><button class="modal-close" onclick="fecharModal('modalAgenda')">✕</button></div>
   <div class="modal-body">
-    <input type="hidden" id="finId">
+    <input type="hidden" id="agdId">
     <div class="form-row cols-2">
-      <div class="form-group"><label class="j-label">Tipo de Movimentação</label><select class="j-select" id="finTipo"><option value="Entrada">Receita (Entrada)</option><option value="Saída">Despesa (Saída)</option></select></div>
-      <div class="form-group"><label class="j-label">Situação</label><select class="j-select" id="finStatus"><option value="Pago">Liquidado (Pago/Recebido)</option><option value="Pendente">Aberto (Pendente)</option></select></div>
-    </div>
-    <div class="form-group"><label class="j-label">Descrição da Movimentação *</label><input class="j-input" id="finDesc" placeholder="Ex: Conta de Luz / Venda Balcão"></div>
-    <div class="form-row cols-3">
-      <div class="form-group"><label class="j-label">Valor (R$)</label><input type="number" step="0.01" class="j-input format-moeda" id="finValor"></div>
-      <div class="form-group"><label class="j-label">Pgto Em</label>
-        <select class="j-select" id="finPgto"><option>PIX</option><option>Dinheiro</option><option>Débito</option><option>Crédito</option><option>Boleto</option><option>Transferência</option></select>
-      </div>
-      <div class="form-group"><label class="j-label">Data Liberação/Venc.</label><input type="date" class="j-input" id="finData"></div>
-    </div>
-  </div>
-  <div class="modal-foot"><button class="btn btn-ghost" onclick="fecharModal('modalFin')">CANCELAR</button><button class="btn btn-brand" onclick="salvarFin()">SALVAR MOVIMENTO</button></div>
-</div>
-</div>
-
-<!-- MODAL RECURSOS HUMANOS -->
-<div class="overlay" id="modalFunc">
-<div class="modal" style="max-width:480px">
-  <div class="modal-head"><div class="modal-title">GERENCIAR COLABORADOR</div><button class="modal-close" onclick="fecharModal('modalFunc')">✕</button></div>
-  <div class="modal-body">
-    <input type="hidden" id="funcId">
-    <div class="form-group"><label class="j-label">Nome Completo *</label><input class="j-input" id="funcNome"></div>
-    <div class="form-group"><label class="j-label">Papel / Cargo</label>
-      <select class="j-select" id="funcCargo"><option value="mecanico">Mecânico / Técnico</option><option value="atendente">Atendimento / Adm</option><option value="gerente">Gerente de Loja</option></select>
-    </div>
-    <hr class="divider">
-    <div class="section-label">PAINEL E COMISSÕES</div>
-    <div class="form-row cols-2">
-      <div class="form-group"><label class="j-label">% Com. Mão de Obra</label><input type="number" class="j-input" id="funcComMao" placeholder="Ex: 50"></div>
-      <div class="form-group"><label class="j-label">% Com. Venda de Peças</label><input type="number" class="j-input" id="funcComPec" placeholder="Ex: 5"></div>
+      <div class="form-group"><label class="j-label">Cliente *</label><select class="j-select" id="agdCliente" onchange="filtrarVeicsAgenda()"></select></div>
+      <div class="form-group"><label class="j-label">Veículo</label><select class="j-select" id="agdVeiculo"></select></div>
     </div>
     <div class="form-row cols-2">
-      <div class="form-group"><label class="j-label">Login do App Colaborador</label><input class="j-input" id="funcLogin" placeholder="nome.sobrenome"></div>
-      <div class="form-group"><label class="j-label">PIN</label><input class="j-input font-mono" id="funcPin" placeholder="Gerado..." disabled></div>
+      <div class="form-group"><label class="j-label">Data *</label><input type="date" class="j-input" id="agdData"></div>
+      <div class="form-group"><label class="j-label">Hora</label><input type="time" class="j-input" id="agdHora"></div>
     </div>
-  </div>
-  <div class="modal-foot"><button class="btn btn-ghost" onclick="fecharModal('modalFunc')">CANCELAR</button><button class="btn btn-brand" onclick="salvarFunc()">SALVAR RH</button></div>
-</div>
-</div>
-
-<!-- MODAL PAGAMENTO DE VALE RH -->
-<div class="overlay" id="modalPgtoRH">
-<div class="modal" style="max-width:400px">
-  <div class="modal-head"><div class="modal-title">PAGAMENTO / ADIANTAMENTO RH</div><button class="modal-close" onclick="fecharModal('modalPgtoRH')">✕</button></div>
-  <div class="modal-body">
-    <div class="form-group"><label class="j-label">Colaborador Emitente</label><select class="j-select" id="rhFunc"></select></div>
     <div class="form-row cols-2">
-      <div class="form-group"><label class="j-label">Valor (R$)</label><input type="number" step="0.01" class="j-input" id="rhValor"></div>
-      <div class="form-group"><label class="j-label">Data Saída</label><input type="date" class="j-input" id="rhData"></div>
+      <div class="form-group"><label class="j-label">Serviço</label><input class="j-input" id="agdServico" placeholder="Revisão, alinhamento, troca de óleo..."></div>
+      <div class="form-group"><label class="j-label">Mecânico</label><select class="j-select" id="agdMec"><option value="">Não definido</option></select></div>
     </div>
-    <div class="form-group"><label class="j-label">Descrição Fiscal / Motivo</label><input class="j-input" id="rhDesc" placeholder="Adiantamento Semanal"></div>
   </div>
-  <div class="modal-foot"><button class="btn btn-ghost" onclick="fecharModal('modalPgtoRH')">CANCELAR</button><button class="btn btn-warn" onclick="salvarPgtoRH()">DISPARAR VIA CAIXA</button></div>
+  <div class="modal-foot"><button class="btn btn-ghost" onclick="fecharModal('modalAgenda')">CANCELAR</button><button class="btn btn-brand" onclick="salvarAgenda()">AGENDAR</button></div>
 </div>
 </div>
 
-<!-- MODAL COMPARTILHAR DASH (Share) -->
-<div class="overlay" id="modalShare">
-<div class="modal" style="max-width:400px;text-align:center">
-  <div class="modal-head" style="border:none;padding-bottom:0"><button class="modal-close" onclick="fecharModal('modalShare')">✕</button></div>
-  <div class="modal-body">
-    <h3 style="color:var(--brand);margin-bottom:8px">COMPARTILHAR PAINEL</h3>
-    <p style="font-size:.85rem;color:var(--text-muted);margin-bottom:20px">Os links dinâmicos e exportação de PDF do Dashboard só estão disponíveis nas versões nativas (PWA) instaladas. Utilize seu navegador (Chrome/Safari) para fixar este site na tela principal.</p>
-    <button class="btn btn-outline" style="width:100%" onclick="fecharModal('modalShare')">ENTENDI</button>
-  </div>
-</div>
-</div>
-
-<!-- ══════════ ENGINE SCRIPTS ══════════════════════════════ -->
+<!-- ── SCRIPTS ──────────────────────────────────────────── -->
+<script src="js/ui.js"></script>
 <script src="js/core.js"></script>
-<script src="js/dashboard.js"></script>
-<script src="js/os.js"></script>
 <script src="js/clientes.js"></script>
+<script src="js/os.js"></script>
 <script src="js/financeiro.js"></script>
 <script src="js/ia.js"></script>
 <script src="js/pdf.js"></script>
-
 <script>
-  // BOOT OFICIAL DASHBOARD MASTER
-  document.addEventListener('DOMContentLoaded', () => {
-    try {
-      window.initCore && initCore();
-    } catch(e) {
-      console.error(e);
-      document.getElementById('page-loader').innerHTML = '<div style="color:red;padding:2rem">CRÍTICO: ESCOPO CORE FALHOU. RECARREGUE. '+e.message+'</div>';
-    }
-  });
+// Mapa de seções e títulos
+window.SECTION_MAP = {
+  dashboard:'s-dashboard', agenda:'s-agenda', kanban:'s-kanban', clientes:'s-clientes',
+  estoque:'s-estoque', financeiro:'s-financeiro', equipe:'s-equipe',
+  chat:'s-chat', ia:'s-ia', auditoria:'s-auditoria'
+};
+window.TITLE_MAP = {
+  dashboard:'DASHBOARD', agenda:'AGENDA', kanban:'PÁTIO / O.S.', clientes:'CLIENTES & VEÍCULOS',
+  estoque:'ESTOQUE / NF', financeiro:'FINANCEIRO / DRE', equipe:'EQUIPE & RH',
+  chat:'CRM CHAT', ia:'thIAguinho IA', auditoria:'AUDITORIA'
+};
 
-  // UIs Base (Toasts e Tabs)
-  window.toastOk = function(msg) { _toast(msg, 'success'); };
-  window.toastWarn = function(msg) { _toast(msg, 'warn'); };
-  window.toastErr = function(msg) { _toast(msg, 'error'); };
-  window.toastInfo = function(msg) { _toast(msg, 'info'); };
-  
-  function _toast(m, t) {
-    const c = document.getElementById('toast-container'); if(!c) return;
-    const d = document.createElement('div');
-    d.className = `toast toast-${t}`; d.innerText = m;
-    c.appendChild(d); setTimeout(() => d.classList.add('show'), 10);
-    setTimeout(() => { d.classList.remove('show'); setTimeout(()=>d.remove(),300); }, 3800);
-  }
+// Painel de atenção toggle
+window._painelOpen = true;
+function toggleAtencao() {
+  const el = document.getElementById('painelAtencaoWrap');
+  const btn = document.getElementById('togglePainel');
+  _painelOpen = !_painelOpen;
+  el.classList.toggle('collapsed', !_painelOpen);
+  btn.textContent = _painelOpen ? '▲' : '▼';
+}
 
-  function abrirModal(id) { document.getElementById(id)?.classList.add('show'); }
-  function fecharModal(id) { document.getElementById(id)?.classList.remove('show'); }
-  
-  function switchTab(btn, showId, hide1, hide2) {
-    const p = btn.parentElement.children;
-    for(let i=0; i<p.length; i++) p[i].classList.remove('active');
-    btn.classList.add('active');
-    document.getElementById(showId)?.classList.add('active');
-    document.getElementById(hide1)?.classList.remove('active');
-    document.getElementById(hide2)?.classList.remove('active');
-  }
-
-  // Navegação SPA
-  function ir(sec, btn=null) {
-    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-    document.getElementById('s-'+sec)?.classList.add('active');
-    
-    if(btn) {
-      document.querySelectorAll('.sb-nav .nav-item').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      const text = btn.innerText.replace(/[0-9]+$/g, '').trim();
-      document.getElementById('pageTitle').innerText = text.toUpperCase();
-    }
-  }
-
-  // Helpers
-  window._v = function(id) { return document.getElementById(id)?.value?.trim() || ''; };
-  window._sv= function(id,v){ const e=document.getElementById(id); if(e) e.value=v; };
-  window._st= function(id,t){ const e=document.getElementById(id); if(e) e.innerText=t; };
-  window._sh= function(id,h){ const e=document.getElementById(id); if(e) e.innerHTML=h; };
-  window._ck= function(id,c){ const e=document.getElementById(id); if(e) e.checked=c; };
-  window._chk=function(id)  { const e=document.getElementById(id); return e ? e.checked : false; };
-
-  window.moeda = function(v) { return parseFloat(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); };
-  window.dtBr = function(iso) { if(!iso) return ''; const d = new Date(iso); return d.toLocaleDateString('pt-BR',{timeZone:'UTC'}); };
-  window.dtHrBr = function(iso) { if(!iso) return ''; const d = new Date(iso); return d.toLocaleString('pt-BR'); };
+// Inicializar
+document.addEventListener('DOMContentLoaded', () => {
+  window.initCore();
+});
 </script>
 </body>
 </html>

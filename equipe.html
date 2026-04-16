@@ -23,16 +23,6 @@
 .equipe-content { flex: 1; overflow-y: auto; padding: 16px 20px; }
 .e-section { display: none; }
 .e-section.active { display: block; }
-
-/* Correções específicas para a Equipe e responsividade do Chat */
-@media (max-width: 768px) {
-  .equipe-header { flex-direction: column; align-items: stretch; gap: 12px; }
-  .equipe-nav { width: 100%; overflow-x: auto; padding-bottom: 4px; }
-  .equipe-tab { white-space: nowrap; }
-  .e-section { padding: 0 4px; }
-  
-  .chat-main { height: calc(100vh - 150px) !important; border-radius: 6px; }
-}
 </style>
 </head>
 <body>
@@ -41,22 +31,19 @@
 
 <div class="equipe-layout">
   <div class="equipe-header">
-    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between;width:100%">
-      <div style="display:flex;align-items:center;gap:12px;">
-         <div class="sb-brand-mark" style="width:30px;height:30px;font-size:1rem">J</div>
-         <div>
-           <div style="font-family:var(--fd);font-size:1rem;font-weight:700" id="eqTenantNome">Oficina</div>
-           <div style="font-family:var(--fm);font-size:0.6rem;color:var(--text-muted)">Painel da Equipe — <span id="eqUserNome">Técnico</span></div>
-         </div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <div class="sb-brand-mark" style="width:30px;height:30px;font-size:1rem">J</div>
+      <div>
+        <div style="font-family:var(--fd);font-size:1rem;font-weight:700" id="eqTenantNome">Oficina</div>
+        <div style="font-family:var(--fm);font-size:0.6rem;color:var(--text-muted)">Painel da Equipe — <span id="eqUserNome">Técnico</span></div>
       </div>
-      <button class="btn-sair" onclick="sair()" style="width:auto;padding:7px 16px">⏻ SAIR</button>
     </div>
-    
     <div class="equipe-nav">
       <div class="equipe-tab active" onclick="eqIr('kanban',this)">🔧 PÁTIO / O.S.</div>
       <div class="equipe-tab" onclick="eqIr('chat',this)">💬 CHAT ADMIN <span class="tab-badge" id="chatTabBadge"></span></div>
       <div class="equipe-tab" onclick="eqIr('comissoes',this)">💰 COMISSÕES</div>
     </div>
+    <button class="btn-sair" onclick="sair()" style="width:auto;padding:7px 16px">⏻ SAIR</button>
   </div>
 
   <div class="equipe-content">
@@ -85,16 +72,11 @@
 
     <!-- CHAT EQUIPE → ADMIN -->
     <div class="e-section" id="eq-chat">
-      <div class="chat-main" style="height:calc(100vh - 120px);border:1px solid var(--border)">
+      <div class="chat-main" style="height:calc(100vh - 130px);border:1px solid var(--border)">
         <div class="chat-head">💬 Chat com Admin / Gerente</div>
         <div class="chat-msgs" id="chatMsgs"></div>
-        <div class="chat-foot" style="display:flex; padding: 12px; gap: 8px;">
-          <!-- 🔴 Botões funcionais da equipe para enviar anexo e áudio local (Bug 3) -->
-          <button class="btn btn-ghost" id="btnPTT" onclick="togglePTT()" title="Gravar Áudio" style="padding:10px;border-radius:50%">🎤</button>
-          <button class="btn btn-ghost" onclick="document.getElementById('chatFileInputEquipe').click()" title="Anexar" style="padding:10px;border-radius:50%">📎</button>
-          <input type="file" id="chatFileInputEquipe" style="display:none" accept="image/*,video/*,audio/*" onchange="enviarArquivoChat(this)">
-          
-          <input class="j-input" id="chatInputEquipe" placeholder="Mensagem para o admin/gestor..." style="flex:1">
+        <div class="chat-foot" style="display:flex">
+          <input class="j-input" id="chatInputEquipe" placeholder="Mensagem para o admin..." style="flex:1">
           <button class="btn btn-brand" onclick="enviarMsgEquipe()">ENVIAR</button>
         </div>
       </div>
@@ -131,12 +113,11 @@
 
   <div class="tab-pane active" id="tabOS1">
     <div class="form-row cols-2">
-      <div class="form-group"><label class="j-label">Tipo de Veículo</label><select class="j-select" id="osTipoVeiculo" onchange="window.filtrarVeiculosOS && filtrarVeiculosOS()"><option value="carro">🚗 Carro</option><option value="moto">🏍️ Moto</option><option value="bicicleta">🚲 Bicicleta</option></select></div>
+      <div class="form-group"><label class="j-label">Tipo de Veículo</label><select class="j-select" id="osTipoVeiculo" onchange="filtrarVeiculosOS()"><option value="carro">🚗 Carro</option><option value="moto">🏍️ Moto</option><option value="bicicleta">🚲 Bicicleta</option></select></div>
       <div class="form-group"><label class="j-label">Fase do Serviço</label>
-        <select class="j-select" id="osStatus" onchange="window.verificarStatusOS && verificarStatusOS()">
+        <select class="j-select" id="osStatus" onchange="verificarStatusOS()">
           <option value="Triagem">Triagem / Avaliação</option>
           <option value="Orcamento">Enviar Orçamento</option>
-          <option value="Orcamento_Enviado">Em Aprovação do Cliente</option>
           <option value="Aprovado">Aprovado (Fila)</option>
           <option value="Andamento">No Elevador / Em Serviço</option>
           <option value="Pronto">Pronto (Informar Dono)</option>
@@ -144,16 +125,15 @@
       </div>
     </div>
     <div class="form-row cols-2">
-      <div class="form-group"><label class="j-label">Cliente (Somente Leitura)</label><select class="j-select" id="osCliente" disabled style="background:var(--surf);opacity:0.7"></select></div>
-      <div class="form-group"><label class="j-label">Veículo (Automático)</label><select class="j-select" id="osVeiculo" onchange="window.filtrarVeiculosOS && filtrarVeiculosOS()"></select></div>
+      <div class="form-group"><label class="j-label">Cliente</label><select class="j-select" id="osCliente" onchange="filtrarVeiculosOS()"></select></div>
+      <div class="form-group"><label class="j-label">Veículo</label><select class="j-select" id="osVeiculo"></select></div>
     </div>
     <div class="form-row cols-2">
-      <div class="form-group"><label class="j-label">Data Entrada</label><input type="date" class="j-input" id="osData" readonly style="background:var(--surf);opacity:0.7"></div>
+      <div class="form-group"><label class="j-label">Data Entrada</label><input type="date" class="j-input" id="osData"></div>
       <div class="form-group"><label class="j-label">KM</label><input type="number" class="j-input" id="osKm" placeholder="45000"></div>
     </div>
     <div class="form-group"><label class="j-label">Problema / Serviço *</label><textarea class="j-textarea" id="osDescricao" rows="2" placeholder="Queixa do cliente..."></textarea></div>
     <div class="form-group"><label class="j-label">Diagnóstico Técnico</label><textarea class="j-textarea" id="osDiagnostico" rows="2" placeholder="Diagnóstico após avaliação..."></textarea></div>
-    
     <!-- Serviços / Peças -->
     <div style="background:var(--surf3);border:1px solid rgba(59,130,246,.15);padding:14px;margin-top:10px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
@@ -178,15 +158,14 @@
 
   <div class="tab-pane" id="tabOS2">
     <div style="background:var(--surf3);border:1px solid var(--border);padding:14px;margin-bottom:14px">
-      <div style="font-family:var(--fd);font-weight:700;color:var(--brand);margin-bottom:10px">FOTOS E VÍDEOS MAQUINÁRIO</div>
-      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+      <div style="font-family:var(--fd);font-weight:700;color:var(--brand);margin-bottom:10px">FOTOS E VÍDEOS (Cloudinary)</div>
+      <div style="display:flex;gap:8px;margin-bottom:12px">
         <input type="file" class="j-input" id="osFileInput" accept="image/*,video/*" capture="environment" style="flex:1">
-        <button class="btn btn-brand btn-sm" onclick="uploadOsMedia()" id="btnUploadMedia" style="min-width: 100px;">UPLOAD MÍDIA</button>
+        <button class="btn btn-brand btn-sm" onclick="uploadOsMedia()" id="btnUploadMedia">UPLOAD</button>
       </div>
       <div class="media-grid" id="osMediaGrid"></div>
       <input type="hidden" id="osMediaArray" value="[]">
     </div>
-    
     <div style="background:var(--surf3);border:1px solid var(--border);padding:14px">
       <div style="font-family:var(--fd);font-weight:700;color:var(--warn);margin-bottom:10px">CHECKLIST</div>
       <div class="form-row cols-3">
@@ -207,10 +186,10 @@
   <div class="tab-pane" id="tabOS3"><div id="osTimeline"></div></div>
 
   <div class="modal-foot">
-    <button class="btn btn-ghost" onclick="fecharModal('modalOS')">FECHAR PAINEL</button>
-    <button class="btn btn-brand" id="btnSalvarOS" onclick="salvarOS()">SALVAR DEFEITO E PEÇAS</button>
+    <button class="btn btn-ghost btn-sm" id="btnGerarPDFOS" style="display:none" onclick="gerarPDFOS()">📄 LAUDO PDF</button>
+    <button class="btn btn-ghost" onclick="fecharModal('modalOS')">CANCELAR</button>
+    <button class="btn btn-brand" id="btnSalvarOS" onclick="salvarOS()">ENVIAR FICHA</button>
   </div>
-  
   <input type="hidden" id="osId">
   <input type="hidden" id="osTimelineData" value="[]">
   <input type="hidden" id="osMec">
@@ -231,20 +210,12 @@
 <script src="js/ia.js"></script>
 <script src="js/pdf.js"></script>
 <script>
-// Chat Context
-window.J = window.J || {};
-
 function eqIr(key, el) {
   document.querySelectorAll('.e-section').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.equipe-tab').forEach(t=>t.classList.remove('active'));
   const secMap = {kanban:'eq-kanban',chat:'eq-chat',comissoes:'eq-comissoes'};
   const sec = document.getElementById(secMap[key]); if(sec) sec.classList.add('active');
   if(el) el.classList.add('active');
-
-  // Redirecionamento local do chat ativo da equipe
-  if (key === 'chat') {
-     J.chatAtivo = "ADMIN_HUB";
-  }
 }
 
 function renderComissoes(fins) {
@@ -266,23 +237,6 @@ function renderComissoes(fins) {
     <tbody>${fins.map(f=>`<tr><td style="font-family:var(--fm);font-size:.75rem">${f.desc||'—'}</td><td style="font-family:var(--fd);color:var(--success)">${window.moeda?moeda(f.valor||0):'R$ 0,00'}</td><td>${window.badgeStatus?badgeStatus(f.status||'Pendente'):'—'}</td></tr>`).join('')}</tbody></table>` :
     `<div class="empty-state"><div class="empty-state-icon">💰</div><div class="empty-state-title">Sem comissões ainda</div></div>`;
 }
-
-// 🔴 Correto vínculo da função Enviar Arquivo na perspectiva de Equipe
-window.enviarArquivoChat = async function(input) {
-  const file=input.files[0]; if(!file) return;
-  
-  if (window.toastInfo) toastInfo('⏳ Enviando arquivo de mídia...');
-  try {
-    const fd=new FormData(); fd.append('file',file); fd.append('upload_preset',J.cloudPreset);
-    const res=await fetch(`https://api.cloudinary.com/v1_1/${J.cloudName}/auto/upload`,{method:'POST',body:fd});
-    const data=await res.json();
-    if(data.secure_url){
-      await J.db.collection('chat_equipe').add({tenantId:J.tid,de:J.fid,para:'admin',sender:'equipe',msg:`📎 Arquivo: ${file.name}`,fileUrl:data.secure_url,fileType:data.resource_type,lidaAdmin:false,lidaEquipe:true,ts:Date.now()});
-      if(window.toastOk) toastOk('✓ Arquivo recebido pelo gerente');
-    }
-  } catch(e){ if(window.toastErr) toastErr('Falha de servidor ou limites excedidos.'); }
-  finally { input.value = ''; }
-};
 
 document.addEventListener('DOMContentLoaded', () => {
   window.SECTION_MAP = {};

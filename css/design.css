@@ -309,7 +309,7 @@ body::before {
 }
 
 /* Search Global */
-.search-wrap { position: relative; width: 100%; }
+.search-wrap { position: relative; }
 .search-wrap svg {
   position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
   width: 14px; height: 14px; fill: var(--text-muted); pointer-events: none;
@@ -319,7 +319,7 @@ body::before {
 .busca-resultados {
   position: absolute; top: calc(100% + 4px); left: 0;
   background: var(--surf); border: 1px solid var(--border2);
-  border-radius: var(--r-md); width: 100%;
+  border-radius: var(--r-md); width: 360px;
   max-height: 300px; overflow-y: auto;
   z-index: 500;
   box-shadow: 0 12px 32px rgba(0,0,0,0.5);
@@ -527,7 +527,7 @@ body::before {
   padding-right: 30px;
 }
 .j-select:focus { border-color: var(--brand); }
-.j-select option { background: var(--surf2); color: var(--text); }
+.j-select option { background: var(--surf2); }
 
 .j-textarea {
   background: var(--surf2);
@@ -750,7 +750,7 @@ body::before {
 .chat-contact.active { background: var(--brand-dim); border-left-color: var(--brand); }
 .chat-contact-name { font-size: 0.85rem; font-weight: 700; margin-bottom: 3px; }
 .chat-contact-last { font-size: 0.73rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.chat-unread { background: var(--danger); color: #fff; font-family: var(--fm); font-size: 0.55rem; padding: 2px 6px; float: right; border-radius:10px; }
+.chat-unread { background: var(--danger); color: #fff; font-family: var(--fm); font-size: 0.55rem; padding: 2px 6px; float: right; }
 
 .chat-main { background: var(--surf); border: 1px solid var(--border); display: flex; flex-direction: column; }
 .chat-head { padding: 14px; border-bottom: 1px solid var(--border); font-family: var(--fd); font-size: 1rem; font-weight: 700; background: var(--surf2); }
@@ -758,6 +758,7 @@ body::before {
 .chat-msg { max-width: 75%; padding: 10px 14px; font-size: 0.85rem; line-height: 1.5; }
 .chat-msg.outgoing { background: var(--surf2); border: 1px solid var(--border2); align-self: flex-end; }
 .chat-msg.incoming { background: var(--surf3); border: 1px solid var(--border); align-self: flex-start; }
+.msg-time { font-family: var(--fm); font-size: 0.58rem; color: var(--text-muted); margin-top: 4px; text-align: right; }
 .chat-foot { padding: 12px; border-top: 1px solid var(--border); display: none; gap: 8px; background: var(--surf2); align-items: center; }
 
 /* ── IA ───────────────────────────────────────────────────── */
@@ -867,75 +868,23 @@ body::before {
 
 .modal { animation: modal-in 0.25s ease; }
 
-/* ── RESPONSIVE CRITICAL ──────────────────────────────────── */
-
+/* ── RESPONSIVE ───────────────────────────────────────────── */
 @media (max-width: 1024px) {
   :root { --sidebar: 0px; }
   .sidebar { display: none; }
   .kpi-grid { grid-template-columns: 1fr 1fr; }
   .dre-grid { grid-template-columns: 1fr; }
 }
-
 @media (max-width: 768px) {
-  /* Restruturação Geral */
-  .layout { flex-direction: column; }
-  .main { width: 100vw; min-width: 100vw; }
-  .topbar { padding: 0 10px; gap: 8px; height: 56px; }
-  .content { padding: 12px; overflow-x: hidden; }
-
-  /* Correção de Layout e Quebras */
-  .form-row.cols-2, .form-row.cols-3, .form-row.cols-4 { 
-    grid-template-columns: 1fr !important; gap: 8px; 
-  }
-  
-  .j-card-header { flex-direction: column; align-items: stretch; gap: 8px; }
-  .j-card-header .btn { width: 100%; justify-content: center; } /* Botões cheios */
-
-  /* Correção Wpp / Icones em lista */
-  .j-table td, .j-table th { white-space: normal; padding: 10px 8px; font-size: 0.75rem; }
-  .j-table td button { padding: 8px; margin-bottom:4px; font-size:1.1rem; } /* Botão MAIOR para dedo */
-  .j-table td .btn-sm { width: auto; display: inline-flex; }
-
-  /* Correção Kanban */
-  .kanban-wrap { 
-    flex-direction: column; gap: 16px; 
-    align-items: stretch; padding-bottom: 24px;
-    overflow-x: hidden;
-  }
-  .k-col { 
-     min-width: 100%; width: 100%; max-height: none; 
-     margin-bottom: 0px; border-radius: var(--r-md);
-  }
-  .k-col-body { max-height: 400px; }
-
-  /* Correção Chat CRM */
-  .chat-layout { 
-      grid-template-columns: 1fr; 
-      grid-template-rows: minmax(100px, 30vh) 1fr; 
-      height: calc(100vh - 120px); 
-      gap: 16px;
-  }
-  .chat-list { max-height: unset; overflow-y: auto; border-radius: var(--r-md); }
-  .chat-main { height: 100%; border-radius: var(--r-md); }
-
-  /* Correção Modals / Popups */
-  .overlay { padding: 10px; align-items: flex-end; }
-  .modal { 
-      max-height: 85vh; 
-      display: flex; flex-direction: column; 
-      border-radius: var(--r-lg) var(--r-lg) 0 0;
-      margin-bottom: 0;
-  }
-  .modal-body, .tab-pane { overflow-y: auto; padding: 14px; }
-  .modal-tabs { padding: 0 14px; }
-  .mtab { padding: 12px 10px; font-size: 0.6rem; }
-  .modal-foot { padding: 14px; flex-direction: column-reverse; }
-  .modal-foot .btn { width: 100%; justify-content: center; }
-
-  /* Ajustes Menores de Tela */
-  .atencao-inner { padding: 8px; }
-  .atencao-box { min-width: 160px; padding: 6px 10px; }
-  .search-wrap { width: 100%; }
-  #buscaGlobalWrap { margin: 0; max-width: none; }
-  .busca-resultados { width: calc(100vw - 20px); left: auto; right: 0; }
+  .content { padding: 14px; }
+  .topbar  { padding: 0 14px; }
+  .form-row.cols-2, .form-row.cols-3, .form-row.cols-4 { grid-template-columns: 1fr !important; }
+  .kanban-wrap { flex-direction: column; }
+  .k-col { min-width: 100%; width: 100%; max-height: none; margin-bottom: 12px; }
+  .k-col-body { max-height: 380px; }
+  .chat-layout { grid-template-columns: 1fr; height: auto; }
+  .chat-list { max-height: 28vh; }
+  .overlay { padding: 8px; align-items: center; }
+  .modal { max-height: 93vh; display: flex; flex-direction: column; }
+  .tab-pane, .modal-body { overflow-y: auto; }
 }
