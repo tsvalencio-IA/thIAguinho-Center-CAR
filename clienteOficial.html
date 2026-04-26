@@ -516,13 +516,20 @@ async function doLogin() {
     return;
   }
   try {
-    const snap = await db.collectionGroup('clientes').where('login', '==', login).where('pin', '==', pin).get();
+    // Busca por login apenas (sem índice composto), filtra PIN e tipo no cliente
+    const snap = await db.collectionGroup('clientes').where('login', '==', login).get();
     if (snap.empty) {
       erro.textContent = '⚠ Login ou PIN incorretos.';
       erro.style.display = 'block';
       return;
     }
-    const doc = snap.docs[0];
+    const matched = snap.docs.find(d => d.data().pin === pin);
+    if (!matched) {
+      erro.textContent = '⚠ Login ou PIN incorretos.';
+      erro.style.display = 'block';
+      return;
+    }
+    const doc = matched;
     const data = doc.data();
     if (data.tipoCliente !== 'governo') {
       erro.textContent = '⚠ Acesso restrito a clientes governamentais. Use o portal cliente.html.';

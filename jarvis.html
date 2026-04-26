@@ -1568,7 +1568,7 @@ window._toggleClienteGovBlock = function(mostrar) {
 
 // Detecta se o cliente da OS aberta é governamental
 window._osClienteGovernamental = function() {
-  const cliId = document.getElementById('osClienteSel')?.value;
+  const cliId = document.getElementById('osCliente')?.value;
   if (!cliId) return false;
   const cli = (window.J?.clientes || []).find(c => c.id === cliId);
   return cli?.tipoCliente === 'governo';
@@ -1576,7 +1576,7 @@ window._osClienteGovernamental = function() {
 
 // Retorna os dados governamentais do cliente da OS aberta (ou null)
 window._osDadosGovernamental = function() {
-  const cliId = document.getElementById('osClienteSel')?.value;
+  const cliId = document.getElementById('osCliente')?.value;
   if (!cliId) return null;
   const cli = (window.J?.clientes || []).find(c => c.id === cliId);
   if (cli?.tipoCliente !== 'governo') return null;
