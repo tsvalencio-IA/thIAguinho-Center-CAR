@@ -421,9 +421,11 @@ window.adicionarPecaOS = function() {
       <button type="button" onclick="this.parentElement.remove();window.calcOSTotal()" style="background:rgba(255,59,59,0.1);border:1px solid rgba(255,59,59,0.3);border-radius:2px;color:var(--danger);cursor:pointer;width:32px;height:32px;">✕</button>
     `;
   } else {
-    // Cliente normal — usa estoque
+    // Cliente normal — usa estoque, mas permite peça avulsa se não tiver no estoque
     sel.style.cssText = 'display:grid;grid-template-columns:1fr 80px 90px 90px 32px;gap:8px;align-items:center;';
-    const opts = '<option value="">Selecionar peça...</option>' + J.estoque.filter(p => (p.qtd || 0) > 0).map(p => `<option value="${p.id}" data-venda="${p.venda || 0}" data-desc="${p.desc || ''}">[${p.qtd}un] ${p.desc} — ${moeda(p.venda)}</option>`).join('');
+    const opts = '<option value="">Selecionar peça...</option>'
+      + J.estoque.filter(p => (p.qtd || 0) > 0).map(p => `<option value="${p.id}" data-venda="${p.venda || 0}" data-desc="${p.desc || ''}">[${p.qtd}un] ${p.desc} — ${moeda(p.venda)}</option>`).join('')
+      + '<option value="__avulsa__" data-venda="0" data-desc="">➕ Peça não cadastrada (digitar manualmente)</option>';
     sel.innerHTML = `
       <select class="j-select peca-sel" onchange="window.selecionarPecaOS(this)">${opts}</select>
       <input type="number" class="j-input peca-qtd" value="1" min="1" placeholder="Qtd" oninput="window.calcOSTotal()">
@@ -451,7 +453,22 @@ window.renderPecaOSRow = function(p) {
 
 window.selecionarPecaOS = function(sel) {
   const opt = sel.options[sel.selectedIndex];
-  sel.parentElement.querySelector('.peca-venda').value = opt.dataset.venda || 0;
+  if (opt.value === '__avulsa__') {
+    // Transforma a linha em entrada manual (igual ao modo governo, mas sem código original)
+    const row = sel.parentElement;
+    row.dataset.pecaAvulsa = '1';
+    row.style.cssText = 'display:grid;grid-template-columns:1fr 80px 90px 90px 32px;gap:8px;align-items:center;background:rgba(255,165,0,0.06);padding:4px;border-radius:3px;border:1px solid rgba(255,165,0,0.25);';
+    row.innerHTML = `
+      <input type="text" class="j-input peca-desc-livre" placeholder="Descrição da peça" oninput="window.calcOSTotal()">
+      <input type="number" class="j-input peca-qtd" value="1" min="1" placeholder="Qtd" oninput="window.calcOSTotal()">
+      <input type="number" class="j-input peca-custo" value="0" step="0.01" placeholder="Custo" oninput="window.calcOSTotal()">
+      <input type="number" class="j-input peca-venda" value="0" step="0.01" placeholder="Venda" oninput="window.calcOSTotal()">
+      <button type="button" onclick="this.parentElement.remove();window.calcOSTotal()" style="background:rgba(255,59,59,0.1);border:1px solid rgba(255,59,59,0.3);border-radius:2px;color:var(--danger);cursor:pointer;width:32px;height:32px;">✕</button>
+    `;
+    row.querySelector('.peca-desc-livre').focus();
+  } else {
+    sel.parentElement.querySelector('.peca-venda').value = opt.dataset.venda || 0;
+  }
   window.calcOSTotal();
 };
 
