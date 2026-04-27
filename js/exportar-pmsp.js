@@ -63,11 +63,9 @@
     // Cabeçalho institucional (multi-linha do cliente)
     const cabecalhoLinhas = (cli.govCabecalho || '').split(/\r?\n/).filter(l => l.trim());
 
-    // Calcula serviços e peças
-    const valorHora = parseFloat(cli.govValorHora || 0);
+    // Usa valores JÁ calculados e salvos na OS — não recalcula
     const descMO = parseFloat(cli.govDescMO || 0);
     const descPeca = parseFloat(cli.govDescPeca || 0);
-
     const servicos = (os.servicos || []).filter(s => s.desc);
     const pecas = (os.pecas || []).filter(p => p.desc);
 
@@ -110,8 +108,7 @@
     let totalTMO = 0;
     servicos.forEach(s => {
       const tempo = parseFloat(s.tempo || 0);
-      const valor = valorHora;
-      const valorFinal = +(tempo * valor * (1 - descMO)).toFixed(2);
+      const valorFinal = parseFloat(s.valor || 0); // valor real salvo
       totalMO += valorFinal;
       totalTMO += tempo;
       linhas.push([
@@ -120,8 +117,8 @@
         '',
         s.desc || '',
         tempo,
-        valor,
-        descMO,
+        valorFinal,
+        '',
         valorFinal
       ]);
     });
@@ -133,8 +130,8 @@
     let totalPecas = 0;
     pecas.forEach(p => {
       const qtd = parseFloat(p.qtd || 1);
-      const valor = parseFloat(p.valor || p.venda || 0);
-      const valorFinal = +(qtd * valor * (1 - descPeca)).toFixed(2);
+      const valorUnit = parseFloat(p.venda || p.valor || 0);
+      const valorFinal = +(qtd * valorUnit).toFixed(2); // valor real salvo × qtd
       totalPecas += valorFinal;
       linhas.push([
         '',
@@ -142,8 +139,8 @@
         '',
         p.desc || '',
         qtd,
-        valor,
-        descPeca,
+        valorUnit,
+        '',
         valorFinal
       ]);
     });
