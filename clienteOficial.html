@@ -465,22 +465,18 @@ function _buildOSCard(os){
         </div>
       </div>`:''
 
-  // Detalhes expandidos
-  const valorHora=parseFloat(CLI.govValorHora||0);
-  const descMO=parseFloat(CLI.govDescMO||0);
-  const descPeca=parseFloat(CLI.govDescPeca||0);
-
+  // Detalhes expandidos — usa valores JÁ calculados e salvos na OS
   let totalMO=0,totalTMO=0,totalPec=0;
   const lsServ=(os.servicos||[]).map(s=>{
     const t=parseFloat(s.tempo||0);
-    const vf=+(t*valorHora*(1-descMO)).toFixed(2);
+    const vf=parseFloat(s.valor||0); // valor real salvo — NÃO recalcula
     totalMO+=vf; totalTMO+=t;
-    return `<div class="detalhe-row"><span>${esc(s.desc||'—')}<br><small style="color:var(--muted)">${esc(s.sistemaTabela||'')}</small></span><span class="detalhe-val">${moeda(vf)}</span></div>`;
+    return `<div class="detalhe-row"><span>${esc(s.desc||'—')}<br><small style="color:var(--muted)">${esc(s.sistemaTabela||'')}${t?` · ${t}h`:''}</small></span><span class="detalhe-val">${moeda(vf)}</span></div>`;
   }).join('');
 
   const lsPec=(os.pecas||[]).map(p=>{
     const q=parseFloat(p.qtd||1),vl=parseFloat(p.venda||0);
-    const vf=+(q*vl*(1-descPeca)).toFixed(2);
+    const vf=+(q*vl).toFixed(2); // valor salvo × qtd — sem aplicar desconto extra
     totalPec+=vf;
     return `<div class="detalhe-row"><span><code style="font-size:.7rem;color:var(--gov)">${esc(p.codigo||'—')}</code> ${esc(p.desc||'—')}<br><small style="color:var(--muted)">${q}× ${moeda(vl)}</small></span><span class="detalhe-val">${moeda(vf)}</span></div>`;
   }).join('');
@@ -492,19 +488,24 @@ function _buildOSCard(os){
       <div class="media-grid">${fotos.map(m=>`<div class="media-item"><img src="${esc(m.url||m)}" loading="lazy" onclick="window.open('${esc(m.url||m)}','_blank')"></div>`).join('')}</div>
     </div>`:'';
 
-  const tl=(os.timeline||[]);
+  // Linha do tempo: apenas mudanças de status (filtra logs de auditoria técnica)
+  const tlFiltrado=(os.timeline||[]).filter(t=>{
+    const a=(t.acao||'').toLowerCase();
+    return a.includes('status alterado')||a.includes('abriu a o.s')||a.includes('aprovou')||a.includes('recusou')||a.includes('entregue')||a.includes('aprovado');
+  });
+  const tlParaExibir=tlFiltrado.length>0?tlFiltrado:(os.timeline||[]).filter(t=>(t.acao||'').toLowerCase().includes('status'));
+
   const tlHtml=`<div class="timeline-box">
-    <div class="tl-title">⏱️ Linha do Tempo</div>
+    <div class="tl-title">📍 Histórico de Status</div>
     <div class="timeline">
-      ${tl.length?[...tl].reverse().map(t=>`
+      ${tlParaExibir.length?[...tlParaExibir].reverse().map(t=>`
         <div class="tl-item">
           <div class="tl-meta">
-            <span class="tl-date">${new Date(t.dt).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}</span>
-            <span class="tl-user">👤 ${esc(t.user||t.usuario||'Sistema')}</span>
+            <span class="tl-date">${new Date(t.dt).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</span>
           </div>
-          <div class="tl-action">${esc(t.acao||'')}</div>
+          <div class="tl-action">${esc((t.acao||'').replace(/^Status alterado para:\s*/i,'').replace(/^Abriu a O\.S\.\s*/i,'Entrada na oficina — '))}</div>
         </div>`).join('')
-      :'<div style="color:var(--muted);font-size:.8rem;text-align:center">Nenhum registro de atividade ainda.</div>'}
+      :'<div style="color:var(--muted);font-size:.8rem;text-align:center;padding:12px">Nenhum registro de status ainda.</div>'}
     </div>
   </div>`;
 
@@ -535,7 +536,7 @@ function _buildOSCard(os){
 
     ${lsServ||lsPec?`<div style="background:var(--gov-dim);border:1px solid var(--border-s);border-radius:var(--r);padding:14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <span style="font-family:var(--disp);font-weight:700;font-size:1rem">VALOR DO CONTRATO</span>
-      <span style="font-family:var(--mono);font-size:1.15rem;font-weight:700;color:var(--gov)">${moeda(totalMO+totalPec)}</span>
+      <span style="font-family:var(--mono);font-size:1.15rem;font-weight:700;color:var(--gov)">${moeda(os.total||totalMO+totalPec)}</span>
     </div>`:''}
 
     ${fotosHtml}

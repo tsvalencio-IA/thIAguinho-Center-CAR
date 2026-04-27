@@ -1986,7 +1986,11 @@ window._wppAcessoCliente = function(cid) {
   const c = J.clientes.find(x => x.id === cid);
   if (!c?.wpp) return;
   const fone = c.wpp.replace(/\D/g, '');
-  const link = 'https://tsvalencio-ia.github.io/of/cliente.html';
+  // Link correto: governo → clienteOficial, demais → cliente
+  const isGov = c.tipoCliente === 'governo';
+  const link = isGov
+    ? 'https://tsvalencio-ia.github.io/of/clienteOficial.html'
+    : 'https://tsvalencio-ia.github.io/of/cliente.html';
   const msg =
     `Olá ${c.nome.split(' ')[0]}! 👋\n\n` +
     `Aqui é a *${J.tnome}*. Seu acesso ao portal do cliente está pronto!\n\n` +
