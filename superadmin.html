@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+<script>(function(){try{var t=localStorage.getItem("thiaguinho_theme");if(!t){t=window.matchMedia&&window.matchMedia("(prefers-color-scheme: light)").matches?"light":"dark";}document.documentElement.setAttribute("data-theme",t);}catch(e){document.documentElement.setAttribute("data-theme","dark");}})();</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>J.A.R.V.I.S — SUPERADMIN SaaS</title>
@@ -190,6 +191,8 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
     <div class="page-title" id="pageTitle" style="color:var(--purple)">DASHBOARD</div>
     <div style="display:flex;align-items:center;gap:12px;">
       <span style="display:flex;align-items:center;gap:6px;font-family:var(--fm);font-size:0.62rem;color:var(--muted2);padding:5px 12px;border:1px solid var(--border);border-radius:2px;"><div class="live-dot"></div> FIREBASE ONLINE</span>
+      <!-- Alternador de tema claro/escuro -->
+      <button data-theme-toggle class="theme-toggle" onclick="window.thiTheme && window.thiTheme.toggle()"><span class="icon-moon">🌙</span><span class="icon-sun">☀️</span></button>
     </div>
   </div>
 
@@ -300,6 +303,29 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
       </div>
     </div>
     <div class="form-row c2">
+      <div class="form-group"><label class="j-label">Razao Social</label><input class="j-input" id="tRazaoSocial" placeholder="S.O.S. MECANICA E ELETRICA LTDA"></div>
+      <div class="form-group"><label class="j-label">CNPJ da Oficina</label><input class="j-input" id="tCnpj" placeholder="00.000.000/0000-00"></div>
+    </div>
+    <div class="form-row c3">
+      <div class="form-group"><label class="j-label">Endereco da Oficina</label><input class="j-input" id="tEndereco" placeholder="Av. Sebastiao Goncalves de Souza"></div>
+      <div class="form-group"><label class="j-label">Numero</label><input class="j-input" id="tNumero" placeholder="571"></div>
+      <div class="form-group"><label class="j-label">Bairro</label><input class="j-input" id="tBairro" placeholder="Eldorado"></div>
+    </div>
+    <div class="form-row c3">
+      <div class="form-group"><label class="j-label">Cidade</label><input class="j-input" id="tCidade" placeholder="Sao Jose do Rio Preto"></div>
+      <div class="form-group"><label class="j-label">UF</label><input class="j-input" id="tUf" placeholder="SP" maxlength="2" style="text-transform:uppercase"></div>
+      <div class="form-group"><label class="j-label">CEP</label><input class="j-input" id="tCep" placeholder="15040-219"></div>
+    </div>
+    <div class="form-row c3">
+      <div class="form-group"><label class="j-label">Telefone da Oficina</label><input class="j-input" id="tTelefone" placeholder="(17) 99999-9999"></div>
+      <div class="form-group"><label class="j-label">E-mail da Oficina</label><input class="j-input" id="tEmail" placeholder="contato@oficina.com"></div>
+      <div class="form-group"><label class="j-label">Responsavel Legal</label><input class="j-input" id="tResponsavel" placeholder="Nome do responsavel legal"></div>
+    </div>
+    <div class="form-row c2">
+      <div class="form-group"><label class="j-label">Orcamentista Padrao</label><input class="j-input" id="tOrcamentista" placeholder="Nome do orcamentista"></div>
+      <div class="form-group"><label class="j-label">Representante na Planilha</label><input class="j-input" id="tRepresentante" placeholder="Nome exibido na assinatura"></div>
+    </div>
+    <div class="form-row c2">
       <div class="form-group"><label class="j-label">Usuário de Login (Admin)</label><input class="j-input" id="tUser" placeholder="oficina.silva" style="font-family:var(--fm);"></div>
       <div class="form-group"><label class="j-label">Senha do Admin</label><input class="j-input" id="tSenha" placeholder="senhasegura123"></div>
     </div>
@@ -323,6 +349,24 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
     <div class="form-row c2">
       <div class="form-group"><label class="j-label">Cloudinary Cloud Name</label><input class="j-input" id="tCloudName" placeholder="dmuvm1o6m"></div>
       <div class="form-group"><label class="j-label">Cloudinary Upload Preset</label><input class="j-input" id="tCloudPreset" placeholder="evolution"></div>
+    </div>
+    <div class="form-group" style="margin-top:12px">
+      <label class="j-label" style="color:var(--cyan)">Firebase exclusivo da oficina (opcional)</label>
+      <div style="font-size:0.68rem;color:var(--muted2);font-family:var(--fm);line-height:1.45;margin:4px 0 10px;">
+        Preencha quando esta oficina tiver projeto Firebase proprio. Se ficar vazio, continua usando o Firebase central atual.
+      </div>
+    </div>
+    <div class="form-row c2">
+      <div class="form-group"><label class="j-label">Firebase apiKey</label><input class="j-input" id="tFbApiKey" placeholder="AIzaSy..."></div>
+      <div class="form-group"><label class="j-label">Firebase authDomain</label><input class="j-input" id="tFbAuthDomain" placeholder="oficina.firebaseapp.com"></div>
+    </div>
+    <div class="form-row c2">
+      <div class="form-group"><label class="j-label">Firebase projectId</label><input class="j-input" id="tFbProjectId" placeholder="oficina-producao"></div>
+      <div class="form-group"><label class="j-label">Firebase storageBucket</label><input class="j-input" id="tFbStorageBucket" placeholder="oficina.firebasestorage.app"></div>
+    </div>
+    <div class="form-row c2">
+      <div class="form-group"><label class="j-label">Firebase messagingSenderId</label><input class="j-input" id="tFbMessagingSenderId" placeholder="123456789"></div>
+      <div class="form-group"><label class="j-label">Firebase appId</label><input class="j-input" id="tFbAppId" placeholder="1:123456789:web:abcdef"></div>
     </div>
     <div class="form-group">
       <label class="j-label" style="margin-bottom:8px;">Módulos Habilitados</label>
@@ -563,8 +607,33 @@ function renderTenants(filter=''){
 function filtrarTenants(v){renderTenants(v);}
 
 // TENANT CRUD
+const CAMPOS_DADOS_OFICINA=[
+  'tRazaoSocial','tCnpj','tEndereco','tNumero','tBairro','tCidade','tUf','tCep',
+  'tTelefone','tEmail','tResponsavel','tOrcamentista','tRepresentante'
+];
+const CAMPOS_FIREBASE_OFICINA=[
+  'tFbApiKey','tFbAuthDomain','tFbProjectId','tFbStorageBucket','tFbMessagingSenderId','tFbAppId'
+];
+
+function montarEnderecoOficina(){
+  return [$v('tEndereco'),$v('tNumero'),$v('tBairro'),$v('tCidade'),$v('tUf'),$v('tCep')]
+    .filter(Boolean).join(', ');
+}
+
+function montarFirebaseOficina(){
+  const cfg={
+    apiKey:$v('tFbApiKey'),
+    authDomain:$v('tFbAuthDomain'),
+    projectId:$v('tFbProjectId'),
+    storageBucket:$v('tFbStorageBucket'),
+    messagingSenderId:$v('tFbMessagingSenderId'),
+    appId:$v('tFbAppId')
+  };
+  return Object.values(cfg).some(Boolean) ? cfg : null;
+}
+
 function prepTenant(mode,id=null){
-  ['tId','tNome','tUser','tSenha','tWpp','tGemini','tCloudName','tCloudPreset'].forEach(f=>{if($(f))$(f).value='';});
+  ['tId','tNome','tUser','tSenha','tWpp','tGemini','tCloudName','tCloudPreset',...CAMPOS_DADOS_OFICINA,...CAMPOS_FIREBASE_OFICINA].forEach(f=>{if($(f))$(f).value='';});
   ['mOS','mCrm','mEst','mFin','mIA','mChat','mAgd','mRH','mComissoes'].forEach(f=>{if($(f))$(f).checked=false;});
   $('tStatus').value='Online'; $('tNicho').value='carros'; $('tPlano').value='trial';
   $('tCloudName').value='dmuvm1o6m'; $('tCloudPreset').value='evolution';
@@ -576,8 +645,28 @@ function prepTenant(mode,id=null){
     $('tId').value=t.id; $('tNome').value=t.nomeFantasia||''; $('tUser').value=t.usuario||'';
     $('tSenha').value=t.senha||''; $('tWpp').value=t.wpp||''; $('tNicho').value=t.nicho||'carros';
     $('tPlano').value=t.plano||'trial'; $('tStatus').value=t.status||'Online';
+    $('tRazaoSocial').value=t.razaoSocial||t.razao||'';
+    $('tCnpj').value=t.cnpj||t.doc||t.documento||'';
+    $('tEndereco').value=t.endereco||t.rua||t.logradouro||'';
+    $('tNumero').value=t.numero||t.num||'';
+    $('tBairro').value=t.bairro||'';
+    $('tCidade').value=t.cidade||t.municipio||'';
+    $('tUf').value=t.uf||'';
+    $('tCep').value=t.cep||'';
+    $('tTelefone').value=t.telefone||t.wpp||'';
+    $('tEmail').value=t.email||'';
+    $('tResponsavel').value=t.responsavel||'';
+    $('tOrcamentista').value=t.orcamentista||'';
+    $('tRepresentante').value=t.representante||t.responsavel||'';
     $('tGemini').value=t.apiKeys?.gemini||''; $('tCloudName').value=t.apiKeys?.cloudName||'dmuvm1o6m';
     $('tCloudPreset').value=t.apiKeys?.cloudPreset||'evolution';
+    const fb=t.firebaseConfig||{};
+    $('tFbApiKey').value=fb.apiKey||'';
+    $('tFbAuthDomain').value=fb.authDomain||'';
+    $('tFbProjectId').value=fb.projectId||'';
+    $('tFbStorageBucket').value=fb.storageBucket||'';
+    $('tFbMessagingSenderId').value=fb.messagingSenderId||'';
+    $('tFbAppId').value=fb.appId||'';
     const m=t.modulos||{};
     $('mOS').checked=!!m.os; $('mCrm').checked=!!m.crm; $('mEst').checked=!!m.estoque;
     $('mFin').checked=!!m.financeiro; $('mIA').checked=!!m.ia; $('mChat').checked=!!m.chat;
@@ -591,14 +680,38 @@ function prepTenant(mode,id=null){
 async function salvarTenant(){
   if(!$v('tNome')||!$v('tUser')||!$v('tSenha')){toast('⚠ Preencha nome, usuário e senha','warn');return;}
   const geminiKey=$v('tGemini');
+  const firebaseConfig=montarFirebaseOficina();
   const payload={
     nomeFantasia:$v('tNome'), usuario:$v('tUser'), senha:$v('tSenha'),
     wpp:$v('tWpp'), nicho:$v('tNicho'), plano:$v('tPlano'), status:$v('tStatus'),
+    razaoSocial:$v('tRazaoSocial'),
+    razao:$v('tRazaoSocial'),
+    cnpj:$v('tCnpj'),
+    doc:$v('tCnpj'),
+    documento:$v('tCnpj'),
+    endereco:$v('tEndereco'),
+    rua:$v('tEndereco'),
+    logradouro:$v('tEndereco'),
+    numero:$v('tNumero'),
+    num:$v('tNumero'),
+    bairro:$v('tBairro'),
+    cidade:$v('tCidade'),
+    municipio:$v('tCidade'),
+    uf:$v('tUf').toUpperCase(),
+    cep:$v('tCep'),
+    telefone:$v('tTelefone')||$v('tWpp'),
+    celular:$v('tTelefone')||$v('tWpp'),
+    email:$v('tEmail'),
+    responsavel:$v('tResponsavel'),
+    orcamentista:$v('tOrcamentista'),
+    representante:$v('tRepresentante')||$v('tResponsavel'),
+    enderecoCompleto:montarEnderecoOficina(),
     apiKeys:{
       gemini:geminiKey||await buscarKeyGlobal(),
       cloudName:$v('tCloudName')||'dmuvm1o6m',
       cloudPreset:$v('tCloudPreset')||'evolution'
     },
+    firebaseConfig,
     modulos:{
       os:$('mOS').checked, crm:$('mCrm').checked, estoque:$('mEst').checked,
       financeiro:$('mFin').checked, ia:$('mIA').checked, chat:$('mChat').checked,
@@ -732,5 +845,6 @@ window.onload=()=>{
   }
 };
 </script>
+<script src="js/theme.js"></script>
 </body>
 </html>

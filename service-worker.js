@@ -12,7 +12,7 @@
  *
  * Powered by thIAguinho Soluções Digitais
  */
-const CACHE_VERSION = 'thiaguinho-v1.4.0';
+const CACHE_VERSION = 'thiaguinho-v1.6.0-tema-claro-escuro-20260504';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
@@ -21,18 +21,26 @@ const PRECACHE_URLS = [
   './',
   './selecionar-perfil.html',
   './index.html',
+  './jarvis.html',
+  './equipe.html',
   './cliente.html',
+  './clienteOficial.html',
   './manifest.json',
   './css/design.css',
   './js/core.js',
   './js/clientes.js',
   './js/ia.js',
   './js/financeiro.js',
+  './js/exportar-pmsp.js',
   './js/os.js',
+  './js/os-utils.js',
+  './js/tabela-tempa.js',
   './js/ui.js',
   './js/pdf.js',
   './js/config.js',
+  './js/theme.js',
   './js/fiscal.js',
+  './assets/templates/I-30003_PLANILHA_DE_CUSTOS.xlsx',
   './elm327-service.js',
   './elm-bridge.js'
 ];

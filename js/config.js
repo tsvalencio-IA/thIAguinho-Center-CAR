@@ -129,7 +129,34 @@ window.aplicarBrand = function(brand) {
 // ============================================================
 // FIREBASE INIT
 // ============================================================
+function _tenantFirebaseConfig() {
+  try {
+    const raw = sessionStorage.getItem('j_firebase_config');
+    if (!raw) return null;
+    const cfg = JSON.parse(raw);
+    if (cfg && cfg.apiKey && cfg.projectId) return cfg;
+  } catch(e) {}
+  return null;
+}
+
+window.getActiveFirebaseConfig = function() {
+  return _tenantFirebaseConfig() || window.JARVIS_FB_CONFIG;
+};
+
+window.initCentralFirebase = function() {
+  let app = firebase.apps.find(a => a.name === '[DEFAULT]');
+  if (!app) app = firebase.initializeApp(window.JARVIS_FB_CONFIG);
+  return app.firestore();
+};
+
 window.initFirebase = function() {
+  const tenantCfg = _tenantFirebaseConfig();
+  if (tenantCfg) {
+    const appName = 'tenant-' + String(tenantCfg.projectId).replace(/[^a-z0-9-]/gi, '-');
+    let app = firebase.apps.find(a => a.name === appName);
+    if (!app) app = firebase.initializeApp(tenantCfg, appName);
+    return app.firestore();
+  }
   if (!firebase.apps.length) firebase.initializeApp(window.JARVIS_FB_CONFIG);
   return firebase.firestore();
 };

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+<script>(function(){try{var t=localStorage.getItem("thiaguinho_theme");if(!t){t=window.matchMedia&&window.matchMedia("(prefers-color-scheme: light)").matches?"light":"dark";}document.documentElement.setAttribute("data-theme",t);}catch(e){document.documentElement.setAttribute("data-theme","dark");}})();</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Portal Oficial — thIAguinho</title>
@@ -57,6 +58,11 @@ body{background:var(--bg0);color:var(--text);font-family:var(--ff);min-height:10
 .stat-lbl{font-family:var(--mono);font-size:0.63rem;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px}
 .stat-val{font-size:1.4rem;font-weight:700;color:var(--gov);font-family:var(--mono)}
 .stat-meta{font-size:0.68rem;color:var(--muted);margin-top:2px}
+.secao-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:0 0 14px}
+.secao-kpi{background:rgba(82,196,255,.055);border:1px solid rgba(82,196,255,.18);border-radius:var(--r);padding:12px 14px}
+.secao-kpi-lbl{font-family:var(--mono);font-size:.58rem;color:var(--muted);letter-spacing:1px;text-transform:uppercase;min-height:24px}
+.secao-kpi-val{font-family:var(--mono);font-size:1rem;color:var(--gov);font-weight:800;margin-top:6px}
+.secao-kpi-meta{font-family:var(--mono);font-size:.62rem;color:var(--muted);margin-top:3px}
 
 /* ── NAV TABS ── */
 .nav-wrap{background:rgba(12,20,38,.95);backdrop-filter:blur(10px);border:1px solid var(--border);border-radius:var(--rx);margin-bottom:14px;overflow:hidden;position:sticky;top:8px;z-index:100}
@@ -175,6 +181,8 @@ body{background:var(--bg0);color:var(--text);font-family:var(--ff);min-height:10
 </style>
 </head>
 <body>
+  <!-- Botão de alternância de tema fixo no canto superior (para cliente oficial) -->
+  <button data-theme-toggle class="theme-toggle" onclick="window.thiTheme && window.thiTheme.toggle()" style="position:fixed;top:14px;right:14px;z-index:9999;display:flex;align-items:center;gap:4px;"><span class="icon-moon">🌙</span><span class="icon-sun">☀️</span></button>
 <div id="toastBox"></div>
 
 <!-- LOGIN -->
@@ -207,9 +215,10 @@ body{background:var(--bg0);color:var(--text);font-family:var(--ff);min-height:10
     <div class="stats-grid">
       <div class="stat"><div class="stat-lbl">Viaturas</div><div class="stat-val" id="stVeic">—</div><div class="stat-meta">no contrato</div></div>
       <div class="stat"><div class="stat-lbl">OS Ativas</div><div class="stat-val" id="stOrc">—</div><div class="stat-meta">em andamento</div></div>
-      <div class="stat"><div class="stat-lbl">Valor Executado</div><div class="stat-val" id="stValor">R$ 0</div><div class="stat-meta">acumulado</div></div>
+      <div class="stat"><div class="stat-lbl">Valor no Período</div><div class="stat-val" id="stValor">R$ 0</div><div class="stat-meta">filtrado</div></div>
       <div class="stat"><div class="stat-lbl">Prontos p/ Retirada</div><div class="stat-val" id="stPrt">—</div><div class="stat-meta">aguardando</div></div>
     </div>
+    <div class="secao-kpis" id="secaoKpis"></div>
 
     <div class="nav-wrap">
       <div class="nav-tabs">
@@ -270,12 +279,21 @@ body{background:var(--bg0);color:var(--text);font-family:var(--ff);min-height:10
         <button class="btn-gov" onclick="_salvarAgendamento()">ENVIAR SOLICITAÇÃO</button>
       </div>
       <div id="renderAgd"></div>
-    </div>
-
-    <!-- TAB: HISTÓRICO -->
+    </div>    <!-- TAB: HISTÓRICO -->
     <div class="tab-content" id="tHist">
       <div style="background:var(--bg1);border:1px solid var(--border);border-radius:var(--rx);overflow:hidden;margin-bottom:14px">
         <div style="padding:14px 18px;border-bottom:1px solid var(--border);font-family:var(--disp);font-weight:700;font-size:1rem;color:var(--gov)">📜 OS Concluídas</div>
+        <div style="display:flex;gap:10px;align-items:end;flex-wrap:wrap;padding:12px 18px;border-bottom:1px solid var(--border);background:rgba(255,255,255,.02)">
+          <div style="min-width:150px;flex:1">
+            <label style="display:block;font-family:var(--mono);font-size:.62rem;color:var(--muted);margin-bottom:4px">DATA INICIAL</label>
+            <input type="date" id="histDtIni" onchange="_renderStats();_renderHist()" style="width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:9px;color:var(--text);font-family:var(--mono)">
+          </div>
+          <div style="min-width:150px;flex:1">
+            <label style="display:block;font-family:var(--mono);font-size:.62rem;color:var(--muted);margin-bottom:4px">DATA FINAL</label>
+            <input type="date" id="histDtFim" onchange="_renderStats();_renderHist()" style="width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:9px;color:var(--text);font-family:var(--mono)">
+          </div>
+          <button onclick="_limparFiltroHist()" style="background:var(--gov-dim);border:1px solid var(--border-s);color:var(--gov);padding:10px 14px;border-radius:var(--r);font-family:var(--mono);font-size:.65rem;cursor:pointer">LIMPAR FILTRO</button>
+        </div>
         <div style="overflow-x:auto">
           <table class="t">
             <thead><tr><th>OS</th><th>Prefixo / Viatura</th><th>Data</th><th style="text-align:right">Valor</th><th></th></tr></thead>
@@ -302,16 +320,135 @@ body{background:var(--bg0);color:var(--text);font-family:var(--ff);min-height:10
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="js/config.js"></script>
+<script src="js/os-utils.js"></script>
 <script>
 'use strict';
-const db = window.initFirebase();
+const portalParams = new URLSearchParams(window.location.search);
+const _tenantSlug = portalParams.get('tenant') || portalParams.get('t') || null;
+if (!_tenantSlug) sessionStorage.removeItem('j_firebase_config');
+let db = window.initFirebase();
 let CLI = null, TID = null;
-let _OS = [], _VEIC = [], _OFIC = null;
+let _OS = [], _VEIC = [], _FIN = [], _OFIC = null;
 const fmt = new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'});
+const _tenantReady = _tenantSlug ? _prepararTenantPortal(_tenantSlug) : Promise.resolve();
 
 function moeda(v){ return fmt.format(parseFloat(v||0)); }
 function fmtDt(d){ if(!d) return '—'; try{ return new Date(d).toLocaleDateString('pt-BR'); }catch{ return '—'; } }
 function esc(s){ return String(s==null?'':s).replace(/[<>&"']/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c])); }
+function _pick(...values){
+  for(const value of values){
+    if(value===undefined||value===null) continue;
+    if(String(value).trim()!=='') return value;
+  }
+  return '';
+}
+function nBR(v){
+  if(typeof v === 'number' && isFinite(v)) return v;
+  const s=String(v==null?'':v).replace(/\s/g,'').replace(/R\$/gi,'');
+  if(!s) return 0;
+  return parseFloat(s.includes(',') ? s.replace(/\./g,'').replace(',','.') : s) || 0;
+}
+function _dataRefOS(os){ return String(os.updatedAt||os.data||os.createdAt||'').slice(0,10); }
+function _osDentroPeriodo(os){
+  const d=_dataRefOS(os);
+  const ini=document.getElementById('histDtIni')?.value||'';
+  const fim=document.getElementById('histDtFim')?.value||'';
+  if(ini && (!d || d<ini)) return false;
+  if(fim && (!d || d>fim)) return false;
+  return true;
+}
+function _finOS(os){
+  return _FIN.filter(f=>{
+    if(!f || f.isComissao) return false;
+    if(String(f.tipo||'').toLowerCase().startsWith('sa')) return false;
+    if(f.osId && f.osId===os.id) return true;
+    const placa=String(os.placa||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+    const desc=String(f.desc||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+    return !f.osId && placa && desc.includes(placa);
+  });
+}
+function _totalAprovadoOS(os){
+  if(os.totalAprovado!=null) return nBR(os.totalAprovado);
+  return nBR(os.total||0);
+}
+function _resumoFinanceiroOS(os){
+  const fin=_finOS(os);
+  const faturado=fin.reduce((s,f)=>s+nBR(f.valor),0)||nBR(os.totalFaturado||0);
+  const formas=[os.pgtoResumoCliente,os.pgtoForma,...fin.map(f=>f.pgtoResumo||f.pgto)].filter(Boolean);
+  const forma=formas.find(Boolean)||'';
+  const vencs=fin.map(f=>f.venc||f.dataPgto||'').filter(Boolean).sort();
+  return {orcamento:nBR(os.total||0), aprovado:_totalAprovadoOS(os), faturado, forma, vencs};
+}
+function _normSecao(txt){
+  return String(txt||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+}
+function _classificarSecaoKPI(serv){
+  const UOS=window.JOS||window.JarvisOSUtils||{};
+  const rate=serv?.secaoHora&&UOS.getPMSPValorHora?UOS.getPMSPValorHora(serv.secaoHora):null;
+  if(rate?.label) return rate.label;
+  const t=_normSecao([serv?.secaoHoraLabel,serv?.sistemaTabela,serv?.sistema,serv?.desc,serv?.descricao].filter(Boolean).join(' '));
+  const base=String(serv?.secaoHoraLabel||serv?.sistemaTabela||serv?.sistema||'').trim();
+  if(base) return base;
+  if(/\b(funilaria|lanternagem|pintura|pintar|lataria|parachoque|para choque)\b/.test(t)) return 'Funilaria / Pintura';
+  if(/\b(tapecaria|capotaria|banco|assento|encosto|forro|estof)\b/.test(t)) return 'Tapecaria / Capotaria';
+  if(/\b(borracharia|pneu|pneus|roda|rodas|calota|balanceamento)\b/.test(t)) return 'Borracharia';
+  if(/\b(lavagem|higienizacao|higienizar|limpeza interna|polimento)\b/.test(t)) return 'Lavagem / Higienizacao';
+  if(/\b(injecao|bico|bicos|combustivel|alimentacao)\b/.test(t)) return 'Injecao / Alimentacao';
+  if(/\b(eletrica|eletrico|eletronica|alternador|bateria|lampada|farol|sensor)\b/.test(t)) return 'Eletrica';
+  if(/\b(mecanica|motor|cambio|transmissao|arrefecimento|suspensao|freio|direcao|retifica)\b/.test(t)) return 'Mecanica';
+  return base ? base.slice(0,48) : 'Outros servicos';
+}
+function _resumoSecoesOS(os){
+  const UOS=window.JOS||window.JarvisOSUtils||{};
+  const out={};
+  if(!os) return [];
+  const hasApproval=UOS.hasApproval?UOS.hasApproval(os):false;
+  const keys=hasApproval&&UOS.getApprovedKeys?UOS.getApprovedKeys(os):new Set();
+  const descMOraw=os.descMO!=null?nBR(os.descMO):nBR(CLI?.govDescMO||0);
+  const descMO=descMOraw>1?descMOraw/100:descMOraw;
+  (os.servicos||[]).forEach((s,idx)=>{
+    if(hasApproval&&!keys.has('servico-'+idx)) return;
+    const tempo=nBR(s.tempo||0);
+    const valorHora=nBR(s.valorHora||s.valorHoraSecao||0);
+    const valorBruto=nBR(s.valor||0)||(tempo*valorHora);
+    if(!tempo&&!valorBruto&&!s.desc) return;
+    const secao=_classificarSecaoKPI(s);
+    if(!out[secao]) out[secao]={horas:0,total:0,qtd:0};
+    out[secao].horas+=tempo;
+    out[secao].total+=+(valorBruto*(1-descMO)).toFixed(2);
+    out[secao].qtd+=1;
+  });
+  return Object.entries(out).sort((a,b)=>b[1].total-a[1].total);
+}
+function _resumoSecoesPeriodo(){ return []; }
+function _kpisSecaoOSHtml(os){
+  const rows=_resumoSecoesOS(os);
+  if(!rows.length) return '';
+  return `<div class="secao-kpis" style="margin:0 0 16px">${rows.map(([secao,item])=>`<div class="secao-kpi">
+    <div class="secao-kpi-lbl">${esc(secao)}</div>
+    <div class="secao-kpi-val">${moeda(item.total)}</div>
+    <div class="secao-kpi-meta">${item.horas.toFixed(2).replace('.',',')}h por ${item.qtd} servico(s)</div>
+  </div>`).join('')}</div>`;
+}
+function _renderKpisSecao(){
+  const el=document.getElementById('secaoKpis');
+  if(!el) return;
+  const rows=_resumoSecoesPeriodo();
+  if(!rows.length){ el.innerHTML=''; return; }
+  el.innerHTML=rows.slice(0,8).map(([secao,item])=>`<div class="secao-kpi">
+    <div class="secao-kpi-lbl">${esc(secao)}</div>
+    <div class="secao-kpi-val">${moeda(item.total)}</div>
+    <div class="secao-kpi-meta">${item.horas.toFixed(2).replace('.',',')}h · ${item.qtd} item(ns)</div>
+  </div>`).join('');
+}
+function _limparFiltroHist(){
+  const ini=document.getElementById('histDtIni');
+  const fim=document.getElementById('histDtFim');
+  if(ini) ini.value='';
+  if(fim) fim.value='';
+  _renderStats();
+  _renderHist();
+}
 
 function toast(msg,type='ok'){
   const el=document.createElement('div'); el.className=`toast-j ${type}`;
@@ -325,6 +462,7 @@ document.getElementById('pinInput').addEventListener('keydown',e=>{ if(e.key==='
 document.getElementById('loginInput').addEventListener('keydown',e=>{ if(e.key==='Enter') document.getElementById('pinInput').focus(); });
 
 async function doLogin(){
+  await _tenantReady;
   const err=document.getElementById('loginErr');
   err.style.display='none';
   const login=(document.getElementById('loginInput').value||'').trim();
@@ -354,8 +492,22 @@ async function doLogin(){
 
 async function _carregarOficina(){
   try{
-    const snap=await db.collection('oficinas').doc(TID).get();
+    const snap=await (window.initCentralFirebase?window.initCentralFirebase():db).collection('oficinas').doc(TID).get();
     if(snap.exists) _OFIC=snap.data();
+  }catch(e){}
+}
+
+async function _prepararTenantPortal(tenantId){
+  try{
+    const centralDb=window.initCentralFirebase?window.initCentralFirebase():db;
+    const snap=await centralDb.collection('oficinas').doc(tenantId).get();
+    if(!snap.exists) return;
+    _OFIC=snap.data();
+    TID=tenantId;
+    if(_OFIC.firebaseConfig?.projectId&&_OFIC.firebaseConfig?.apiKey){
+      sessionStorage.setItem('j_firebase_config',JSON.stringify(_OFIC.firebaseConfig));
+      db=window.initFirebase();
+    }
   }catch(e){}
 }
 
@@ -374,7 +526,7 @@ function _ligarListeners(){
     _VEIC=snap.docs.map(d=>({id:d.id,...d.data()}));
     _renderViaturas();
     const el=document.getElementById('agdVeiculo');
-    if(el) el.innerHTML='<option value="">Selecione a viatura...</option>'+_VEIC.map(v=>`<option value="${v.id}">${(v.prefixo||'').toUpperCase()||v.placa} — ${v.modelo||''}</option>`).join('');
+    if(el) el.innerHTML='<option value="">Selecione a viatura...</option>'+_VEIC.map(v=>`<option value="${v.id}">${String(_pick(v.prefixo,v.placa)||'').toUpperCase()} — ${_pick(v.modelo)}</option>`).join('');
   });
 
   // OS
@@ -391,6 +543,14 @@ function _ligarListeners(){
     _renderChat(msgs);
   });
 
+  // Financeiro vinculado ao cliente oficial
+  db.collection('financeiro').where('tenantId','==',TID).onSnapshot(snap=>{
+    _FIN=snap.docs.map(d=>({id:d.id,...d.data()})).filter(f=>!String(f.tipo||'').toLowerCase().startsWith('sa')&&!f.isComissao);
+    _renderStats();
+    _renderOS();
+    _renderHist();
+  });
+
   // Agendamentos
   db.collection('agendamentos').where('tenantId','==',TID).where('clienteId','==',CLI.id).onSnapshot(snap=>{
     const list=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>((b.data||'')>(a.data||''))?1:-1);
@@ -401,11 +561,13 @@ function _ligarListeners(){
 // ── STATS ──────────────────────────────────────────────────────
 function _renderStats(){
   const ativas=_OS.filter(o=>o.status!=='Entregue'&&o.status!=='Concluido');
-  const total=_OS.reduce((s,o)=>s+(parseFloat(o.total)||0),0);
+  const osPeriodo=_OS.filter(_osDentroPeriodo);
+  const total=osPeriodo.reduce((s,o)=>s+(_resumoFinanceiroOS(o).faturado||_totalAprovadoOS(o)),0);
   document.getElementById('stVeic').textContent=_VEIC.length;
   document.getElementById('stOrc').textContent=ativas.length;
   document.getElementById('stValor').textContent=moeda(total);
   document.getElementById('stPrt').textContent=ativas.filter(o=>/pronto/i.test(o.status||'')).length;
+  _renderKpisSecao();
 }
 
 // ── RENDER OS ─────────────────────────────────────────────────
@@ -438,6 +600,19 @@ function _buildOSCard(os){
   const placaBruta=(os.placa||v.placa||'S/PLACA').toUpperCase().replace(/[^A-Z0-9]/g,'');
   const placa=placaBruta.length===7?`${placaBruta.slice(0,3)}-${placaBruta.slice(3)}`:placaBruta;
   const km=os.km?Number(os.km).toLocaleString('pt-BR'):(v.km?Number(v.km).toLocaleString('pt-BR'):'--');
+  const marcaVeic=_pick(v.marca,os.marca);
+  const modeloVeic=_pick(v.modelo,os.veiculo,os.modelo);
+  const anoVeic=_pick(v.ano,os.ano);
+  const prefixoVeic=String(_pick(v.prefixo,os.prefixo)||'').toUpperCase();
+  const chassisVeic=String(_pick(v.chassis,v.chassi,os.chassis,os.chassi)||'').toUpperCase();
+  const patrimonioVeic=_pick(v.patrimonio,v.patrimonioNumero,v.patrimonioId,os.patrimonio,os.patrimonioNumero);
+  const resumoFin=_resumoFinanceiroOS(os);
+  const vencsTxt=resumoFin.vencs.map(v=>fmtDt(v)).join(' | ');
+  const resumoFinHtml=`<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0;">
+    <div style="background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:var(--r);padding:10px"><div style="font-family:var(--mono);font-size:.58rem;color:var(--muted);letter-spacing:1px">ORCAMENTO</div><strong style="font-family:var(--mono);color:var(--warn)">${moeda(resumoFin.orcamento)}</strong></div>
+    <div style="background:rgba(82,196,255,.08);border:1px solid rgba(82,196,255,.24);border-radius:var(--r);padding:10px"><div style="font-family:var(--mono);font-size:.58rem;color:var(--muted);letter-spacing:1px">APROVADO</div><strong style="font-family:var(--mono);color:var(--gov)">${resumoFin.aprovado?moeda(resumoFin.aprovado):'-'}</strong></div>
+    <div style="background:rgba(77,208,143,.08);border:1px solid rgba(77,208,143,.24);border-radius:var(--r);padding:10px"><div style="font-family:var(--mono);font-size:.58rem;color:var(--muted);letter-spacing:1px">FATURADO</div><strong style="font-family:var(--mono);color:var(--ok)">${resumoFin.faturado?moeda(resumoFin.faturado):'-'}</strong></div>
+  </div>${(resumoFin.forma||vencsTxt)?`<div style="font-family:var(--mono);font-size:.68rem;color:var(--muted);line-height:1.5;margin-bottom:10px">${resumoFin.forma?`Pagamento: <strong style="color:var(--text)">${esc(resumoFin.forma)}</strong>`:''}${vencsTxt?`<br>Vencimentos: <strong style="color:var(--text)">${esc(vencsTxt)}</strong>`:''}</div>`:''}`;
 
   const stepper=isCancelado
     ?`<div style="text-align:center;padding:22px;color:var(--err);font-weight:700;font-family:var(--disp);font-size:1.3rem">🚫 CANCELADA</div>`
@@ -459,7 +634,7 @@ function _buildOSCard(os){
   const orcAlerta=isOrc
     ?`<div class="alerta-orc">
         <div style="font-family:var(--disp);font-size:1.15rem;font-weight:700;color:var(--warn);margin-bottom:6px">📋 Orçamento Disponível para Aprovação</div>
-        <div style="font-size:.88rem;color:var(--text);margin-bottom:14px">Valor estimado: <strong style="font-size:1.2rem">${moeda(os.total)}</strong></div>
+        ${resumoFinHtml}
         <div style="display:flex;gap:10px;flex-wrap:wrap">
           <button class="btn-aprovar" onclick="_aprovarOrc('${os.id}')">✓ APROVAR</button>
           <button class="btn-negociar" onclick="_negociar('${esc(placa)}')">💬 NEGOCIAR</button>
@@ -475,20 +650,38 @@ function _buildOSCard(os){
         </div>
       </div>`:''
 
-  // Detalhes expandidos — usa valores JÁ calculados e salvos na OS
+  // Detalhes — aplica desconto do batalhão (govDescMO / govDescPeca) sobre valores brutos
+  const UOS = window.JOS || window.JarvisOSUtils || {};
+  const parseBR = UOS.parseNumberBR || (v => parseFloat(String(v || 0).replace(',', '.')) || 0);
+  const pctDescMOBase = os.descMO!=null ? parseBR(os.descMO) : parseBR(CLI.govDescMO || 0);
+  const pctDescPecaBase = os.descPeca!=null ? parseBR(os.descPeca) : parseBR(CLI.govDescPeca || 0);
+  const pctDescMO = pctDescMOBase > 1 ? pctDescMOBase / 100 : pctDescMOBase;
+  const pctDescPeca = pctDescPecaBase > 1 ? pctDescPecaBase / 100 : pctDescPecaBase;
+  const temAprovacao = UOS.hasApproval ? UOS.hasApproval(os) : false;
+  const chavesAprovadas = UOS.getApprovedKeys ? UOS.getApprovedKeys(os) : new Set();
+  const badgeAprovacao = key => temAprovacao
+    ? `<small style="display:inline-block;margin-left:6px;padding:2px 6px;border-radius:3px;border:1px solid ${chavesAprovadas.has(key) ? 'rgba(77,208,143,.35)' : 'rgba(255,77,109,.35)'};color:${chavesAprovadas.has(key) ? 'var(--ok)' : 'var(--danger)'};font-family:var(--mono);font-size:.56rem;">${chavesAprovadas.has(key) ? 'APROVADO' : 'NÃO APROVADO'}</small>`
+    : '';
+
   let totalMO=0,totalTMO=0,totalPec=0;
-  const lsServ=(os.servicos||[]).map(s=>{
-    const t=parseFloat(s.tempo||0);
-    const vf=parseFloat(s.valor||0); // valor real salvo — NÃO recalcula
+  const lsServ=(os.servicos||[]).map((s,idx)=>{
+    const t=parseBR(s.tempo||0);
+    const vBruto=parseBR(s.valor||0);
+    const valorHora=parseBR(s.valorHora || (t > 0 ? vBruto / t : 0));
+    const secao=s.secaoHoraLabel || s.sistemaTabela || s.sistema || 'Seção manual';
+    const vf=+(vBruto*(1-pctDescMO)).toFixed(2);
     totalMO+=vf; totalTMO+=t;
-    return `<div class="detalhe-row"><span>${esc(s.desc||'—')}<br><small style="color:var(--muted)">${esc(s.sistemaTabela||'')}${t?` · ${t}h`:''}</small></span><span class="detalhe-val">${moeda(vf)}</span></div>`;
+    const riscado=pctDescMO>0?`<span style="color:var(--muted);text-decoration:line-through;font-size:.75rem">${moeda(vBruto)}</span> <span style="color:var(--ok);font-size:.7rem">-${(pctDescMO*100).toFixed(0)}%</span> `:'';
+    return `<div class="detalhe-row"><span>${s.codigoTabela||s.codigo?`<code style="font-size:.7rem;color:var(--gov)">${esc(s.codigoTabela||s.codigo)}</code> `:''}${esc(s.desc||'—')}${badgeAprovacao('servico-'+idx)}<br><small style="color:var(--muted)">${esc(secao)}${t?` · ${String(t).replace('.',',')}h`:''}${valorHora?` · ${moeda(valorHora)}/h`:''}</small></span><span class="detalhe-val" style="text-align:right">${riscado}${moeda(vf)}</span></div>`;
   }).join('');
 
-  const lsPec=(os.pecas||[]).map(p=>{
-    const q=parseFloat(p.qtd||1),vl=parseFloat(p.venda||0);
-    const vf=+(q*vl).toFixed(2); // valor salvo × qtd — sem aplicar desconto extra
+  const lsPec=(os.pecas||[]).map((p,idx)=>{
+    const q=parseBR(p.qtd||1),vl=parseBR(p.venda||0);
+    const vBruto=+(q*vl).toFixed(2);
+    const vf=+(vBruto*(1-pctDescPeca)).toFixed(2);
     totalPec+=vf;
-    return `<div class="detalhe-row"><span><code style="font-size:.7rem;color:var(--gov)">${esc(p.codigo||'—')}</code> ${esc(p.desc||'—')}<br><small style="color:var(--muted)">${q}× ${moeda(vl)}</small></span><span class="detalhe-val">${moeda(vf)}</span></div>`;
+    const riscado=pctDescPeca>0?`<span style="color:var(--muted);text-decoration:line-through;font-size:.75rem">${moeda(vBruto)}</span> <span style="color:var(--ok);font-size:.7rem">-${(pctDescPeca*100).toFixed(0)}%</span> `:'';
+    return `<div class="detalhe-row"><span><code style="font-size:.7rem;color:var(--gov)">${esc(p.codigo||'—')}</code> ${esc(p.desc||'—')}${badgeAprovacao('peca-'+idx)}<br><small style="color:var(--muted)">${q}× ${moeda(vl)}</small></span><span class="detalhe-val" style="text-align:right">${riscado}${moeda(vf)}</span></div>`;
   }).join('');
 
   const fotos=((os.media||[]).concat(os.fotos||[])).filter(m=>m);
@@ -521,10 +714,10 @@ function _buildOSCard(os){
 
   const detalhes=`<div class="os-details">
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,.05)">
-      <div><div style="font-family:var(--mono);font-size:.63rem;color:var(--muted);margin-bottom:2px">VEÍCULO</div><div style="font-weight:700">${esc(v.marca||'')} ${esc(v.modelo||'')}</div></div>
-      <div><div style="font-family:var(--mono);font-size:.63rem;color:var(--muted);margin-bottom:2px">ANO / PREFIXO</div><div style="font-weight:700">${esc(v.ano||'—')} / ${esc((v.prefixo||'').toUpperCase()||'—')}</div></div>
-      <div><div style="font-family:var(--mono);font-size:.63rem;color:var(--muted);margin-bottom:2px">CHASSIS</div><div style="font-family:var(--mono);font-size:.75rem">${esc(v.chassis||'—')}</div></div>
-      <div><div style="font-family:var(--mono);font-size:.63rem;color:var(--muted);margin-bottom:2px">PATRIMÔNIO</div><div style="font-family:var(--mono);font-size:.75rem">${esc(v.patrimonio||'—')}</div></div>
+      <div><div style="font-family:var(--mono);font-size:.63rem;color:var(--muted);margin-bottom:2px">VEÍCULO</div><div style="font-weight:700">${esc(marcaVeic)} ${esc(modeloVeic)}</div></div>
+      <div><div style="font-family:var(--mono);font-size:.63rem;color:var(--muted);margin-bottom:2px">ANO / PREFIXO</div><div style="font-weight:700">${esc(anoVeic||'—')} / ${esc(prefixoVeic||'—')}</div></div>
+      <div><div style="font-family:var(--mono);font-size:.63rem;color:var(--muted);margin-bottom:2px">CHASSIS</div><div style="font-family:var(--mono);font-size:.75rem">${esc(chassisVeic||'—')}</div></div>
+      <div><div style="font-family:var(--mono);font-size:.63rem;color:var(--muted);margin-bottom:2px">PATRIMÔNIO</div><div style="font-family:var(--mono);font-size:.75rem">${esc(patrimonioVeic||'—')}</div></div>
     </div>
 
     ${os.diagnostico||os.relato?`<div style="margin-bottom:16px">
@@ -532,21 +725,24 @@ function _buildOSCard(os){
       <div style="font-size:.85rem;background:rgba(0,0,0,.2);padding:12px;border-radius:var(--r);border-left:3px solid var(--gov)">${esc(os.diagnostico||os.relato||'')}</div>
     </div>`:''}
 
+    ${resumoFinHtml}
+    ${_kpisSecaoOSHtml(os)}
+
     ${lsServ?`<div style="margin-bottom:16px">
-      <div style="font-family:var(--mono);font-size:.63rem;color:var(--brand);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">MÃO DE OBRA (${totalTMO.toFixed(2).replace('.',',')}h)</div>
+      <div style="font-family:var(--mono);font-size:.63rem;color:var(--brand);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">MÃO DE OBRA (${totalTMO.toFixed(2).replace('.',',')}h)${pctDescMO>0?` · Desc. contrato: ${(pctDescMO*100).toFixed(0)}%`:''}</div>
       ${lsServ}
-      <div style="display:flex;justify-content:flex-end;padding-top:6px;font-family:var(--mono);font-size:.75rem;color:var(--muted)">Subtotal MO: <strong style="color:var(--text);margin-left:8px">${moeda(totalMO)}</strong></div>
+      <div style="display:flex;justify-content:flex-end;padding-top:6px;font-family:var(--mono);font-size:.75rem;color:var(--muted)">Subtotal MO c/ desconto: <strong style="color:var(--text);margin-left:8px">${moeda(totalMO)}</strong></div>
     </div>`:''}
 
     ${lsPec?`<div style="margin-bottom:16px">
-      <div style="font-family:var(--mono);font-size:.63rem;color:var(--ok);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">PEÇAS APLICADAS</div>
+      <div style="font-family:var(--mono);font-size:.63rem;color:var(--ok);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">PEÇAS APLICADAS${pctDescPeca>0?` · Desc. contrato: ${(pctDescPeca*100).toFixed(0)}%`:''}</div>
       ${lsPec}
-      <div style="display:flex;justify-content:flex-end;padding-top:6px;font-family:var(--mono);font-size:.75rem;color:var(--muted)">Subtotal Peças: <strong style="color:var(--text);margin-left:8px">${moeda(totalPec)}</strong></div>
+      <div style="display:flex;justify-content:flex-end;padding-top:6px;font-family:var(--mono);font-size:.75rem;color:var(--muted)">Subtotal Peças c/ desconto: <strong style="color:var(--text);margin-left:8px">${moeda(totalPec)}</strong></div>
     </div>`:''}
 
     ${lsServ||lsPec?`<div style="background:var(--gov-dim);border:1px solid var(--border-s);border-radius:var(--r);padding:14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-      <span style="font-family:var(--disp);font-weight:700;font-size:1rem">VALOR DO CONTRATO</span>
-      <span style="font-family:var(--mono);font-size:1.15rem;font-weight:700;color:var(--gov)">${moeda(os.total||totalMO+totalPec)}</span>
+      <span style="font-family:var(--disp);font-weight:700;font-size:1rem">${temAprovacao ? 'VALOR APROVADO' : 'VALOR DO CONTRATO'}</span>
+      <span style="font-family:var(--mono);font-size:1.15rem;font-weight:700;color:var(--gov)">${moeda(temAprovacao ? resumoFin.aprovado : (totalMO+totalPec))}</span>
     </div>`:''}
 
     ${fotosHtml}
@@ -557,7 +753,7 @@ function _buildOSCard(os){
     <div class="os-header">
       <div>
         <div class="placa-box"><div class="placa-top">BRASIL</div><div class="placa-txt">${esc(placa)}</div></div>
-        <div style="margin-top:8px;font-size:.72rem;color:var(--muted)">${esc(v.modelo||os.veiculo||'')}</div>
+        <div style="margin-top:8px;font-size:.72rem;color:var(--muted)">${esc(modeloVeic)}</div>
         <div style="font-family:var(--mono);font-size:.6rem;color:var(--disabled);margin-top:2px">OS #${os.id.slice(-6).toUpperCase()}</div>
       </div>
       <div style="text-align:right">
@@ -566,7 +762,7 @@ function _buildOSCard(os){
         <div style="margin-top:8px"><span class="pill ${PILL_MAP[stLimpo]||'p-gov'}">${PILL_TXT[stLimpo]||stLimpo}</span></div>
       </div>
     </div>
-    ${stepper}${bannerEntregue}${orcAlerta}${revisao}
+    ${stepper}${bannerEntregue}${orcAlerta}${!isOrc?`<div style="padding:0 18px 12px">${resumoFinHtml}</div>`:''}${revisao}
     <button class="btn-toggle" onclick="this.closest('.os-card').classList.toggle('expanded')">▼ VER DETALHAMENTO E LINHA DO TEMPO</button>
     ${detalhes}
   </div>`;
@@ -577,10 +773,10 @@ function _renderViaturas(){
   const tb=document.getElementById('tbViat');
   if(!_VEIC.length){ tb.innerHTML='<tr><td colspan="5" class="empty">Nenhuma viatura cadastrada.</td></tr>'; return; }
   tb.innerHTML=_VEIC.map(v=>`<tr>
-    <td><strong>${esc((v.prefixo||'').toUpperCase())||'—'}</strong></td>
-    <td>${esc(v.marca||'')} ${esc(v.modelo||'')}<br><small style="color:var(--muted)">Ano ${esc(v.ano||'—')}</small></td>
+    <td><strong>${esc(String(_pick(v.prefixo,v.placa)||'').toUpperCase())||'—'}</strong></td>
+    <td>${esc(_pick(v.marca))} ${esc(_pick(v.modelo))}<br><small style="color:var(--muted)">Ano ${esc(_pick(v.ano)||'—')}</small></td>
     <td style="font-family:var(--mono);font-weight:700">${esc((v.placa||'').toUpperCase())}</td>
-    <td style="font-family:var(--mono)">${esc(v.patrimonio||'—')}</td>
+    <td style="font-family:var(--mono)">${esc(_pick(v.patrimonio,v.patrimonioNumero,v.patrimonioId)||'—')}</td>
     <td style="font-family:var(--mono)">${esc(v.km||'—')}</td>
   </tr>`).join('');
 }
@@ -588,15 +784,16 @@ function _renderViaturas(){
 // ── HISTÓRICO ─────────────────────────────────────────────────
 function _renderHist(){
   const tb=document.getElementById('tbHist');
-  const conc=_OS.filter(o=>o.status==='Entregue'||o.status==='Concluido');
+  const conc=_OS.filter(o=>(o.status==='Entregue'||o.status==='Concluido')&&_osDentroPeriodo(o));
   if(!conc.length){ tb.innerHTML='<tr><td colspan="5" class="empty">Sem serviços concluídos.</td></tr>'; return; }
   tb.innerHTML=conc.slice(0,60).map(o=>{
     const v=_VEIC.find(x=>x.id===o.veiculoId)||{};
+    const resumo=_resumoFinanceiroOS(o);
     return `<tr>
       <td><strong>#${o.id.slice(-6).toUpperCase()}</strong></td>
-      <td>${esc((v.prefixo||v.placa||'').toUpperCase())}<br><small style="color:var(--muted)">${esc(v.modelo||'')}</small></td>
+      <td>${esc(String(_pick(v.prefixo,v.placa,o.placa)||'').toUpperCase())}<br><small style="color:var(--muted)">${esc(_pick(v.modelo,o.veiculo,o.modelo))}</small></td>
       <td>${fmtDt(o.updatedAt||o.data)}</td>
-      <td style="text-align:right;font-family:var(--mono);font-weight:700;color:var(--ok)">${moeda(o.total)}</td>
+      <td style="text-align:right;font-family:var(--mono);font-weight:700;color:var(--ok)">${moeda(resumo.faturado||resumo.aprovado||resumo.orcamento)}</td>
       <td><button onclick="abrirHistOS('${o.id}')" style="background:var(--gov-dim);border:1px solid var(--border-s);color:var(--gov);padding:6px 12px;border-radius:var(--r);font-family:var(--mono);font-size:.65rem;cursor:pointer;white-space:nowrap">▶ VER</button></td>
     </tr>`;
   }).join('');
@@ -624,13 +821,19 @@ function fecharModalHist(){
 
 // ── APROVAR ORÇAMENTO ─────────────────────────────────────────
 async function _aprovarOrc(osId){
-  if(!confirm('Confirma a APROVAÇÃO do orçamento? O serviço entrará na fila imediatamente.')) return;
   try{
-    const snap=await db.collection('ordens_servico').doc(osId).get();
-    const tl=snap.data().timeline||[];
-    tl.push({dt:new Date().toISOString(),user:CLI.govUnidade||CLI.nome||'Órgão',acao:'Órgão APROVOU o orçamento via Portal Oficial'});
-    await db.collection('ordens_servico').doc(osId).update({status:'Andamento',timeline:tl,updatedAt:new Date().toISOString()});
-    toast('Orçamento aprovado! Viatura entrou na fila de serviço.','ok');
+    const result = await (window.JOS || window.JarvisOSUtils).aprovarOrcamentoComSelecao({
+      db,
+      osId,
+      novoStatus: 'Aprovado',
+      cliente: CLI,
+      clientes: CLI ? [CLI] : [],
+      actorName: CLI.govUnidade || CLI.nome || 'Órgão',
+      actorType: 'clienteOficial',
+      toast
+    });
+    if(!result) return;
+    toast('Orçamento aprovado com os itens selecionados. A oficina dará sequência ao fluxo da O.S.','ok');
   }catch(e){ toast('Erro ao aprovar: '+e.message,'err'); }
 }
 
@@ -794,20 +997,23 @@ function trocarTab(id,btn){
 
 // ── SAIR ──────────────────────────────────────────────────────
 function sair(){
-  sessionStorage.removeItem('govCli'); sessionStorage.removeItem('govTid');
+  sessionStorage.removeItem('govCli'); sessionStorage.removeItem('govTid'); sessionStorage.removeItem('j_firebase_config');
   location.reload();
 }
 
 // ── AUTO-LOGIN ────────────────────────────────────────────────
 (function(){
-  const cached=sessionStorage.getItem('govCli');
-  if(cached){
-    try{
-      CLI=JSON.parse(cached); TID=sessionStorage.getItem('govTid');
-      _carregarOficina().then(inicializar);
-    }catch(e){}
-  }
+  _tenantReady.then(()=>{
+    const cached=sessionStorage.getItem('govCli');
+    if(cached){
+      try{
+        CLI=JSON.parse(cached); TID=sessionStorage.getItem('govTid')||TID;
+        _carregarOficina().then(inicializar);
+      }catch(e){}
+    }
+  });
 })();
 </script>
+<script src="js/theme.js"></script>
 </body>
 </html>

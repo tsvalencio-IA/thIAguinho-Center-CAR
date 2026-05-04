@@ -1,15 +1,16 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+<script>(function(){try{var t=localStorage.getItem("thiaguinho_theme");if(!t){t=window.matchMedia&&window.matchMedia("(prefers-color-scheme: light)").matches?"light":"dark";}document.documentElement.setAttribute("data-theme",t);}catch(e){document.documentElement.setAttribute("data-theme","dark");}})();</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>J.A.R.V.I.S — Painel da Equipe</title>
+<title>JARVIS ERP — Painel da Equipe</title>
 <!-- ═══ PWA ═══ -->
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#00D4FF">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="JARVIS Mecânico">
+<meta name="apple-mobile-web-app-title" content="t.h.I.A.g.u.i.n.h.o. Mecânico">
 <meta name="mobile-web-app-capable" content="yes">
 <script>
 if ('serviceWorker' in navigator) {
@@ -20,6 +21,7 @@ if ('serviceWorker' in navigator) {
 </script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="js/os-utils.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=JetBrains+Mono:wght@400;700&family=Exo+2:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -120,12 +122,12 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 .mec-kpi.c2 .mec-kpi-val{color:var(--warn);}
 
 /* KANBAN */
-.kanban-wrap{display:flex;gap:12px;overflow-x:auto;padding-bottom:8px;align-items:flex-start;}
-.k-col{background:var(--surf2);border:1px solid var(--border);border-radius:3px;min-width:260px;width:260px;display:flex;flex-direction:column;max-height:calc(100vh - 200px);}
+.kanban-wrap{display:grid;grid-template-columns:repeat(6,minmax(150px,1fr));gap:10px;overflow-x:hidden;padding-bottom:8px;align-items:flex-start;}
+.k-col{background:var(--surf2);border:1px solid var(--border);border-radius:3px;min-width:0;width:auto;display:flex;flex-direction:column;max-height:calc(100vh - 220px);min-height:126px;}
 .k-col-head{padding:11px 13px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
 .k-col-label{font-family:var(--fd);font-size:0.82rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;}
 .k-col-count{font-family:var(--fm);font-size:0.62rem;color:var(--muted);padding:2px 7px;border:1px solid var(--border);border-radius:10px;}
-.k-col-body{overflow-y:auto;padding:8px;flex:1;display:flex;flex-direction:column;gap:7px;}
+.k-col-body{overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:7px;min-height:76px;max-height:calc(100vh - 286px);}
 .k-card{background:var(--surf3);border:1px solid var(--border);border-left:3px solid;border-radius:3px;padding:11px;cursor:pointer;transition:all 0.15s;}
 .k-card:hover{border-color:var(--border2);transform:translateY(-1px);}
 .k-placa{font-family:var(--fm);font-size:0.9rem;font-weight:700;letter-spacing:2px;margin-bottom:3px;}
@@ -240,7 +242,9 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
   .mec-kpis{grid-template-columns:1fr;}
   .form-row.c2,.form-row.c3{grid-template-columns:1fr;}
   .kanban-wrap{flex-direction:column;}
+  .kanban-wrap{display:flex;overflow-x:hidden;}
   .k-col{min-width:100%;width:100%;max-height:none;}
+  .k-col-body{max-height:none;min-height:86px;}
   .topbar{padding:10px 14px;}
   .topbar-info{display:none;}
   .content{padding:14px;}
@@ -294,6 +298,8 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
       </div>
     </div>
     <button class="btn-sair" onclick="sair()">⏻ SAIR</button>
+    <!-- Botão para alternar tema claro/escuro (injetado manualmente para garantir visibilidade) -->
+    <button data-theme-toggle class="theme-toggle" onclick="window.thiTheme && window.thiTheme.toggle()" style="display:flex;align-items:center;gap:4px;"><span class="icon-moon">🌙</span><span class="icon-sun">☀️</span></button>
   </div>
 </div>
 
@@ -660,12 +666,26 @@ const J = {
   cloudName: sessionStorage.getItem('j_cloud_name')||'dmuvm1o6m',
   cloudPreset: sessionStorage.getItem('j_cloud_preset')||'evolution'
 };
- if(!J.tid || J.role==='admin') window.location.replace('index.html');
+ if(!J.tid || String(J.role||'').toLowerCase()==='admin') window.location.replace('index.html');
 
 // FIREBASE
-const FB={apiKey:"AIzaSyBqIuCsHHuy_f-mBWV4JBkbyOorXpqQvqg",authDomain:"hub-thiaguinho.firebaseapp.com",projectId:"hub-thiaguinho",storageBucket:"hub-thiaguinho.firebasestorage.app",messagingSenderId:"453508098543",appId:"1:453508098543:web:305f4d48edd9be40bd6e1a"};
-if(!firebase.apps.length) firebase.initializeApp(FB);
-const db = firebase.firestore();
+const FB_BASE={apiKey:"AIzaSyBqIuCsHHuy_f-mBWV4JBkbyOorXpqQvqg",authDomain:"hub-thiaguinho.firebaseapp.com",projectId:"hub-thiaguinho",storageBucket:"hub-thiaguinho.firebasestorage.app",messagingSenderId:"453508098543",appId:"1:453508098543:web:305f4d48edd9be40bd6e1a"};
+function _firebaseEquipeConfig(){
+  try{
+    const cfg=JSON.parse(sessionStorage.getItem('j_firebase_config')||'null');
+    if(cfg&&cfg.apiKey&&cfg.projectId) return cfg;
+  }catch(e){}
+  return FB_BASE;
+}
+const FB=_firebaseEquipeConfig();
+const appName=(FB.projectId&&FB.projectId!==FB_BASE.projectId)?('tenant-'+String(FB.projectId).replace(/[^a-z0-9-]/gi,'-')):undefined;
+let fbApp;
+if(appName){
+  fbApp=firebase.apps.find(a=>a.name===appName)||firebase.initializeApp(FB,appName);
+}else{
+  fbApp=firebase.apps[0]||firebase.initializeApp(FB);
+}
+const db = fbApp.firestore();
 
 // STATE
 let dbOS=[], dbClientes=[], dbVeiculos=[], dbEstoque=[], dbMsgs=[];
@@ -707,6 +727,15 @@ function irTab(id,el){
 
 const dtBr = iso=>iso?new Date(iso).toLocaleDateString('pt-BR'):'-';
 const dtHrBr = iso=>iso?new Date(iso).toLocaleString('pt-BR'):'-';
+function moeda(v){
+  const n = typeof v === 'number'
+    ? v
+    : (parseFloat(String(v || 0).replace(/\./g, '').replace(',', '.')) || 0);
+  return 'R$ ' + n.toFixed(2).replace('.', ',');
+}
+function equipePodeVerValores(){
+  return ['gerente','vendedor','gestor','financeiro','caixa'].includes(String(J.role || '').toLowerCase());
+}
 
 // ═══════════════════════════════════════════════════════════════
 // STT - SPEECH TO TEXT (reconhecimento de voz)
@@ -862,7 +891,7 @@ function _resetChkBtns() {
 // ═══════════════════════════════════════════════════════════════
 const STATUS_NEXT = {
   'Aguardando': {label:'→ Orçamento',           next:'Orcamento'},
-  'Orcamento':  {label:'→ Em Serviço',          next:'Andamento'},
+  'Orcamento':  {label:'✓ Aprovar Itens',       next:'Aprovado'},
   'Aprovado':   {label:'→ Em Serviço',          next:'Andamento'},
   'Andamento':  {label:'✓ Pronto p/ Retirada',  next:'Pronto'},
   'Pronto':     {label:'⚠ Aguardando caixa',    next:null},  // mecânico NÃO move daqui
@@ -884,6 +913,20 @@ async function quickMoveOS(osId, novoStatus, ev) {
   try {
     const os = dbOS.find(x => x.id === osId);
     const stAntes = os?.status || '';
+    if (novoStatus === 'Aprovado' && os && !(window.JOS || window.JarvisOSUtils).hasApproval?.(os)) {
+      const result = await (window.JOS || window.JarvisOSUtils).aprovarOrcamentoComSelecao({
+        db,
+        osId,
+        novoStatus: 'Aprovado',
+        clientes: dbClientes,
+        actorName: J.nome || 'Equipe',
+        actorType: 'equipe',
+        toast,
+        hideValues: !equipePodeVerValores()
+      });
+      if (result) toast('✓ Orçamento aprovado com os itens selecionados.', 'ok');
+      return;
+    }
     const tl = [];
     if (os && os.timeline) tl.push(...os.timeline);
 
@@ -898,11 +941,41 @@ async function quickMoveOS(osId, novoStatus, ev) {
     });
     toast(`✓ Status: ${labelNovo}`, 'ok');
 
-    // WhatsApp automático: quando vira "Pronto p/ Retirada"
+    // Quando vira "Pronto", avisa o admin/gestor no chat da equipe.
     if (novoStatus === 'Pronto' && stAntes !== 'Pronto') {
-      setTimeout(() => _dispararWppPronto(os), 400);
+      setTimeout(() => _avisarAdminPronto({...os, status: novoStatus}), 400);
     }
   } catch(e) { toast('Erro ao mover: ' + e.message, 'err'); }
+}
+
+/**
+ * Avisa o admin/gestor no chat interno quando a equipe marca a OS como pronta.
+ * O WhatsApp do cliente fica sob confirmação do dono/gestor no Jarvis.
+ */
+async function _avisarAdminPronto(os) {
+  if (!os) return;
+  const cliente = (dbClientes || []).find(c => c.id === os.clienteId);
+  const veic = (dbVeiculos || []).find(v => v.id === os.veiculoId);
+  const placa = os.placa || veic?.placa || 'sem placa';
+  const modelo = veic?.modelo ? ` - ${veic.modelo}` : '';
+  try {
+    await db.collection('chat_equipe').add({
+      tenantId: J.tid,
+      de: J.fid || 'equipe',
+      deNome: J.nome || 'Equipe',
+      para: 'admin',
+      sender: 'equipe',
+      msg: `OS #${String(os.id || '').slice(-6).toUpperCase()} marcada como PRONTO pela equipe. Cliente: ${cliente?.nome || 'não identificado'} | Veículo: ${placa}${modelo}. Conferir e enviar aviso ao cliente pelo Jarvis.`,
+      lidaAdmin: false,
+      lidaEquipe: true,
+      origem: 'status_pronto',
+      osId: os.id,
+      ts: Date.now()
+    });
+    toast('Admin avisado no chat da equipe.', 'ok');
+  } catch (e) {
+    toast('OS pronta, mas não consegui avisar o admin no chat: ' + e.message, 'warn');
+  }
 }
 
 /**
@@ -1349,7 +1422,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   db.collection('oficinas').doc(J.tid).onSnapshot(doc => {
     if (doc.exists) {
       const ofi = doc.data();
-      const podeVer = ofi.modulos && ofi.modulos.comissoes === true;
+      const podeVer = equipePodeVerValores() && ofi.modulos && ofi.modulos.comissoes === true;
       const cardComissao = document.getElementById('kpiComissao');
       
       if (cardComissao) cardComissao.style.display = podeVer ? 'block' : 'none';
@@ -1461,10 +1534,9 @@ function renderKanban(){
     if (st === 'cancelado') return false;
     
     // Se for gerente, vendedor ou admin, vê TODO o pátio.
-    if (['gerente', 'vendedor', 'admin'].includes(J.role)) return true;
+    if (['gerente', 'vendedor', 'admin'].includes(String(J.role||'').toLowerCase())) return true;
     
-    // Se for mecânico, só vê as OS sem dono ou as que são dele.
-    if (o.mecId && o.mecId !== J.fid) return false;
+    // Visibilidade do kanban: mecanico ve todo o patio; KPI/comissao seguem filtrados por J.fid.
     
     return true;
   });
@@ -1477,7 +1549,7 @@ function renderKanban(){
     if(cols[st]){ cols[st].push({os:o,v,c}); cnts[st]++; }
   });
 
-  const corMap={Aguardando:'var(--muted2)',Orcamento:'var(--warn)',Aprovado:'var(--cyan)',Andamento:'#FF8C00',Concluido:'var(--success)'};
+  const corMap={Aguardando:'var(--muted2)',Orcamento:'var(--warn)',Aprovado:'var(--cyan)',Andamento:'#FF8C00',Pronto:'var(--success)',Entregue:'#00FF88',Concluido:'var(--success)'};
   statuses.forEach(s=>{
     const cEl=$('cnt-'+s); if(cEl) cEl.innerText=cnts[s];
     const kEl=$('kb-'+s); if(!kEl) return;
@@ -1486,11 +1558,20 @@ function renderKanban(){
     kEl.innerHTML=cols[s].sort((a,b)=>new Date(b.os.updatedAt||0)-new Date(a.os.updatedAt||0)).map(({os,v,c})=>{
       const qm = STATUS_NEXT[s];
       const qmBtn = qm ? `<button class="k-move-btn" onclick="quickMoveOS('${os.id}','${qm.next}',event)">${qm.label}</button>` : '';
+      const UOS = window.JarvisOSUtils || window.JOS || {};
+      const podeVerValores = equipePodeVerValores();
+      const resumo = podeVerValores && UOS.getBudgetSummary ? UOS.getBudgetSummary(os, c, J.financeiro) : {orcamento:os.total||0, aprovado:os.totalAprovado||0, faturado:0};
+      const valores = podeVerValores ? `<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;margin:8px 0;">
+        <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);padding:5px;border-radius:3px;"><small style="display:block;font-family:var(--fm);font-size:.47rem;color:var(--muted);">ORC.</small><b style="font-family:var(--fm);font-size:.58rem;color:var(--warn);">${moeda(resumo.orcamento||0)}</b></div>
+        <div style="background:rgba(0,212,255,.05);border:1px solid rgba(0,212,255,.12);padding:5px;border-radius:3px;"><small style="display:block;font-family:var(--fm);font-size:.47rem;color:var(--muted);">APROV.</small><b style="font-family:var(--fm);font-size:.58rem;color:var(--cyan);">${resumo.aprovado?moeda(resumo.aprovado):'-'}</b></div>
+        <div style="background:rgba(0,255,136,.05);border:1px solid rgba(0,255,136,.12);padding:5px;border-radius:3px;"><small style="display:block;font-family:var(--fm);font-size:.47rem;color:var(--muted);">FAT.</small><b style="font-family:var(--fm);font-size:.58rem;color:var(--success);">${resumo.faturado?moeda(resumo.faturado):'-'}</b></div>
+      </div>` : `<div style="margin:8px 0;padding:7px;border-radius:3px;border:1px dashed rgba(255,255,255,.10);font-family:var(--fm);font-size:.58rem;color:var(--muted);letter-spacing:.7px;">VALORES RESTRITOS AO GESTOR</div>`;
       return `
       <div class="k-card" style="border-left-color:${cor}" onclick="prepOS('edit','${os.id}');abrirModal('modalOS')">
         <div class="k-placa" style="color:${cor}">${v?.placa||os.placa||'S/PLACA'}</div>
         <div class="k-cli">${c?.nome||os.cliente||'—'}</div>
         <div class="k-desc">${os.desc||os.relato||'Sem descrição'}</div>
+        ${valores}
         <div class="k-footer">
           <span class="k-tipo ${v?.tipo||'carro'}">${{carro:'🚗 CARRO',moto:'🏍️ MOTO',bicicleta:'🚲 BICICLETA'}[v?.tipo||'carro']||'VEÍCULO'}</span>
         </div>
@@ -1524,6 +1605,7 @@ function prepOS(mode,id=null){
   $('osMO').value='0'; $('osTipo').value='carro'; $('osStatus').value='Aguardando';
   $('osData').value=new Date().toISOString().split('T')[0];
   $('containerPecas').innerHTML=''; $('containerServicos').innerHTML='';
+  document.getElementById('resumoAprovacaoEquipe')?.remove();
   $('mediaGrid').innerHTML=''; $('mediaArray').value='[]';
   $('osTimeline').innerHTML=''; $('tlData').value='[]';
   $('osIdBadge').innerText='NOVA O.S.';
@@ -1566,19 +1648,120 @@ function prepOS(mode,id=null){
     renderTimeline();
     if(os.pecas) os.pecas.forEach(p=>renderPecaRow(p));
     if(os.servicos) os.servicos.forEach(s=>renderServicoRow(s));
+    aplicarMarcadoresAprovacaoEquipe(os);
   }
+}
+
+function statusOptionsExecEquipe(tipo, atual) {
+  const opts = tipo === 'peca'
+    ? [
+        ['pendente', 'Pendente'],
+        ['trocada', 'Peca trocada/executada'],
+        ['nao_encontrada', 'Peca nao encontrada'],
+        ['nao_trocada', 'Nao trocada']
+      ]
+    : [
+        ['pendente', 'Pendente'],
+        ['em_execucao', 'Em execucao'],
+        ['executado', 'Servico executado'],
+        ['nao_executado', 'Nao executado']
+      ];
+  return opts.map(([value, label]) => `<option value="${value}" ${value === atual ? 'selected' : ''}>${label}</option>`).join('');
+}
+
+async function salvarExecucaoAprovadosEquipe(osId) {
+  if (!osId) { toast('Salve a O.S. antes de marcar execucao.', 'warn'); return; }
+  const osAtual = (dbOS || []).find(o => o.id === osId) || {};
+  const execucaoItens = { ...(osAtual.execucaoItens || {}) };
+  const rows = document.querySelectorAll('#resumoAprovacaoEquipe .execucao-aprovado-row');
+  rows.forEach(row => {
+    const key = row.dataset.key;
+    if (!key) return;
+    execucaoItens[key] = {
+      key,
+      tipo: row.dataset.tipo || '',
+      status: row.querySelector('.exec-status')?.value || 'pendente',
+      obs: row.querySelector('.exec-obs')?.value?.trim() || '',
+      usuario: J.nome || 'Equipe',
+      updatedAt: new Date().toISOString()
+    };
+  });
+  const timeline = Array.isArray(osAtual.timeline) ? osAtual.timeline.slice() : [];
+  timeline.push({
+    dt: new Date().toISOString(),
+    user: J.nome || 'Equipe',
+    acao: `Atualizou execucao interna de ${rows.length} item(ns) aprovado(s).`
+  });
+  await db.collection('ordens_servico').doc(osId).update({
+    execucaoItens,
+    timeline,
+    updatedAt: new Date().toISOString()
+  });
+  toast('Execucao interna salva.', 'ok');
+}
+
+function aplicarMarcadoresAprovacaoEquipe(os) {
+  const U = window.JOS || window.JarvisOSUtils || {};
+  document.getElementById('resumoAprovacaoEquipe')?.remove();
+  document.querySelectorAll('#containerServicos .aprovacao-item-badge,#containerPecas .aprovacao-item-badge').forEach(el => el.remove());
+  if (!U.hasApproval?.(os)) return;
+  const keys = U.getApprovedKeys?.(os) || new Set();
+  const mk = key => `<div class="aprovacao-item-badge" style="font-family:var(--fm);font-size:.56rem;letter-spacing:.7px;color:${keys.has(key) ? 'var(--success)' : 'var(--danger)'};padding:2px 4px;border:1px solid ${keys.has(key) ? 'rgba(0,255,136,.25)' : 'rgba(255,59,59,.25)'};border-radius:2px;white-space:nowrap;">${keys.has(key) ? 'APROVADO' : 'NÃO APROVADO'}</div>`;
+  document.querySelectorAll('#containerServicos>div').forEach((row, idx) => {
+    row.querySelector('.aprovacao-item-badge')?.remove();
+    row.insertAdjacentHTML('beforeend', mk('servico-' + idx));
+  });
+  document.querySelectorAll('#containerPecas>div').forEach((row, idx) => {
+    row.querySelector('.aprovacao-item-badge')?.remove();
+    row.insertAdjacentHTML('beforeend', mk('peca-' + idx));
+  });
+  const cliente = (dbClientes || []).find(c => c.id === os?.clienteId);
+  const itens = U.buildBudgetItems?.(os, cliente) || [];
+  const aprovados = itens.filter(it => keys.has(it.key));
+  const pendentes = itens.filter(it => !keys.has(it.key));
+  const podeVerValores = equipePodeVerValores();
+  const moeda = U.moeda || (v => 'R$ ' + parseBR(v).toFixed(2).replace('.', ','));
+  const total = os?.totalAprovado != null ? parseBR(os.totalAprovado) : aprovados.reduce((sum, it) => sum + parseBR(it.valorFinal), 0);
+  const exec = os?.execucaoItens || {};
+  const execHtml = aprovados.length ? `
+    <div style="margin-top:12px;border-top:1px solid rgba(255,255,255,.12);padding-top:10px;">
+      <div style="font-family:var(--fm);font-size:.68rem;color:var(--cyan);font-weight:800;letter-spacing:1px;margin-bottom:8px;">EXECUCAO INTERNA DOS ITENS APROVADOS</div>
+      <div style="display:grid;gap:7px;">
+        ${aprovados.map(it => {
+          const e = exec[it.key] || {};
+          return `<div class="execucao-aprovado-row" data-key="${U.escapeHtml?.(it.key) || it.key}" data-tipo="${U.escapeHtml?.(it.tipo) || it.tipo}" style="display:grid;grid-template-columns:minmax(160px,1fr) 150px minmax(150px,1fr);gap:7px;align-items:center;background:rgba(0,0,0,.16);border:1px solid rgba(255,255,255,.10);border-radius:3px;padding:8px;">
+            <div style="font-size:.72rem;color:var(--text);"><b>${U.escapeHtml?.(it.labelTipo || it.tipo) || it.tipo}</b> ${it.codigo ? '[' + (U.escapeHtml?.(it.codigo) || it.codigo) + '] ' : ''}${U.escapeHtml?.(it.desc || '-') || it.desc || '-'}</div>
+            <select class="j-select exec-status" style="font-size:.7rem;">${statusOptionsExecEquipe(it.tipo, e.status || 'pendente')}</select>
+            <input class="j-input exec-obs" value="${U.escapeHtml?.(e.obs || '') || ''}" placeholder="Observacao interna">
+          </div>`;
+        }).join('')}
+      </div>
+      <button type="button" class="btn-primary" style="margin-top:10px;" onclick="salvarExecucaoAprovadosEquipe('${U.escapeHtml?.(os.id || '') || os.id || ''}')">SALVAR EXECUCAO INTERNA</button>
+    </div>` : '';
+  const box = document.createElement('div');
+  box.id = 'resumoAprovacaoEquipe';
+  box.style.cssText = 'background:rgba(0,255,136,.07);border:1px solid rgba(0,255,136,.24);border-radius:4px;padding:12px;margin-bottom:14px;';
+  box.innerHTML = `
+    <div style="font-family:var(--fd);font-weight:800;color:var(--success);letter-spacing:1px;margin-bottom:8px;">ORCAMENTO APROVADO - ${aprovados.length}/${itens.length} ITEM(NS)${podeVerValores ? ' - ' + moeda(total) : ''}</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;">
+      ${aprovados.map(it => `<div style="border:1px solid rgba(0,255,136,.2);background:rgba(0,0,0,.14);border-radius:3px;padding:8px;font-size:.75rem;"><b style="color:var(--success);">APROVADO</b><br>${U.escapeHtml?.(it.desc || '-') || it.desc || '-'}<br><small>${it.codigo ? '[' + (U.escapeHtml?.(it.codigo) || it.codigo) + '] ' : ''}${it.tempo ? 'TMO ' + String(it.tempo).replace('.', ',') + 'h' : ''}</small></div>`).join('')}
+      ${pendentes.map(it => `<div style="border:1px solid rgba(255,184,0,.24);background:rgba(0,0,0,.1);border-radius:3px;padding:8px;font-size:.75rem;opacity:.75;"><b style="color:var(--warn);">NAO APROVADO</b><br>${U.escapeHtml?.(it.desc || '-') || it.desc || '-'}<br><small>Mantido para historico.</small></div>`).join('')}
+    </div>
+    ${execHtml}`;
+  const alvo = document.getElementById('containerServicos')?.parentElement;
+  if (alvo) alvo.insertAdjacentElement('beforebegin', box);
 }
 
 // ADICIONAR SERVIÇOS (DINÂMICO POR CARGO)
 function adicionarServico(s=null){
   const div=document.createElement('div');
-  const podeVerPreco = ['gerente', 'vendedor', 'admin'].includes(J.role);
+  const podeVerPreco = equipePodeVerValores();
   
   div.style.cssText='display:flex;gap:7px;align-items:center;position:relative;';
   const uid = 'sv_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
   
   const inputValor = podeVerPreco 
-    ? `<input type="number" class="j-input serv-valor" placeholder="R$" value="${s?s.valor:0}" style="width:85px; padding:9px 6px;">` 
+    ? `<input type="text" inputmode="decimal" class="j-input serv-valor" placeholder="R$" value="${parseBR(s?s.valor:0).toFixed(2).replace('.', ',')}" style="width:85px; padding:9px 6px;">` 
     : `<input type="hidden" class="serv-valor" value="${s?s.valor:0}">`;
 
   div.innerHTML=`
@@ -1594,14 +1777,14 @@ function renderServicoRow(s){ adicionarServico(s); }
 // ADICIONAR PEÇAS (DINÂMICO POR CARGO)
 function adicionarPeca(){
   const div=document.createElement('div');
-  const podeVerPreco = ['gerente', 'vendedor', 'admin'].includes(J.role);
+  const podeVerPreco = equipePodeVerValores();
   
   div.style.cssText = podeVerPreco 
     ? 'display:grid;grid-template-columns:1fr 65px 85px 28px;gap:7px;align-items:center;'
     : 'display:grid;grid-template-columns:1fr 60px 28px;gap:7px;align-items:center;';
 
   const inputValor = podeVerPreco 
-    ? `<input type="number" step="0.01" class="j-input peca-venda" placeholder="R$" value="0">` 
+    ? `<input type="text" inputmode="decimal" class="j-input peca-venda" placeholder="R$" value="0,00">` 
     : `<input type="hidden" class="peca-venda" value="0">`;
 
   div.innerHTML=`
@@ -1618,14 +1801,14 @@ function adicionarPeca(){
 
 function renderPecaRow(p){
   const div=document.createElement('div');
-  const podeVerPreco = ['gerente', 'vendedor', 'admin'].includes(J.role);
+  const podeVerPreco = equipePodeVerValores();
   
   div.style.cssText = podeVerPreco 
     ? 'display:grid;grid-template-columns:1fr 65px 85px 28px;gap:7px;align-items:center;'
     : 'display:grid;grid-template-columns:1fr 60px 28px;gap:7px;align-items:center;';
 
   const inputValor = podeVerPreco 
-    ? `<input type="number" step="0.01" class="j-input peca-venda" placeholder="R$" value="${p.venda||0}">` 
+    ? `<input type="text" inputmode="decimal" class="j-input peca-venda" placeholder="R$" value="${parseBR(p.venda||0).toFixed(2).replace('.', ',')}">` 
     : `<input type="hidden" class="peca-venda" value="${p.venda||0}">`;
 
   div.innerHTML=`
@@ -1641,7 +1824,13 @@ function renderPecaRow(p){
 }
 function selPeca(sel){
   const opt=sel.options[sel.selectedIndex];
-  sel.parentElement.querySelector('.peca-venda').value=opt.dataset.v||0;
+  sel.parentElement.querySelector('.peca-venda').value=parseBR(opt.dataset.v||0).toFixed(2).replace('.', ',');
+}
+
+function parseBR(v) {
+  const U = window.JOS || window.JarvisOSUtils || {};
+  if (U.parseNumberBR) return U.parseNumberBR(v);
+  return parseFloat(String(v || '0').replace(/\./g, '').replace(',', '.')) || 0;
 }
 
 // INTEGRAÇÃO DE DEEP DIFF E SALVAMENTO NA O.S.
@@ -1655,20 +1844,20 @@ async function salvarOS(){
     pecas.push({
       estoqueId:sel?.value,
       desc:opt?.dataset.d||opt?.text||'',
-      qtd:parseFloat(r.querySelector('.peca-qtd')?.value||1),
-      venda:parseFloat(r.querySelector('.peca-venda')?.value||0)
+      qtd:parseBR(r.querySelector('.peca-qtd')?.value||1),
+      venda:parseBR(r.querySelector('.peca-venda')?.value||0)
     });
   });
 
   const servicos=[];
   document.querySelectorAll('#containerServicos>div').forEach(r=>{
     const desc=r.querySelector('.serv-desc')?.value||'';
-    const valor=parseFloat(r.querySelector('.serv-valor')?.value||0);
+    const valor=parseBR(r.querySelector('.serv-valor')?.value||0);
     if(desc) servicos.push({desc, valor});
   });
 
   // O Total é recalculado secretamente para não perder a integridade dos dados no Firebase
-  let t = parseFloat($v('osMO'))||0;
+  let t = parseBR($v('osMO'))||0;
   pecas.forEach(p => t += (p.qtd * p.venda));
   servicos.forEach(s => t += s.valor);
 
@@ -1763,7 +1952,7 @@ async function salvarOS(){
     tenantId:J.tid,tipoVeiculo:$v('osTipo'),clienteId:$v('osCliente'),veiculoId:$v('osVeiculo'),
     mecId:J.fid,mecNome:J.nome,data:$v('osData'),km:$v('osKm'),
     desc:$v('osDesc'),diagnostico:$v('osDiag'),status:$v('osStatus'),
-    maoObra:parseFloat($v('osMO')||0),
+    maoObra:parseBR($v('osMO')||0),
     total: t,
     pecas,
     servicos,
@@ -1773,6 +1962,34 @@ async function salvarOS(){
     chkCar:$('chkCar')?.value||'',chkDoc:$('chkDoc')?.value||'',
     timeline:tl,updatedAt:new Date().toISOString()
   };
+
+  const osAntigaAprovacao = id ? (dbOS.find(x => x.id === id) || {}) : {};
+  const UOS = window.JOS || window.JarvisOSUtils || {};
+  if (p.status === 'Aprovado' && !(UOS.hasApproval?.(osAntigaAprovacao))) {
+    const aprovacao = await UOS.openApprovalModal?.({ id: id || 'nova-os', ...osAntigaAprovacao, ...p }, {
+      clientes: dbClientes,
+      toast,
+      hideValues: !equipePodeVerValores()
+    });
+    if (!aprovacao) {
+      toast('Aprovação cancelada. A O.S. continua com o orçamento preservado.', 'warn');
+      return;
+    }
+    p.aprovacao = {
+      status: aprovacao.status,
+      aprovadoEm: new Date().toISOString(),
+      aprovadoPor: J.nome || 'Equipe',
+      aprovadoPorTipo: 'equipe',
+      totalOrcamento: aprovacao.totalOrcamento,
+      totalAprovado: aprovacao.totalAprovado,
+      itens: aprovacao.itens
+    };
+    p.itensAprovados = aprovacao.keys;
+    p.totalAprovado = aprovacao.totalAprovado;
+    const totalAprovadoTxt = equipePodeVerValores() ? ` - total ${UOS.moeda ? UOS.moeda(aprovacao.totalAprovado) : aprovacao.totalAprovado}` : '';
+    tl.push({ dt: new Date().toISOString(), user: J.nome || 'Equipe', acao: `Orçamento APROVADO (${aprovacao.status}) - ${aprovacao.itens.length}/${aprovacao.totalItens} item(ns)${totalAprovadoTxt}` });
+    p.timeline = tl;
+  }
 
   // ═══════════════════════════════════════════════════════════════
   // TRANCA DE SEGURANÇA: mecânico/equipe NÃO pode salvar status=Entregue.
@@ -1788,11 +2005,11 @@ async function salvarOS(){
   if(id) await db.collection('ordens_servico').doc(id).update(p);
   else{p.createdAt=new Date().toISOString();await db.collection('ordens_servico').add(p);}
 
-  // Avisa cliente via WhatsApp quando a O.S. acabou de virar PRONTO
+  // Avisa o admin/gestor no chat interno quando a O.S. acabou de virar PRONTO
   if (p.status === 'Pronto' && id) {
     const osAntes = dbOS.find(x => x.id === id);
     if (osAntes && osAntes.status !== 'Pronto') {
-      setTimeout(() => _dispararWppPronto({...osAntes, ...p, id}), 400);
+      setTimeout(() => _avisarAdminPronto({...osAntes, ...p, id}), 400);
     }
   }
 
@@ -1814,7 +2031,7 @@ window._validarStatusMecanico = function(sel) {
   } else if (sel.value === 'Pronto') {
     aviso.style.display = 'block';
     aviso.style.color = 'var(--success)';
-    aviso.textContent = '✓ Ao salvar, o cliente será avisado via WhatsApp que o veículo está pronto para retirada.';
+    aviso.textContent = '✓ Ao salvar, o admin será avisado no chat da equipe para conferir e enviar o WhatsApp ao cliente.';
   } else {
     aviso.style.display = 'none';
   }
@@ -2057,5 +2274,6 @@ function aplicarSugestaoIA() {
   salvarOS(); 
 }
 </script>
+<script src="js/theme.js"></script>
 </body>
 </html>

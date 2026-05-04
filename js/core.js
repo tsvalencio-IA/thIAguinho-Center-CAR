@@ -14,6 +14,11 @@
  */
 'use strict';
 
+function _parseSessionJson(key, fallback) {
+  try { return JSON.parse(sessionStorage.getItem(key) || 'null') || fallback; }
+  catch(e) { return fallback; }
+}
+
 // ── NAMESPACE GLOBAL ───────────────────────────────────────
 window.J = {
   // SESSÃO
@@ -26,7 +31,8 @@ window.J = {
   nicho:       sessionStorage.getItem('j_nicho')        || 'carros',
   cloudName:   sessionStorage.getItem('j_cloud_name')   || 'dmuvm1o6m',
   cloudPreset: sessionStorage.getItem('j_cloud_preset') || 'evolution',
-  brand:       JSON.parse(sessionStorage.getItem('j_brand') || 'null'),
+  brand:       _parseSessionJson('j_brand', null),
+  oficina:     _parseSessionJson('j_oficina', null),
   comissao:    parseFloat(sessionStorage.getItem('j_comissao') || '0'),
 
   // ESTADO IN-MEMORY
@@ -81,6 +87,7 @@ window.initCore = function() {
   _populateBaseUI();
   _aplicarRestricoesPorRole();
 
+  _escutarOficina();
   _escutarOS();
   _escutarClientes();
   _escutarVeiculos();
@@ -103,10 +110,12 @@ window.initCoreEquipe = function() {
   if (J.brand) window.aplicarBrand(J.brand);
 
   _populateBaseUI();
+  _escutarOficina();
   _escutarOS();
   _escutarClientes();
   _escutarVeiculos();
   _escutarEstoque();
+  _escutarFinanceiro();
   _escutarChatEquipe();
   _escutarNotificacoes();
   if (J.fid) _escutarComissoesEquipe();
@@ -144,6 +153,28 @@ function _aplicarRestricoesPorRole() {
 }
 
 // ── LISTENERS FIRESTORE ────────────────────────────────────
+function _escutarOficina() {
+  if (!J.db || !J.tid || J.tid === 'MASTER_ADMIN') return;
+  J.db.collection('oficinas').doc(J.tid).onSnapshot(doc => {
+    if (!doc.exists) return;
+    const d = { id: doc.id, ...doc.data() };
+    J.oficina = d;
+    J.tnome = d.nomeFantasia || J.tnome;
+    J.gemini = d.apiKeys?.gemini || J.gemini;
+    J.nicho = d.nicho || J.nicho;
+    J.cloudName = d.apiKeys?.cloudName || J.cloudName;
+    J.cloudPreset = d.apiKeys?.cloudPreset || J.cloudPreset;
+    sessionStorage.setItem('j_oficina', JSON.stringify(d));
+    sessionStorage.setItem('j_tnome', J.tnome);
+    sessionStorage.setItem('j_gemini', J.gemini || '');
+    sessionStorage.setItem('j_nicho', J.nicho || 'carros');
+    sessionStorage.setItem('j_cloud_name', J.cloudName || 'dmuvm1o6m');
+    sessionStorage.setItem('j_cloud_preset', J.cloudPreset || 'evolution');
+    _populateBaseUI();
+    window.renderDashboard && renderDashboard();
+  });
+}
+
 function _escutarOS() {
   J.db.collection('ordens_servico')
     .where('tenantId', '==', J.tid)
@@ -185,6 +216,7 @@ function _escutarFinanceiro() {
     J.financeiro = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     window.renderFinanceiro && renderFinanceiro();
     window.renderDashboard  && renderDashboard();
+    window.renderKanban     && renderKanban();
   });
 }
 

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+<script>(function(){try{var t=localStorage.getItem("thiaguinho_theme");if(!t){t=window.matchMedia&&window.matchMedia("(prefers-color-scheme: light)").matches?"light":"dark";}document.documentElement.setAttribute("data-theme",t);}catch(e){document.documentElement.setAttribute("data-theme","dark");}})();</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Portal do Cliente — thIAguinho</title>
@@ -168,6 +169,8 @@ body { overflow-y: auto; background: #060A14; color: #E8F4FF; font-family: 'Exo 
 </style>
 </head>
 <body>
+  <!-- Botão de alternância de tema fixo no canto superior (para cliente) -->
+  <button data-theme-toggle class="theme-toggle" onclick="window.thiTheme && window.thiTheme.toggle()" style="position:fixed;top:14px;right:14px;z-index:9999;display:flex;align-items:center;gap:4px;"><span class="icon-moon">🌙</span><span class="icon-sun">☀️</span></button>
 <div id="toastBox"></div>
 
 <div id="loginView" class="portal-bg">
@@ -207,7 +210,6 @@ body { overflow-y: auto; background: #060A14; color: #E8F4FF; font-family: 'Exo 
       <button class="tab-btn" onclick="switchCliTab('tabChat', this)">💬 CHAT <span class="tab-badge" id="cliChatBadge">0</span></button>
       <button class="tab-btn" onclick="switchCliTab('tabFin', this)">💳 EXTRATO</button>
       <button class="tab-btn" onclick="switchCliTab('tabAgd', this)">📅 AGENDAR</button>
-      <button class="tab-btn" onclick="switchCliTab('tabIA', this)" style="color:var(--text-muted)">🤖 IA</button>
       <button class="tab-btn" onclick="switchCliTab('tabOBD', this)" style="color:var(--text-muted)">🔌 OBD</button>
     </div>
   </div>
@@ -243,30 +245,6 @@ body { overflow-y: auto; background: #060A14; color: #E8F4FF; font-family: 'Exo 
         <button class="btn btn-brand" onclick="_salvarAgendamentoCli()">ENVIAR SOLICITAÇÃO</button>
       </div>
       <div id="renderAgdArea"></div>
-    </div>
-
-    <div id="tabIA" class="tab-content">
-      <div style="background:var(--surf-1);border:1px solid rgba(167,139,250,0.25);border-radius:var(--r-xl);overflow:hidden;">
-        <div style="padding:16px 20px;background:linear-gradient(135deg,rgba(167,139,250,0.1),transparent);border-bottom:1px solid rgba(167,139,250,0.2);display:flex;align-items:center;gap:12px;">
-          <div style="font-size:1.5rem;">🤖</div>
-          <div>
-            <div style="font-family:var(--ff-display);font-size:1.1rem;font-weight:700;color:white;">thIAguinho</div>
-            <div style="font-family:var(--ff-mono);font-size:0.6rem;color:#A78BFA;letter-spacing:1px;">ASSISTENTE DE TRIAGEM AUTOMOTIVA</div>
-          </div>
-        </div>
-        <div style="padding:10px 14px;border-bottom:1px solid rgba(167,139,250,0.1);display:flex;gap:8px;flex-wrap:wrap;background:rgba(0,0,0,0.1);">
-          <span onclick="iaChip('Qual o status das minhas OS?')" style="padding:6px 12px;background:rgba(167,139,250,0.12);border:1px solid rgba(167,139,250,0.2);border-radius:20px;font-family:var(--ff-mono);font-size:0.7rem;color:#A78BFA;cursor:pointer;">📋 Status OS</span>
-          <span onclick="iaChip('Tenho manutenções pendentes?')" style="padding:6px 12px;background:rgba(167,139,250,0.12);border:1px solid rgba(167,139,250,0.2);border-radius:20px;font-family:var(--ff-mono);font-size:0.7rem;color:#A78BFA;cursor:pointer;">🔧 Manutenções</span>
-          <span onclick="iaChip('Explique os erros do meu veículo')" style="padding:6px 12px;background:rgba(167,139,250,0.12);border:1px solid rgba(167,139,250,0.2);border-radius:20px;font-family:var(--ff-mono);font-size:0.7rem;color:#A78BFA;cursor:pointer;">⚠️ Erros OBD</span>
-        </div>
-        <div id="iaMsgs" style="min-height:300px;max-height:55vh;overflow-y:auto;padding:20px;background:var(--surf-0);display:flex;flex-direction:column;gap:12px;">
-          <div style="text-align:center;color:var(--text-muted);font-size:0.85rem;padding:20px;">Faça uma pergunta sobre os sintomas do seu veículo.</div>
-        </div>
-        <div style="padding:14px;background:var(--surf-2);border-top:1px solid rgba(167,139,250,0.2);display:flex;gap:10px;align-items:center;">
-          <input id="iaInput" class="input" placeholder="Descreva um sintoma ou erro..." style="margin:0;border-radius:24px;padding:12px 18px;border-color:rgba(167,139,250,0.25);">
-          <button onclick="iaEnviar()" style="background:#A78BFA;border:none;border-radius:50%;width:44px;height:44px;min-width:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.1rem;color:#000;flex-shrink:0;">➤</button>
-        </div>
-      </div>
     </div>
 
     <div id="tabOBD" class="tab-content">
@@ -369,13 +347,17 @@ body { overflow-y: auto; background: #060A14; color: #E8F4FF; font-family: 'Exo 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="js/config.js?v=99"></script>
+<script src="js/os-utils.js"></script>
 <script>
 // ============================================================
 // CORE LÓGICA E FIREBASE
 // Powered by thIAguinho Soluções Digitais
 // ============================================================
-const db = window.initFirebase();
-let P = { clienteId: null, tenantId: null, cliente: null, oficina: null, veiculos: [] };
+const params = new URLSearchParams(window.location.search);
+const _tenantSlug = params.get('tenant') || params.get('t') || null;
+if (!_tenantSlug) sessionStorage.removeItem('j_firebase_config');
+let db = window.initFirebase();
+let P = { clienteId: null, tenantId: null, cliente: null, oficina: null, veiculos: [], financeiro: [] };
 const formatter = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 
 function toast(msg, type='ok') {
@@ -393,19 +375,22 @@ function switchCliTab(tabId, btnEl) {
   if(tabId === 'tabChat') { const msgsContainer = document.getElementById('renderChatArea'); if(msgsContainer) msgsContainer.scrollTop = msgsContainer.scrollHeight; }
 }
 
-const params = new URLSearchParams(window.location.search);
-const _tenantSlug = params.get('tenant') || params.get('t') || null;
-if (_tenantSlug) _carregarBrandTenant(_tenantSlug);
+const _tenantReady = _tenantSlug ? _carregarBrandTenant(_tenantSlug) : Promise.resolve();
 
 async function _carregarBrandTenant(tenantId) {
   try {
-    const snap = await db.collection('oficinas').doc(tenantId).get();
+    const centralDb = window.initCentralFirebase ? window.initCentralFirebase() : db;
+    const snap = await centralDb.collection('oficinas').doc(tenantId).get();
     if (!snap.exists) return;
     const d = snap.data();
     document.getElementById('portalOficinaName').textContent = d.nomeFantasia || 'Portal do Cliente';
     const logoL = (d.nomeFantasia||'J').charAt(0).toUpperCase();
     document.getElementById('portalLogoMark').textContent = logoL; document.getElementById('portalHdrMark').textContent  = logoL; document.getElementById('portalHdrName').textContent  = d.nomeFantasia || 'Oficina Parceira';
     P.tenantId = tenantId; P.oficina  = d;
+    if (d.firebaseConfig?.projectId && d.firebaseConfig?.apiKey) {
+      sessionStorage.setItem('j_firebase_config', JSON.stringify(d.firebaseConfig));
+      db = window.initFirebase();
+    }
   } catch(e) {}
 }
 
@@ -413,6 +398,7 @@ document.getElementById('pPin').addEventListener('keydown', e => { if (e.key ===
 document.getElementById('pLogin').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('pPin').focus(); });
 
 async function portalLogin() {
+  await _tenantReady;
   const rawLogin = document.getElementById('pLogin').value.trim().toLowerCase();
   const pin   = document.getElementById('pPin').value.trim();
   const err   = document.getElementById('portalLoginErr');
@@ -471,6 +457,7 @@ async function portalLogin() {
 }
 
 function portalLogout() {
+  sessionStorage.removeItem('j_firebase_config');
   P = { clienteId: null, tenantId: null, cliente: null, oficina: null, veiculos: [] };
   document.getElementById('loginView').style.display  = 'block'; document.getElementById('portalView').style.display = 'none';
   document.getElementById('pLogin').value = ''; document.getElementById('pPin').value   = '';
@@ -519,7 +506,9 @@ function _iniciarPortalListeners() {
             if (nomeCliente.length > 2 && desc.includes(nomeCliente.split(' ')[0])) return true;
             return false;
           }).sort((a,b)=>((b.venc||'')>(a.venc||''))?1:-1);
+          P.financeiro = finList;
           _renderFinanceiro(finList);
+          if (window._osDoCliente) _renderPortalOS(window._osDoCliente);
         });
       db.collection('agendamentos').where('tenantId', '==', P.tenantId).where('clienteId', '==', P.clienteId).onSnapshot(snap => {
           const agdList = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b)=>(b.data||'') > (a.data||'') ? 1 : -1); _renderAgendamento(agdList);
@@ -581,6 +570,30 @@ function _renderPortalOS(osList) {
     // Calculo: (índice atual / índice total) * 100
     // Como tem 7 passos, o índice máximo é 6. 6/6 * 100 = 100%.
     const fillPercent = isEntregue ? 100 : Math.max(0, (statusIdx / (STEPS.length - 1)) * 100);
+    const UOSPortal = window.JOS || window.JarvisOSUtils || {};
+    const resumoValores = UOSPortal.getBudgetSummary
+      ? UOSPortal.getBudgetSummary(os, P.cliente, P.financeiro)
+      : { orcamento: os.total || 0, aprovado: os.totalAprovado || 0, faturado: 0, pagamento: {} };
+    const vencimentos = (resumoValores.pagamento?.vencimentos || []).map(v => {
+      try { return new Date(String(v).slice(0,10) + 'T00:00:00').toLocaleDateString('pt-BR'); }
+      catch(e) { return v; }
+    });
+    const resumoValoresHTML = `
+      <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0;">
+        <div style="background:rgba(255,255,255,.035);border:1px solid var(--border);border-radius:var(--r-md);padding:10px;">
+          <div style="font-family:var(--ff-mono);font-size:.62rem;color:var(--text-muted);letter-spacing:1px;">ORCAMENTO</div>
+          <strong style="font-family:var(--ff-mono);color:var(--warn);font-size:.98rem;">${formatter.format(resumoValores.orcamento || 0)}</strong>
+        </div>
+        <div style="background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.22);border-radius:var(--r-md);padding:10px;">
+          <div style="font-family:var(--ff-mono);font-size:.62rem;color:var(--text-muted);letter-spacing:1px;">APROVADO</div>
+          <strong style="font-family:var(--ff-mono);color:var(--brand);font-size:.98rem;">${resumoValores.aprovado ? formatter.format(resumoValores.aprovado) : '-'}</strong>
+        </div>
+        <div style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.22);border-radius:var(--r-md);padding:10px;">
+          <div style="font-family:var(--ff-mono);font-size:.62rem;color:var(--text-muted);letter-spacing:1px;">FATURADO</div>
+          <strong style="font-family:var(--ff-mono);color:var(--success);font-size:.98rem;">${resumoValores.faturado ? formatter.format(resumoValores.faturado) : '-'}</strong>
+        </div>
+      </div>
+      ${(resumoValores.pagamento?.forma || vencimentos.length) ? `<div style="font-family:var(--ff-mono);font-size:.72rem;color:var(--text-muted);line-height:1.5;margin-top:8px;">${resumoValores.pagamento?.forma ? `Pagamento: <strong style="color:var(--text-primary)">${resumoValores.pagamento.forma}</strong>` : ''}${vencimentos.length ? `<br>Vencimentos: <strong style="color:var(--text-primary)">${vencimentos.join(' | ')}</strong>` : ''}</div>` : ''}`;
     
     const stepperHTML = isCancelada 
         ? `<div style="text-align:center;padding:24px;color:var(--danger);font-weight:700;font-family:var(--ff-display);font-size:1.4rem;">🚫 CANCELADA</div>` 
@@ -589,7 +602,7 @@ function _renderPortalOS(osList) {
     // Banner Entregue Premium injetado logo após o stepper
     const bannerEntregueHtml = isEntregue ? `<div style="margin: 20px; padding: 16px; background: linear-gradient(135deg, var(--success-dim), transparent); border-left: 4px solid var(--success); border-radius: 0 var(--r-md) var(--r-md) 0;"><div style="font-family:var(--ff-display);font-size:1.2rem;font-weight:700;color:var(--success);margin-bottom:6px">✅ Veículo Entregue</div><div style="font-size:0.9rem;color:white;">Serviço finalizado. Agradecemos a confiança!</div></div>` : '';
     
-    const orcAlerta = isOrcamento ? `<div class="alerta-orcamento"><div style="font-family:var(--ff-display);font-size:1.2rem;font-weight:700;color:var(--warn);margin-bottom:6px">Orçamento Disponível</div><div style="font-size:0.9rem;color:white;margin-bottom:16px">Valor estimado: <strong style="font-size:1.3rem;">${formatter.format(os.total || 0)}</strong></div><div style="display:flex;gap:10px;flex-wrap:wrap;"><button class="btn btn-success" style="flex:1;" onclick="_aprovarOrcamento('${os.id}')">✓ APROVAR</button><button class="btn btn-outline" style="flex:1;" onclick="_negociarOrcamento('${placaFormatada}')">💬 NEGOCIAR</button></div></div>` : '';
+    const orcAlerta = isOrcamento ? `<div class="alerta-orcamento"><div style="font-family:var(--ff-display);font-size:1.2rem;font-weight:700;color:var(--warn);margin-bottom:6px">Orçamento Disponível</div>${resumoValoresHTML}<div style="display:flex;gap:10px;flex-wrap:wrap;"><button class="btn btn-success" style="flex:1;" onclick="_aprovarOrcamento('${os.id}')">✓ APROVAR</button><button class="btn btn-outline" style="flex:1;" onclick="_negociarOrcamento('${placaFormatada}')">💬 NEGOCIAR</button></div></div>` : '';
 
     const timelineHtml = `
       <div class="timeline-box">
@@ -609,30 +622,37 @@ function _renderPortalOS(osList) {
     `;
 
     let financeiroDetalhe = '';
-    const pecas = os.pecas || [];
-    const servicos = os.servicos || [];
-    if (pecas.length > 0 || servicos.length > 0) {
+    const UOS = window.JOS || window.JarvisOSUtils || {};
+    const budgetItems = UOS.buildBudgetItems ? UOS.buildBudgetItems(os, P.cliente) : [];
+    const temAprovacao = UOS.hasApproval ? UOS.hasApproval(os) : false;
+    const chavesAprovadas = UOS.getApprovedKeys ? UOS.getApprovedKeys(os) : new Set();
+    if (budgetItems.length > 0) {
         financeiroDetalhe = `<div style="margin-bottom:20px;">
-            <span class="ficha-lbl" style="font-size:0.7rem; color:var(--text-muted); display:block; margin-bottom:5px; text-transform:uppercase;">Peças e Serviços Aprovados/Sugeridos</span>
+            <span class="ficha-lbl" style="font-size:0.7rem; color:var(--text-muted); display:block; margin-bottom:5px; text-transform:uppercase;">Peças e Serviços do Orçamento${temAprovacao ? ' / Aprovados' : ''}</span>
             <div style="background:var(--surf-2); border:1px solid var(--border); border-radius:var(--r-md); padding:12px;">`;
-        
+
+        const badgeAprovacao = item => temAprovacao
+          ? `<small style="display:inline-block;margin-left:6px;padding:2px 6px;border-radius:3px;border:1px solid ${chavesAprovadas.has(item.key) ? 'rgba(0,255,136,.35)' : 'rgba(255,59,59,.35)'};color:${chavesAprovadas.has(item.key) ? 'var(--success)' : 'var(--danger)'};font-family:var(--ff-mono);font-size:.58rem;">${chavesAprovadas.has(item.key) ? 'APROVADO' : 'NÃO APROVADO'}</small>`
+          : '';
+        const servicos = budgetItems.filter(i => i.tipo === 'servico');
+        const pecas = budgetItems.filter(i => i.tipo === 'peca');
         if (servicos.length > 0) {
             financeiroDetalhe += `<div style="font-family:var(--ff-mono); font-size:0.65rem; color:var(--brand); margin-bottom:6px; letter-spacing:1px;">MÃO DE OBRA / SERVIÇOS</div>`;
             servicos.forEach(s => {
-                financeiroDetalhe += `<div class="detalhe-row"><span>${s.desc}</span><span class="detalhe-valor">${formatter.format(s.valor || 0)}</span></div>`;
+                financeiroDetalhe += `<div class="detalhe-row"><span>${UOS.escapeHtml ? UOS.escapeHtml(s.desc) : s.desc}${badgeAprovacao(s)}<br><small style="color:var(--text-muted);font-family:var(--ff-mono);">${s.codigo ? 'Cód. '+(UOS.escapeHtml ? UOS.escapeHtml(s.codigo) : s.codigo)+' · ' : ''}${s.tempo ? String(s.tempo).replace('.', ',')+'h' : 'Sem hora informada'}</small></span><span class="detalhe-valor">${formatter.format(s.valorFinal || 0)}</span></div>`;
             });
         }
         if (pecas.length > 0) {
             financeiroDetalhe += `<div style="font-family:var(--ff-mono); font-size:0.65rem; color:var(--success); margin-top:12px; margin-bottom:6px; letter-spacing:1px;">PEÇAS APLICADAS</div>`;
             pecas.forEach(p => {
-                financeiroDetalhe += `<div class="detalhe-row"><span>${p.qtd}x ${p.desc}</span><span class="detalhe-valor">${formatter.format((p.qtd || 1) * (p.venda || 0))}</span></div>`;
+                financeiroDetalhe += `<div class="detalhe-row"><span>${p.codigo ? '<code style="font-size:.68rem;color:var(--brand)">'+(UOS.escapeHtml ? UOS.escapeHtml(p.codigo) : p.codigo)+'</code> ' : ''}${UOS.escapeHtml ? UOS.escapeHtml(p.desc) : p.desc}${badgeAprovacao(p)}<br><small style="color:var(--text-muted);font-family:var(--ff-mono);">${p.qtd}x ${formatter.format(p.valorUnit || 0)}</small></span><span class="detalhe-valor">${formatter.format(p.valorFinal || 0)}</span></div>`;
             });
         }
         if (os.maoObra) {
             financeiroDetalhe += `<div class="detalhe-row" style="margin-top:8px; border-top:1px dashed var(--border); padding-top:8px; color:var(--text-muted);"><span>Mão de Obra Avulsa</span><span class="detalhe-valor">${formatter.format(os.maoObra)}</span></div>`;
         }
         
-        financeiroDetalhe += `<div class="detalhe-row" style="margin-top:10px; border-top:1px solid var(--border); padding-top:12px; color:var(--warn);"><span>TOTAL ESTIMADO/APROVADO</span><span class="detalhe-valor" style="font-size:1.2rem;">${formatter.format(os.total || 0)}</span></div>`;
+        financeiroDetalhe += `<div class="detalhe-row" style="margin-top:10px; border-top:1px solid var(--border); padding-top:12px; color:var(--warn);"><span>${temAprovacao ? 'TOTAL APROVADO' : 'TOTAL ESTIMADO'}</span><span class="detalhe-valor" style="font-size:1.2rem;">${formatter.format(temAprovacao ? (os.totalAprovado || 0) : (os.total || 0))}</span></div>`;
         financeiroDetalhe += `</div></div>`;
     }
 
@@ -642,6 +662,7 @@ function _renderPortalOS(osList) {
             <div><span class="ficha-lbl" style="font-size:0.7rem; color:var(--text-muted); display:block;">Ano / Cor</span><span class="ficha-val" style="font-weight:bold;">${v.ano || '—'} / ${v.cor || '—'}</span></div>
         </div>
         <div style="margin-bottom:20px;"><span class="ficha-lbl" style="font-size:0.7rem; color:var(--text-muted); display:block; margin-bottom:5px;">Diagnóstico Técnico</span><div style="font-size:0.85rem; background:rgba(0,0,0,0.2); padding:10px; border-radius:var(--r-md); border-left:3px solid var(--brand);">${os.diagnostico || 'Avaliação técnica em andamento...'}</div></div>
+        ${resumoValoresHTML}
         ${financeiroDetalhe}
         ${(os.media && os.media.length > 0) || (os.fotos && os.fotos.length > 0) ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-bottom:5px; text-transform:uppercase;">Evidências (Fotos/Vídeos)</div><div class="media-grid">${(os.media || os.fotos || []).map(m => `<div class="media-item"><img src="${m.url || m}" onclick="window.open('${m.url || m}')"></div>`).join('')}</div>` : ''}
         ${timelineHtml}
@@ -657,7 +678,7 @@ function _renderPortalOS(osList) {
         <div style="padding:14px 20px; background:var(--surf-2); border-bottom:1px solid var(--border); font-size:0.85rem; color:var(--text-primary); display:flex; justify-content:space-between; align-items:center;">
           <div><strong style="color:white">${v.modelo || os.veiculo || 'Veículo'}</strong></div><div style="font-family:var(--ff-mono);font-size:0.6rem;color:var(--text-muted)">OS #${os.id.slice(-6).toUpperCase()}</div>
         </div>
-        ${stepperHTML}${bannerEntregueHtml}${orcAlerta}${revisaoHTML}${badgeHistorico}
+        ${stepperHTML}${bannerEntregueHtml}${orcAlerta}${!isOrcamento ? `<div style="padding:0 20px 16px">${resumoValoresHTML}</div>` : ''}${revisaoHTML}${badgeHistorico}
         <button class="btn-toggle-detalhes" onclick="this.closest('.os-card').classList.toggle('expanded')">▼ VER DETALHAMENTO E HISTÓRICO DA OS</button>
         ${detalheHtml}
       </div>`;
@@ -684,11 +705,6 @@ function _renderFinanceiro(finList) {
     return true;
   });
 
-  if (docsCli.length === 0) {
-    container.innerHTML = `<div style="padding:40px 20px;text-align:center;background:var(--surf-1);border-radius:var(--r-xl);border:1px dashed var(--border);"><div style="font-size:2.5rem;margin-bottom:12px">💳</div><div style="font-family:var(--ff-display);font-size:1.2rem;font-weight:700;color:white;">Nenhum histórico financeiro</div></div>`;
-    return;
-  }
-
   // Agrupa recebimentos de cartão (que o cliente já quitou) para mostrar como 1 linha "PAGO"
   const docsClienteViu = [];
   const osQuitadasNoCartao = new Set();
@@ -703,11 +719,11 @@ function _renderFinanceiro(finList) {
   // 2ª passagem: monta lista de verdade
   const osDoCli = (window._osDoCliente || []);
   osDoCli.forEach(os => {
-    if (osQuitadasNoCartao.has(os.id) && os.total > 0) {
+    if (osQuitadasNoCartao.has(os.id) && (os.totalAprovado || os.total) > 0) {
       // OS paga no cartão — mostra como 1 linha quitada
       docsClienteViu.push({
         desc: `O.S. ${os.placa || ''} — ${os.desc || 'Serviço'}`,
-        valor: os.total,
+        valor: os.totalAprovado || os.total,
         status: 'Pago',
         pgtoResumo: os.pgtoResumoCliente || os.pgtoForma || 'Cartão',
         dataPgto: os.pgtoData,
@@ -721,6 +737,11 @@ function _renderFinanceiro(finList) {
     docsClienteViu.push(f);
   });
 
+  if (docsClienteViu.length === 0) {
+    container.innerHTML = `<div style="padding:40px 20px;text-align:center;background:var(--surf-1);border-radius:var(--r-xl);border:1px dashed var(--border);"><div style="font-size:2.5rem;margin-bottom:12px">💳</div><div style="font-family:var(--ff-display);font-size:1.2rem;font-weight:700;color:white;">Nenhum histórico financeiro</div></div>`;
+    return;
+  }
+
   let emAberto = 0;
   let totalPago = 0;
   const listHTML = docsClienteViu.map(f => {
@@ -728,7 +749,8 @@ function _renderFinanceiro(finList) {
     if (!isPago) emAberto += (f.valor || 0);
     if (isPago)  totalPago += (f.valor || 0);
 
-    const pgtoInfo = f.pgtoResumo ? `<div style="font-family:var(--ff-mono); font-size:0.68rem; color:var(--brand); margin-top:4px;">💳 ${f.pgtoResumo}</div>` : '';
+    const pgtoTexto = f.pgtoResumoCliente || f.pgtoResumo || f.pgto || '';
+    const pgtoInfo = pgtoTexto ? `<div style="font-family:var(--ff-mono); font-size:0.68rem; color:var(--brand); margin-top:4px;">💳 ${pgtoTexto}</div>` : '';
     const dataInfo = isPago && f.dataPgto
       ? `Pago em: ${new Date(f.dataPgto).toLocaleDateString('pt-BR')}`
       : (f.venc ? `Vencimento: ${new Date(f.venc).toLocaleDateString('pt-BR')}` : '-');
@@ -1026,12 +1048,19 @@ function _negociarOrcamento(placa) {
 
 async function _aprovarOrcamento(osId) {
   try {
-    const snap = await db.collection('ordens_servico').doc(osId).get();
-    const tl = snap.data().timeline || [];
-    tl.push({ dt: new Date().toISOString(), user: P.cliente?.nome || 'Cliente', acao: `Cliente APROVOU o orçamento via Aplicativo B2C` });
-    await db.collection('ordens_servico').doc(osId).update({ status: 'Andamento', timeline: tl, updatedAt: new Date().toISOString() });
-    await db.collection('lixeira_auditoria').add({ tenantId: P.tenantId, modulo: 'PORTAL B2C', acao: `Orçamento APROVADO: OS #${osId.slice(-5).toUpperCase()}`, usuario: P.cliente?.nome || 'Cliente', ts: new Date().toISOString() });
-    toast('Orçamento aprovado com sucesso! O veículo já está na fila de serviço.', 'ok');
+    const result = await (window.JOS || window.JarvisOSUtils).aprovarOrcamentoComSelecao({
+      db,
+      osId,
+      novoStatus: 'Aprovado',
+      cliente: P.cliente,
+      clientes: P.cliente ? [P.cliente] : [],
+      actorName: P.cliente?.nome || 'Cliente',
+      actorType: 'cliente',
+      toast
+    });
+    if (!result) return;
+    await db.collection('lixeira_auditoria').add({ tenantId: P.tenantId, modulo: 'PORTAL B2C', acao: `Orçamento APROVADO (${result.aprovacao?.status || 'selecionado'}): OS #${osId.slice(-5).toUpperCase()} - total ${formatter.format(result.totalAprovado || 0)}`, usuario: P.cliente?.nome || 'Cliente', ts: new Date().toISOString() });
+    toast('Orçamento aprovado com os itens selecionados. A oficina continuará o fluxo da O.S.', 'ok');
   } catch (e) { toast('Erro ao aprovar: ' + e.message, 'err'); }
 }
 
@@ -1051,205 +1080,6 @@ async function _recusarOrcamento(osId) {
 <script src="elm-bridge.js"></script>
 <script src="elm327-service.js"></script>
 <script>
-// ── IA thIAguinho E CÉREBRO AI-ENGINE ──────────────────────────────────────────
-let _iaHist = [];
-let _osDoCliente = [];
-window._ultimosDTCsLidos = []; // Armazena estado global para o dashboard de Saúde
-
-// Motor Estatístico de Viagem
-let _tripData = { active: false, startTime: 0, distanceKm: 0, fuelLiters: 0, cost: 0, pricePerLiter: 5.80, lastTime: 0 };
-
-// Base de Dados Injetada do ai-engine.js (Inteligência Offline e Contexto)
-const _dtcDatabase = {
-    'P0171': { description: 'Sistema muito pobre (Banco 1)', severity: 'Médio', urgency: 'Moderada', causes: ['Filtro de ar sujo', 'Sensor MAF defeituoso', 'Vazamento no sistema de admissão', 'Bomba de combustível fraca', 'Injetores entupidos'] },
-    'P0301': { description: 'Falha de ignição no cilindro 1', severity: 'Alto', urgency: 'Alta', causes: ['Vela de ignição defeituosa', 'Bobina com problema', 'Cabo de vela danificado', 'Baixa compressão', 'Injetor entupido'] },
-    'P0420': { description: 'Eficiência do catalisador abaixo do limite', severity: 'Médio', urgency: 'Moderada', causes: ['Catalisador danificado', 'Sensor de oxigênio defeituoso', 'Vazamento no escapamento', 'Combustível ruim'] },
-    'P0128': { description: 'Termostato do sistema de arrefecimento', severity: 'Baixo', urgency: 'Baixa', causes: ['Termostato travado aberto', 'Sensor de temperatura defeituoso', 'Fluido baixo'] }
-};
-
-const _maintenanceKnowledge = [
-    { item: 'Troca de óleo', interval: 10000, cost: 'R$ 120 - R$ 250' },
-    { item: 'Filtro de ar', interval: 15000, cost: 'R$ 30 - R$ 80' },
-    { item: 'Pastilhas de freio', interval: 30000, cost: 'R$ 200 - R$ 400' },
-    { item: 'Correia dentada', interval: 60000, cost: 'R$ 400 - R$ 800' }
-];
-
-document.addEventListener('osCarregadas', e => { _osDoCliente = e.detail || []; });
-
-function iaChip(txt) {
-  const el = document.getElementById('iaInput');
-  if (el) el.value = txt;
-  iaEnviar();
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('iaInput')?.addEventListener('keydown', e => {
-    if (e.key === 'Enter') iaEnviar();
-  });
-});
-
-async function iaEnviar() {
-  const inp = document.getElementById('iaInput');
-  const msg = inp?.value?.trim();
-  if (!msg) return;
-  inp.value = '';
-
-  _iaMsgUser(msg);
-  const lid = _iaMsgBot('<span class="j-spinner"></span> Processando...');
-
-  const key = P?.oficina?.apiKeys?.gemini || P?.oficina?.geminiKey || null;
-  _iaHist.push({ role: 'user', text: msg });
-
-  // Construção do Contexto Inteligente Extraindo Variáveis Reais
-  let ctx = `Cliente: ${P?.cliente?.nome || '—'} | Oficina: ${P?.oficina?.nomeFantasia || '—'}\n`;
-  let kmDoCliente = 0;
-  let activeDTCs = [...window._ultimosDTCsLidos];
-  
-  (_osDoCliente.length ? _osDoCliente : (P?.osDoCliente || [])).forEach(o => {
-    const kmNum = parseFloat(String(o.km || '0').replace(/\D/g, ''));
-    if (kmNum > kmDoCliente) kmDoCliente = kmNum;
-    ctx += `OS #${o.id?.slice(-6)} | ${o.placa||''} ${o.veiculo||''} | KM: ${o.km||'—'} | Status: ${o.status||'—'} | Total: R$${o.total||0}\n`;
-    if (o.dtcsCliente?.length) {
-        o.dtcsCliente.forEach(d => activeDTCs.push(d.code || d));
-    }
-  });
-
-  activeDTCs = [...new Set(activeDTCs)]; // Remove DTCs duplicados
-  let dtcContext = "";
-  
-  if (activeDTCs.length > 0) {
-      dtcContext = "\n\nCÓDIGOS DE ERRO ATIVOS (DTCs) DETECTADOS PELO SCANNER:\n";
-      activeDTCs.forEach(code => {
-          const info = _dtcDatabase[code.toUpperCase()];
-          if(info) {
-              dtcContext += `- ${code}: ${info.description}. Severidade: ${info.severity}. Causas comuns: ${info.causes.join(', ')}.\n`;
-          } else {
-              dtcContext += `- ${code}: Código de erro genérico relatado pelo sistema OBD.\n`;
-          }
-      });
-  }
-
-  if (!key) {
-    _iaReplace(lid, _iaFallback(msg, kmDoCliente, activeDTCs));
-    return;
-  }
-
-  try {
-    const contents = _iaHist.map(h => ({ role: h.role==='user'?'user':'model', parts:[{text:h.text}] }));
-    
-    // Prompt de Sistema Blindado baseado nas regras do ai-engine.js
-    const systemInstructionText = `Você é o thIAguinho, assistente técnico de triagem da oficina ${P?.oficina?.nomeFantasia || 'parceira'}.
-REGRAS ABSOLUTAS (SOB PENA DE DESLIGAMENTO):
-1. Aja estritamente como um conselheiro. NUNCA dê o diagnóstico final definitivo nem ensine o cliente a consertar o veículo em casa.
-2. O veículo do cliente tem atualmente ${kmDoCliente} KM.${kmDoCliente > 0 ? ' Use essa quilometragem para recomendar manutenções preventivas lógicas se perguntado.' : ''}
-3. Sempre finalize suas respostas orientando o cliente a usar a aba 🔌 OBD para ler códigos se houver luzes no painel, ou a chamar o mecânico na aba 💬 CHAT para agendar o serviço.
-4. Seja amigável, transparente e direto ao ponto.
-
-CONTEXTO REAL DO VEÍCULO E HISTÓRICO:
-${ctx}${dtcContext}`;
-
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(key)}`, {
-      method: 'POST', headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({
-        contents,
-        systemInstruction: { parts: [{ text: systemInstructionText }] }
-      })
-    });
-    
-    const data = await res.json();
-    
-    // Trava para forçar o erro real aparecer e não engolir o problema
-    if (!res.ok) {
-        throw new Error(data?.error?.message || `Erro na API do Google (Status: ${res.status})`);
-    }
-    
-    const resp = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!resp) throw new Error("A resposta da IA veio vazia.");
-
-    _iaHist.push({ role: 'model', text: resp });
-    _iaReplace(lid, resp.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>'));
-  } catch(e) {
-    // Se a IA der erro grave (como quota excedida ou API Key inválida), joga pro modo Offline (Fallback) e mostra o erro
-    const fallbackTxt = _iaFallback(msg, kmDoCliente, activeDTCs);
-    _iaReplace(lid, `${fallbackTxt}<br><br><small style="color:var(--danger);font-family:var(--ff-mono);">[Modo Offline] Erro técnico: ${e.message}</small>`);
-  }
-}
-
-// Fallback Inteligente (quando não há internet ou chave do Gemini) - Baseado no ai-engine.js
-function _iaFallback(msg, km, activeDTCs) {
-  const m = msg.toLowerCase();
-  
-  if (m.includes('dtc') || m.includes('código') || m.includes('erro') || m.includes('problema') || m.includes('falha') || m.includes('luz')) {
-      if (activeDTCs.length === 0) {
-          return '✅ Não há códigos de erro ativos registrados na sua última varredura. Se uma luz acendeu, vá até a aba 🔌 OBD e clique em "LER ERROS" com o scanner conectado.';
-      }
-      let resp = `🔍 Encontrei ${activeDTCs.length} código(s) ativo(s) no seu veículo:<br><br>`;
-      activeDTCs.forEach(code => {
-          const info = _dtcDatabase[code.toUpperCase()];
-          if(info) {
-              resp += `<strong>${code}</strong>: ${info.description}<br>📊 Severidade: ${info.severity} | ⚠️ Urgência: ${info.urgency}<br>Possíveis causas: ${info.causes.join(', ')}<br><br>`;
-          } else {
-              resp += `<strong>${code}</strong>: Código de erro detectado pelo OBD.<br><br>`;
-          }
-      });
-      resp += '💡 <strong>Recomendação:</strong> Procure nosso mecânico pelo CHAT para uma avaliação detalhada e orçamento.';
-      return resp;
-  }
-  
-  if (m.includes('manutenção') || m.includes('revisão') || m.includes('troca') || m.includes('óleo') || m.includes('pendente')) {
-      if (!km || km === 0) return '🔧 Para eu calcular suas manutenções, precisamos da quilometragem exata do veículo gravada na Oficina. Envie sua KM no chat para o mecânico atualizar!';
-      
-      let resp = `🔧 <strong>Status de Manutenção Preventiva (KM Atual: ${km.toLocaleString()})</strong><br><br>`;
-      let found = false;
-      
-      _maintenanceKnowledge.forEach(item => {
-          const kmSince = km % item.interval;
-          const kmDue = item.interval - kmSince;
-          if (kmDue <= 3000) {
-              found = true;
-              resp += `• <strong>${item.item}</strong> (Falta ${kmDue} km)<br>Custo estimado: ${item.cost}<br><br>`;
-          }
-      });
-      
-      if (found) {
-          resp += '⚠️ Recomendamos agendar essas manutenções em breve na aba 📅 AGENDAR.';
-      } else {
-          resp += '✅ Parabéns! Com base na sua quilometragem, suas manutenções principais parecem estar em dia.';
-      }
-      return resp;
-  }
-
-  if (m.includes('status') || m.includes('os') || m.includes('ordem')) {
-      const os = _osDoCliente.length ? _osDoCliente : (P?.osDoCliente || []);
-      if (!os.length) return 'Nenhuma Ordem de Serviço encontrada no momento.';
-      return os.map(o => `🚘 <strong>${o.placa||o.veiculo||'Veículo'}</strong> — ${o.status||'—'}${o.total?` | R$ ${Number(o.total).toLocaleString('pt-BR',{minimumFractionDigits:2})}`:''}`).join('<br>');
-  }
-
-  return `🤖 <strong>Como posso ajudar?</strong><br><br>Posso auxiliar com:<br>🔍 Diagnóstico de códigos de erro (DTCs)<br>🔧 Avisos de manutenção preventiva<br>📋 Status da sua O.S.<br><br>Dica: Se a luz de injeção acendeu, conecte o seu scanner na aba 🔌 OBD!`;
-}
-
-let _iaCnt = 0;
-function _iaMsgUser(txt) {
-  const c = document.getElementById('iaMsgs'); if(!c) return;
-  if (c.children.length === 1 && c.children[0].style.textAlign === 'center') c.innerHTML = '';
-  const d = document.createElement('div');
-  d.style.cssText = 'padding:12px 16px;border-radius:12px 12px 0 12px;max-width:85%;background:rgba(167,139,250,0.12);border:1px solid rgba(167,139,250,0.2);color:#fff;align-self:flex-end;font-size:0.9rem;word-break:break-word;margin-left:auto;';
-  d.textContent = txt; c.appendChild(d); c.scrollTop = c.scrollHeight;
-}
-function _iaMsgBot(html) {
-  const c = document.getElementById('iaMsgs'); if(!c) return null;
-  const id = 'ia-' + (_iaCnt++);
-  const d = document.createElement('div'); d.id = id;
-  d.style.cssText = 'padding:12px 16px;border-radius:12px 12px 12px 0;max-width:90%;background:var(--surf-2);border:1px solid rgba(167,139,250,0.15);color:var(--text-primary);font-size:0.88rem;line-height:1.6;word-break:break-word;';
-  d.innerHTML = `<div style="font-family:var(--ff-mono);font-size:0.6rem;color:#A78BFA;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;">thIAguinho</div>${html}`;
-  c.appendChild(d); c.scrollTop = c.scrollHeight; return id;
-}
-function _iaReplace(id, html) {
-  const el = document.getElementById(id); if(!el) return;
-  el.innerHTML = `<div style="font-family:var(--ff-mono);font-size:0.6rem;color:#A78BFA;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;">thIAguinho</div>${html}`;
-  document.getElementById('iaMsgs').scrollTop = 99999;
-}
-
 // ── INTEGRAÇÃO OBD2 ROBUSTA (ELM327-SERVICE.JS) E DASHBOARD ──────────────────────────
 function _obdLog(msg, cor) {
   const el = document.getElementById('obdLog'); if(!el) return;
@@ -1409,7 +1239,6 @@ async function obdLerDTCs() {
     } else {
         toast(`⚠ ${todos.length} código(s) encontrado(s)`, 'warn');
         _obdLog(`Leitura finalizada. ${todos.length} código(s) reportado(s).`, 'var(--danger)');
-        _iaHist.push({ role:'user', text:`[SISTEMA OBD] Acabei de ler a central com o scanner. DTCs encontrados: ${todos.map(d=>d.code || d).join(', ')}` });
     }
   } catch(e) { toast('Erro: ' + e.message, 'err'); }
 }
@@ -1483,7 +1312,6 @@ async function obdVarredura() {
     
     _obdSalvarFirebase(dtcs, liveData);
     if (dtcs.length) {
-        _iaHist.push({ role:'user', text:`[OBD SCAN] Varredura completa. DTCs: ${dtcs.map(d=>(d.code||d)).join(', ')}` });
     }
     
     toast('Varredura concluída!', 'ok');
@@ -1724,5 +1552,6 @@ async function _obdSalvarFirebase(dtcs, scan) {
   } catch(e) { console.warn('Firebase OBD save falhou:', e); }
 }
 </script>
+<script src="js/theme.js"></script>
 </body>
 </html>

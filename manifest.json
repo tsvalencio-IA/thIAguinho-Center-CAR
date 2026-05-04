@@ -12,9 +12,15 @@
   "categories": ["productivity", "automotive", "business"],
   "icons": [
     {
-      "src": "https://api.dicebear.com/7.x/initials/svg?seed=T&backgroundColor=00D4FF&textColor=060A14",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ],

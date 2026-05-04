@@ -7,6 +7,115 @@
 
 'use strict';
 
+const OSU = () => window.JarvisOSUtils || window.JOS || {};
+const numBR = value => (OSU().parseNumberBR ? OSU().parseNumberBR(value) : (parseFloat(String(value || 0).replace(',', '.')) || 0));
+const taxaDescontoOS = value => {
+  const v = numBR(value);
+  return v > 1 ? +(v / 100).toFixed(6) : v;
+};
+const escOS = value => (OSU().escapeHtml ? OSU().escapeHtml(value) : String(value == null ? '' : value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])));
+
+function lerOficinaSessaoOS() {
+  try { return JSON.parse(sessionStorage.getItem('j_oficina') || '{}') || {}; } catch(e) { return {}; }
+}
+
+function pickOS(...values) {
+  for (const value of values) {
+    if (value === undefined || value === null) continue;
+    if (String(value).trim() !== '') return value;
+  }
+  return '';
+}
+
+function enderecoOficinaOS(oficina) {
+  oficina = oficina || {};
+  return pickOS(
+    oficina.enderecoCompleto,
+    [
+      pickOS(oficina.endereco, oficina.rua, oficina.logradouro),
+      pickOS(oficina.numero, oficina.num, oficina.n),
+      oficina.bairro,
+      pickOS(oficina.cidade, oficina.municipio),
+      oficina.uf,
+      oficina.cep
+    ].filter(v => String(v || '').trim()).join(', ')
+  );
+}
+
+function enderecoPessoaOS(pessoa) {
+  pessoa = pessoa || {};
+  return pickOS(
+    pessoa.enderecoCompleto,
+    [
+      pickOS(pessoa.endereco, pessoa.rua, pessoa.logradouro),
+      pickOS(pessoa.numero, pessoa.num, pessoa.n),
+      pessoa.bairro,
+      pickOS(pessoa.cidade, pessoa.municipio),
+      pessoa.uf,
+      pessoa.cep
+    ].filter(v => String(v || '').trim()).join(', ')
+  );
+}
+
+function dadosOficinaAtualOS() {
+  const sessaoOficina = lerOficinaSessaoOS();
+  const base = { ...(window.J || {}), ...sessaoOficina, ...((window.J || {}).oficina || {}) };
+  return {
+    nomeFantasia: pickOS(base.nomeFantasia, base.tnome, base.nome),
+    razaoSocial: pickOS(base.razaoSocial, base.razao, base.nomeFantasia, base.tnome, base.nome),
+    cnpj: pickOS(base.cnpj, base.doc, base.documento),
+    endereco: enderecoOficinaOS(base),
+    telefone: pickOS(base.telefone, base.wpp, base.celular),
+    email: pickOS(base.email),
+    orcamentista: pickOS(base.orcamentista, base.responsavel, base.nomeFantasia, base.tnome),
+    responsavel: pickOS(base.responsavel, base.representante),
+    representante: pickOS(base.representante, base.responsavel, base.orcamentista, base.nomeFantasia, base.tnome)
+  };
+}
+
+function usuarioPodeDispararWppProntoOS() {
+  const role = String(window.J?.role || sessionStorage.getItem('j_role') || '').toLowerCase();
+  return ['admin', 'gestor', 'gerente', 'superadmin', 'dono'].includes(role);
+}
+
+function classificarSecaoResumoOS(input) {
+  const rate = input?.secaoHora ? OSU().getPMSPValorHora?.(input.secaoHora) : null;
+  if (rate?.label) return String(rate.label).toUpperCase();
+  const explicita = String(input?.secaoHoraLabel || input?.sistemaTabela || input?.sistema || '').trim();
+  if (explicita) return explicita.toUpperCase();
+  const normalizar = OSU().normalizeText || (v => String(v || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase());
+  const texto = normalizar([
+    input?.secaoHoraLabel,
+    input?.sistemaTabela,
+    input?.sistema,
+    input?.operacao,
+    input?.item,
+    input?.desc,
+    input?.descricao
+  ].filter(Boolean).join(' '));
+  const labelBase = String(input?.secaoHoraLabel || input?.sistemaTabela || input?.sistema || '').trim();
+  if (/\b(funilaria|lanternagem|pintura|pintar|lataria|parachoque|para choque)\b/.test(texto)) return 'FUNILARIA / PINTURA';
+  if (/\b(tapecaria|capotaria|banco|assento|encosto|forro|estof)\b/.test(texto)) return 'TAPECARIA / CAPOTARIA';
+  if (/\b(borracharia|pneu|pneus|roda|rodas|calota|balanceamento)\b/.test(texto)) return 'BORRACHARIA';
+  if (/\b(lavagem|higienizacao|higienizar|limpeza interna|polimento)\b/.test(texto)) return 'LAVAGEM / HIGIENIZACAO';
+  if (/\b(injecao|bico|bicos|combustivel|alimentacao)\b/.test(texto)) return 'INJECAO / ALIMENTACAO';
+  if (/\b(eletrica|eletrico|eletronica|alternador|bateria|lampada|farol|sensor)\b/.test(texto)) return 'ELETRICA';
+  if (/\b(mecanica|motor|cambio|transmissao|arrefecimento|suspensao|freio|direcao|retifica)\b/.test(texto)) return 'MECANICA';
+  return labelBase ? labelBase.toUpperCase().slice(0, 54) : 'OUTROS SERVICOS';
+}
+
+async function auditGeralOS(osId, acao, extra = {}) {
+  try {
+    const idCurto = osId ? String(osId).slice(-6).toUpperCase() : 'NOVA';
+    const texto = `OS #${idCurto} — ${acao}`;
+    if (typeof window.audit === 'function') {
+      await window.audit('OS', texto, { osId: osId || null, origem: 'jarvis_campos_editaveis', ...extra });
+    } else if (typeof audit === 'function') {
+      await audit('OS', texto);
+    }
+  } catch(e) {}
+}
+
 const KANBAN_STATUSES = ['Triagem', 'Orcamento', 'Orcamento_Enviado', 'Aprovado', 'Andamento', 'Pronto', 'Entregue'];
 
 const STATUS_MAP_LEGACY = { 
@@ -78,6 +187,25 @@ window.renderKanban = function() {
       const nomeCli = esc(c?.nome || os.cliente || 'Cliente Avulso').trim() || 'Cliente Avulso';
       const placaRaw = (os.placa || v?.placa || 'S/PLACA').toString().trim().toUpperCase();
       const placaFmt = placaRaw === 'S/PLACA' ? 'S/PLACA' : esc(placaRaw);
+      const UOS = window.JarvisOSUtils || window.JOS || {};
+      const resumoValores = UOS.getBudgetSummary
+        ? UOS.getBudgetSummary(os, c, J.financeiro)
+        : { orcamento: os.total || 0, aprovado: os.totalAprovado || 0, faturado: 0, pagamento: {} };
+      const valoresHtml = `
+        <div style="display:grid;grid-template-columns:repeat(3,minmax(38px,1fr));gap:3px;margin:7px 0;">
+          <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);padding:4px;border-radius:3px;min-width:0;">
+            <small style="display:block;font-family:var(--fm);font-size:.44rem;color:var(--muted);letter-spacing:.45px;">ORC.</small>
+            <strong style="display:block;font-family:var(--fm);font-size:.54rem;color:var(--warn);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${moeda(resumoValores.orcamento || 0)}</strong>
+          </div>
+          <div style="background:rgba(0,212,255,.05);border:1px solid rgba(0,212,255,.12);padding:4px;border-radius:3px;min-width:0;">
+            <small style="display:block;font-family:var(--fm);font-size:.44rem;color:var(--muted);letter-spacing:.45px;">APROV.</small>
+            <strong style="display:block;font-family:var(--fm);font-size:.54rem;color:var(--cyan);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${resumoValores.aprovado ? moeda(resumoValores.aprovado) : '-'}</strong>
+          </div>
+          <div style="background:rgba(0,255,136,.05);border:1px solid rgba(0,255,136,.12);padding:4px;border-radius:3px;min-width:0;">
+            <small style="display:block;font-family:var(--fm);font-size:.44rem;color:var(--muted);letter-spacing:.45px;">FAT.</small>
+            <strong style="display:block;font-family:var(--fm);font-size:.54rem;color:var(--success);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${resumoValores.faturado ? moeda(resumoValores.faturado) : '-'}</strong>
+          </div>
+        </div>`;
       const descFmt = esc(os.desc || os.relato || 'Sem descrição inicial...').substring(0, 120);
 
       // Botão de exclusão definitiva — visível apenas para admin/gestor/superadmin
@@ -94,9 +222,10 @@ window.renderKanban = function() {
         </div>
         <div class="k-cliente" style="font-size:0.85rem;font-weight:700;color:var(--text);margin-bottom:2px;">${nomeCli}</div>
         <div class="k-desc" style="margin-bottom:8px;">${descFmt}</div>
+        ${valoresHtml}
         <div class="k-footer" style="margin-bottom:8px;">
           <span class="k-tipo ${tipoCls}">${tipoLabel}</span>
-          <span style="font-family:var(--fm);font-size:0.85rem;color:var(--success);font-weight:700;">${moeda(os.total)}</span>
+          <span style="font-family:var(--fm);font-size:0.68rem;color:var(--muted);font-weight:700;">${resumoValores.pagamento?.forma ? esc(resumoValores.pagamento.forma).slice(0, 24) : 'Sem pgto'}</span>
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between;border-top:1px solid rgba(255,255,255,0.05);padding-top:6px;">
           ${btnPrev}
@@ -113,6 +242,27 @@ window.moverStatusOS = async function(id, novoStatus) {
     const osAntes = J.os.find(x => x.id === id);
     const statusAntes = osAntes?.status || '';
 
+    if ((novoStatus === 'Aprovado' || novoStatus === 'Andamento') && osAntes && !OSU().hasApproval?.(osAntes)) {
+        try {
+            const res = await OSU().aprovarOrcamentoComSelecao?.({
+                db,
+                osId: id,
+                novoStatus: novoStatus === 'Andamento' ? 'Aprovado' : novoStatus,
+                clientes: J.clientes,
+                actorName: J.nome || 'Gestor',
+                actorType: 'jarvis',
+                toast: window.toast
+            });
+            if (res) {
+                window.toast(`✓ Orçamento aprovado: ${moeda(res.totalAprovado || 0)}`);
+                audit('KANBAN', `Aprovou OS ${id.slice(-6)} com seleção de itens`);
+            }
+        } catch(e) {
+            window.toast('Erro ao aprovar itens: ' + e.message, 'err');
+        }
+        return;
+    }
+
     await db.collection('ordens_servico').doc(id).update({ status: novoStatus, updatedAt: new Date().toISOString() });
     window.toast(`✓ Movido para ${novoStatus.replace('_', ' ')}`);
     audit('KANBAN', `Moveu OS ${id.slice(-6)} de "${statusAntes}" para "${novoStatus}"`);
@@ -121,9 +271,22 @@ window.moverStatusOS = async function(id, novoStatus) {
         window.enviarWppB2C(id);
     }
 
-    // ═══ WhatsApp automático: Pronto para retirada / Entregue ═══
-    if ((novoStatus === 'Pronto' || novoStatus === 'Entregue') &&
-        statusAntes !== 'Pronto' && statusAntes !== 'Entregue') {
+    // Equipe apenas avisa internamente. Gestor/admin confirma Pronto e pode enviar WhatsApp.
+    if (novoStatus === 'Pronto' && statusAntes !== 'Pronto') {
+        if (usuarioPodeDispararWppProntoOS()) {
+            setTimeout(() => {
+                if (typeof window.dispararAvisoEntregaAutomatico === 'function') {
+                    window.dispararAvisoEntregaAutomatico(id, novoStatus);
+                }
+            }, 300);
+        } else {
+            window.notificarAdminOSPronta?.(id, 'jarvis');
+        }
+        return;
+    }
+
+    // WhatsApp automatico somente para entrega confirmada pelo gestor/caixa.
+    if ((novoStatus === 'Entregue') && statusAntes !== 'Entregue') {
         setTimeout(() => {
             if (typeof window.dispararAvisoEntregaAutomatico === 'function') {
                 window.dispararAvisoEntregaAutomatico(id, novoStatus);
@@ -165,6 +328,32 @@ window.dispararAvisoEntregaAutomatico = function(id, novoStatus) {
     }
 };
 
+window.notificarAdminOSPronta = async function(id, origem) {
+    try {
+        const os = (window.J?.os || []).find(x => x.id === id);
+        if (!os || !window.db) return;
+        const v = (window.J?.veiculos || []).find(x => x.id === os.veiculoId) || {};
+        const c = (window.J?.clientes || []).find(x => x.id === os.clienteId) || {};
+        const placa = os.placa || v.placa || 'S/PLACA';
+        const msg = `OS #${String(id).slice(-6).toUpperCase()} marcada como PRONTO para retirada. Veiculo: ${placa}${v.modelo ? ' - ' + v.modelo : ''}. Cliente: ${c.nome || os.cliente || '-'}. Conferir e enviar WhatsApp ao cliente quando autorizado.`;
+        await db.collection('chat_equipe').add({
+            tenantId: J.tid,
+            de: os.mecId || J.uid || 'sistema',
+            para: 'admin',
+            sender: 'equipe',
+            msg,
+            lidaAdmin: false,
+            lidaEquipe: true,
+            origem: origem || 'status_pronto',
+            osId: id,
+            ts: Date.now()
+        });
+        window.toast?.('Admin avisado no chat da equipe.', 'ok');
+    } catch(e) {
+        console.warn('Aviso interno OS pronta:', e);
+    }
+};
+
 window.enviarWppB2C = function(id) {
     const os = J.os.find(x => x.id === id);
     if (!os) return;
@@ -187,9 +376,10 @@ window.enviarWppB2C = function(id) {
 
     // Link correto: governo → clienteOficial, demais → cliente
     const isGov = cli?.tipoCliente === 'governo';
-    const link = isGov
-      ? 'https://tsvalencio-ia.github.io/of/clienteOficial.html'
-      : 'https://tsvalencio-ia.github.io/of/cliente.html';
+    const portalBase = isGov
+      ? 'https://tsvalencio-ia.github.io/ERP-CODEX3/clienteOficial.html'
+      : 'https://tsvalencio-ia.github.io/ERP-CODEX3/cliente.html';
+    const link = `${portalBase}?tenant=${encodeURIComponent(J.tid || '')}`;
 
     const totalFmt = (os.total || 0).toFixed(2).replace('.', ',');
 
@@ -225,8 +415,15 @@ window.prepOS = function(mode, id = null) {
   if ($('containerItensOS')) $('containerItensOS').innerHTML = '';
   if ($('containerServicosOS')) $('containerServicosOS').innerHTML = '';
   if ($('containerPecasOS')) $('containerPecasOS').innerHTML = '';
+  if ($('containerPecasReais')) $('containerPecasReais').innerHTML = '';
+  document.getElementById('resumoAprovacaoOS')?.remove();
   if ($('osTotalVal')) $('osTotalVal').innerText = '0,00';
+  if ($('osTotalServicosVal')) $('osTotalServicosVal').innerText = '0,00';
+  if ($('osTotalPecasVal')) $('osTotalPecasVal').innerText = '0,00';
+  if ($('osTotalValMirror')) $('osTotalValMirror').innerText = '0,00';
+  if ($('osSecaoKpisOS')) $('osSecaoKpisOS').innerHTML = '';
   if ($('osTotalHidden')) $('osTotalHidden').value = '0';
+  ['osProxRev','osProxKm','osPgtoForma','osPgtoData','osPgtoParcelas','osDescMO','osDescPeca','osEntregueA'].forEach(f => { if ($(f)) $(f).value = ''; });
   if ($('osMediaGrid')) $('osMediaGrid').innerHTML = ''; 
   if ($('osMediaArray')) $('osMediaArray').value = '[]';
   if ($('osTimeline')) $('osTimeline').innerHTML = ''; 
@@ -273,6 +470,30 @@ window.prepOS = function(mode, id = null) {
     if ($('osDescricao')) $('osDescricao').value = o.desc || o.relato || '';
     if ($('osData')) $('osData').value = o.data || ''; 
     if ($('osKm')) $('osKm').value = o.km || '';
+    if ($('osEntregueA')) {
+      $('osEntregueA').value = o.entreguePara || '';
+      const r = document.getElementById('rowEntregueA');
+      if (r) r.style.display = (o.status === 'Entregue') ? 'flex' : 'none';
+    }
+    // Desconto personalizado desta OS
+    if ($('osDescMO')) $('osDescMO').value = o.descMO != null ? (parseFloat(o.descMO)*100).toFixed(1) : '';
+    if ($('osDescPeca')) $('osDescPeca').value = o.descPeca != null ? (parseFloat(o.descPeca)*100).toFixed(1) : '';
+    // Mostra blocos governo se cliente for gov
+    const _cli_load = (window.J?.clientes||[]).find(cl=>cl.id===o.clienteId);
+    const _ehGov_load = _cli_load?.tipoCliente === 'governo';
+    const _blocoDesc = document.getElementById('blocoDescontoOS');
+    const _blocoReais = document.getElementById('blocoReais');
+    if (_blocoDesc) _blocoDesc.style.display = _ehGov_load ? 'block' : 'none';
+    if (_blocoReais) {
+      // Somente dono (perfil admin) vê peças reais
+      const _isDono = ['admin','superadmin'].includes((window.J?.role||'').toLowerCase());
+      _blocoReais.style.display = _isDono ? 'block' : 'none';
+    }
+    // Carregar peças reais
+    if ($('containerPecasReais')) {
+      $('containerPecasReais').innerHTML = '';
+      (o.pecasReais || []).forEach(p => window.adicionarPecaRealRow(p));
+    }
     // LOTE C — Traz próxima revisão ao editar
     if ($('osProxRev')) $('osProxRev').value = o.proxRev || '';
     if ($('osProxKm'))  $('osProxKm').value  = o.proxKm  || '';
@@ -294,6 +515,10 @@ window.prepOS = function(mode, id = null) {
 
     if (o.pecas && o.pecas.length > 0 && typeof window.renderPecaOSRow === 'function') {
         o.pecas.forEach(p => window.renderPecaOSRow(p));
+    }
+
+    if (typeof window.aplicarMarcadoresAprovacaoOS === 'function') {
+      window.aplicarMarcadoresAprovacaoOS(o);
     }
 
     if ($('chkComb')) $('chkComb').value = o.chkComb || 'N/A'; 
@@ -329,6 +554,12 @@ window.prepOS = function(mode, id = null) {
     window.calcOSTotal();
     window.verificarStatusOS();
     
+    // Auto-preenche placa na busca histórica com a placa desta OS
+    const _elBuscaPlaca = document.getElementById('histBuscaPlaca');
+    if (_elBuscaPlaca && o.placa) _elBuscaPlaca.value = (o.placa||'').toUpperCase();
+    const _elBuscaRes = document.getElementById('histBuscaResultado');
+    if (_elBuscaRes) _elBuscaRes.innerHTML = '';
+
     if ($('btnGerarPDFOS')) $('btnGerarPDFOS').style.display = 'block';
 
     // Botão de exclusão só aparece se for admin/gestor (e estiver editando OS existente)
@@ -384,27 +615,140 @@ window.renderItensOS = function() {
     window.calcOSTotal();
 };
 
+window._osValorHoraCliente = function() {
+  const dadosGov = typeof window._osDadosGovernamental === 'function' ? window._osDadosGovernamental() : null;
+  const cliId = document.getElementById('osCliente')?.value;
+  const cli = (window.J?.clientes || []).find(c => c.id === cliId) || null;
+  return numBR(dadosGov?.valorHora || cli?.govValorHora || cli?.valorHora || window.J?.valorHoraMecanica || 0);
+};
+
+window._osVeiculoAtual = function() {
+  const id = document.getElementById('osVeiculo')?.value;
+  return (window.J?.veiculos || []).find(v => v.id === id) || {};
+};
+
+function fmtHoraOS(value) {
+  return numBR(value).toFixed(2).replace('.', ',');
+}
+
+window._osSecaoHoraOptions = function(selected) {
+  const rates = OSU().getPMSPValoresHora?.() || [];
+  const opts = ['<option value="">Sem selecao / manual</option>'];
+  rates.forEach(rate => {
+    opts.push(`<option value="${escOS(rate.key)}" ${rate.key === selected ? 'selected' : ''}>${escOS(rate.label)} - R$ ${fmtHoraOS(rate.valor)}/h</option>`);
+  });
+  return opts.join('');
+};
+
+window.aplicarSecaoMaoObraOS = function(row, key, options) {
+  if (!row) return null;
+  const opts = options || {};
+  const select = row.querySelector('.serv-secao-hora');
+  const horaInput = row.querySelector('.serv-valor-hora');
+  const rate = key ? OSU().getPMSPValorHora?.(key) : null;
+
+  if (select) select.value = rate ? rate.key : '';
+  row.dataset.secaoHora = rate ? rate.key : '';
+  row.dataset.secaoHoraLabel = rate ? rate.label : '';
+  row.dataset.valorHoraSecao = rate ? String(rate.valor) : '';
+
+  if (horaInput && opts.preserveValorHora !== true) {
+    horaInput.value = rate ? fmtHoraOS(rate.valor) : '';
+    row.dataset.valorHoraManual = rate ? '0' : '';
+  }
+  if (opts.recalcular !== false) window.atualizarValorServicoPorHora(row);
+  return rate;
+};
+
+window.atualizarSecaoMaoObraOS = function(select) {
+  const row = select?.closest('div');
+  if (!row) return;
+  window.aplicarSecaoMaoObraOS(row, select.value, { recalcular: true });
+};
+
+window.atualizarValorServicoPorHora = function(row) {
+  if (!row) return;
+  const tempo = numBR(row.querySelector('.serv-tempo')?.value || 0);
+  const horaInput = row.querySelector('.serv-valor-hora');
+  const valorHora = horaInput ? numBR(horaInput.value || 0) : window._osValorHoraCliente();
+  const valorInput = row.querySelector('.serv-valor');
+  if (tempo > 0 && valorHora > 0 && valorInput && row.dataset.valorManual !== '1') {
+    valorInput.value = (tempo * valorHora).toFixed(2).replace('.', ',');
+  }
+  window.calcOSTotal?.();
+};
+
 window.adicionarServicoOS = function() {
   const sel = document.createElement('div');
-  sel.style.cssText = 'display:grid;grid-template-columns:1fr 70px 100px 32px;gap:8px;align-items:center;margin-bottom:8px;';
-  sel.innerHTML = `
-    <input type="text" class="j-input serv-desc" placeholder="Ex: Alinhamento, Troca de Freio..." oninput="window.calcOSTotal()">
-    <input type="text" class="j-input serv-tempo" placeholder="TMO h" title="Tempo de Mão de Obra (horas)" style="text-align:center;font-family:var(--fm);font-size:0.78rem;color:var(--warn);">
-    <input type="number" class="j-input serv-valor" value="0" step="0.01" placeholder="R$ 0,00" oninput="window.calcOSTotal()">
-    <button type="button" onclick="this.parentElement.remove();window.calcOSTotal()" style="background:rgba(255,59,59,0.1);border:1px solid rgba(255,59,59,0.3);border-radius:2px;color:var(--danger);cursor:pointer;width:32px;height:32px;">✕</button>
-  `;
+  const ehGov = typeof window._osClienteGovernamental === 'function' && window._osClienteGovernamental();
+  const dadosGov = ehGov && typeof window._osDadosGovernamental === 'function' ? window._osDadosGovernamental() : null;
+  const descMO = dadosGov ? taxaDescontoOS(dadosGov.descMO || 0) : 0;
+  if (ehGov) {
+    sel.style.cssText = 'display:grid;grid-template-columns:minmax(150px,0.9fr) minmax(210px,1.4fr) 70px 90px 110px 90px 32px;gap:8px;align-items:center;margin-bottom:8px;';
+    sel.innerHTML = `
+      <select class="j-select serv-secao-hora" onchange="window.atualizarSecaoMaoObraOS(this)" title="Secao oficial da mao de obra PMSP. Use Sem selecao/manual quando nao houver correspondencia segura.">${window._osSecaoHoraOptions('')}</select>
+      <input type="text" class="j-input serv-desc" placeholder="Ex: Alinhamento, Troca de Freio..." oninput="window.calcOSTotal()">
+      <input type="text" inputmode="decimal" class="j-input serv-tempo" placeholder="TMO h" title="Tempo de Mão de Obra (horas)" oninput="window.atualizarValorServicoPorHora(this.closest('div'))" style="text-align:center;font-family:var(--fm);font-size:0.78rem;color:var(--warn);">
+      <input type="text" inputmode="decimal" class="j-input serv-valor-hora" value="" placeholder="R$/h" oninput="this.closest('div').dataset.valorHoraManual='1';window.atualizarValorServicoPorHora(this.closest('div'))" title="Valor da hora trabalhada desta seção. Vem da tabela oficial quando selecionada, mas é editável pelo admin." style="text-align:center;font-family:var(--fm);font-size:0.78rem;color:var(--cyan);">
+      <input type="text" inputmode="decimal" class="j-input serv-valor" value="0,00" placeholder="Total serv." oninput="this.closest('div').dataset.valorManual='1';window.calcOSTotal()" title="Valor bruto total do serviço. Calculado por TMO x valor/hora quando não estiver manual.">
+      <div class="serv-desc-box" style="font-family:var(--fm);font-size:0.72rem;color:var(--ok);text-align:right;line-height:1.2;">
+        <div class="serv-desc-pct" style="color:var(--purple,#A78BFA);font-size:0.65rem;">-${(descMO*100).toFixed(0)}%</div>
+        <div class="serv-desc-val">R$ 0,00</div>
+      </div>
+      <button type="button" onclick="this.parentElement.remove();window.calcOSTotal()" style="background:rgba(255,59,59,0.1);border:1px solid rgba(255,59,59,0.3);border-radius:2px;color:var(--danger);cursor:pointer;width:32px;height:32px;">✕</button>
+    `;
+  } else {
+    sel.style.cssText = 'display:grid;grid-template-columns:1fr 70px 100px 32px;gap:8px;align-items:center;margin-bottom:8px;';
+    sel.innerHTML = `
+      <input type="text" class="j-input serv-desc" placeholder="Ex: Alinhamento, Troca de Freio..." oninput="window.calcOSTotal()">
+      <input type="text" inputmode="decimal" class="j-input serv-tempo" placeholder="TMO h" title="Tempo de Mão de Obra (horas)" oninput="window.atualizarValorServicoPorHora(this.closest('div'))" style="text-align:center;font-family:var(--fm);font-size:0.78rem;color:var(--warn);">
+      <input type="text" inputmode="decimal" class="j-input serv-valor" value="0,00" placeholder="R$ 0,00" oninput="this.closest('div').dataset.valorManual='1';window.calcOSTotal()" title="Valor bruto do serviço. Editável pelo admin.">
+      <button type="button" onclick="this.parentElement.remove();window.calcOSTotal()" style="background:rgba(255,59,59,0.1);border:1px solid rgba(255,59,59,0.3);border-radius:2px;color:var(--danger);cursor:pointer;width:32px;height:32px;">✕</button>
+    `;
+  }
   if($('containerServicosOS')) $('containerServicosOS').appendChild(sel);
 };
 
 window.renderServicoOSRow = function(s) {
   const div = document.createElement('div');
-  div.style.cssText = 'display:grid;grid-template-columns:1fr 70px 100px 32px;gap:8px;align-items:center;margin-bottom:8px;';
-  div.innerHTML = `
-    <input type="text" class="j-input serv-desc" value="${s.desc || ''}" placeholder="Descrição do Serviço" oninput="window.calcOSTotal()">
-    <input type="text" class="j-input serv-tempo" value="${s.tempo || ''}" placeholder="TMO h" title="Tempo de Mão de Obra (horas)" style="text-align:center;font-family:var(--fm);font-size:0.78rem;color:var(--warn);">
-    <input type="number" class="j-input serv-valor" value="${s.valor || 0}" step="0.01" placeholder="R$ 0,00" oninput="window.calcOSTotal()">
-    <button type="button" onclick="this.parentElement.remove();window.calcOSTotal()" style="background:rgba(255,59,59,0.1);border:1px solid rgba(255,59,59,0.3);border-radius:2px;color:var(--danger);cursor:pointer;width:32px;height:32px;">✕</button>
-  `;
+  div.dataset.codigoTabela = s.codigoTabela || s.codigo || '';
+  div.dataset.sistemaTabela = s.sistemaTabela || s.sistema || '';
+  div.dataset.tempoTabela = s.tempoTabela || s.tempo || '';
+  const ehGov = typeof window._osClienteGovernamental === 'function' && window._osClienteGovernamental();
+  const dadosGov = ehGov && typeof window._osDadosGovernamental === 'function' ? window._osDadosGovernamental() : null;
+  const descMO = dadosGov ? taxaDescontoOS(dadosGov.descMO || 0) : 0;
+  const vBruto = numBR(s.valor || 0);
+  const vFinal = +(vBruto * (1 - descMO)).toFixed(2);
+  if (ehGov) {
+    const resolvido = OSU().resolvePMSPServico?.(s, { veiculo: window._osVeiculoAtual?.(), fallbackValorHora: window._osValorHoraCliente?.() }) || {};
+    const secaoKey = s.secaoHora || resolvido.secaoHora || '';
+    const valorHora = numBR(s.valorHora || s.valorHoraSecao || resolvido.valorHora || 0);
+    div.dataset.secaoHora = secaoKey;
+    div.dataset.secaoHoraLabel = s.secaoHoraLabel || resolvido.secaoHoraLabel || '';
+    div.dataset.valorHoraSecao = s.valorHoraTabela || resolvido.valorHoraTabela || '';
+    div.dataset.valorHoraManual = s.valorHoraManual ? '1' : '';
+    div.style.cssText = 'display:grid;grid-template-columns:minmax(150px,0.9fr) minmax(210px,1.4fr) 70px 90px 110px 90px 32px;gap:8px;align-items:center;margin-bottom:8px;';
+    div.innerHTML = `
+      <select class="j-select serv-secao-hora" onchange="window.atualizarSecaoMaoObraOS(this)" title="Secao oficial da mao de obra PMSP. Use Sem selecao/manual quando nao houver correspondencia segura.">${window._osSecaoHoraOptions(secaoKey)}</select>
+      <input type="text" class="j-input serv-desc" value="${escOS(s.desc || '')}" placeholder="Descrição do Serviço" oninput="window.calcOSTotal()">
+      <input type="text" inputmode="decimal" class="j-input serv-tempo" value="${String(s.tempo || '').replace('.', ',')}" placeholder="TMO h" title="Tempo de Mão de Obra (horas)" oninput="window.atualizarValorServicoPorHora(this.closest('div'))" style="text-align:center;font-family:var(--fm);font-size:0.78rem;color:var(--warn);">
+      <input type="text" inputmode="decimal" class="j-input serv-valor-hora" value="${valorHora ? valorHora.toFixed(2).replace('.', ',') : ''}" placeholder="R$/h" oninput="this.closest('div').dataset.valorHoraManual='1';window.atualizarValorServicoPorHora(this.closest('div'))" title="Valor da hora trabalhada desta seção. Vem da tabela oficial quando selecionada, mas é editável pelo admin." style="text-align:center;font-family:var(--fm);font-size:0.78rem;color:var(--cyan);">
+      <input type="text" inputmode="decimal" class="j-input serv-valor" value="${vBruto.toFixed(2).replace('.', ',')}" placeholder="Total serv." oninput="this.closest('div').dataset.valorManual='1';window.calcOSTotal()" title="Valor bruto total do serviço. Calculado por TMO x valor/hora quando não estiver manual.">
+      <div class="serv-desc-box" style="font-family:var(--fm);font-size:0.72rem;color:var(--ok);text-align:right;line-height:1.2;">
+        <div class="serv-desc-pct" style="color:var(--purple,#A78BFA);font-size:0.65rem;">-${(descMO*100).toFixed(0)}%</div>
+        <div class="serv-desc-val">R$ ${vFinal.toFixed(2).replace('.',',')}</div>
+      </div>
+      <button type="button" onclick="this.parentElement.remove();window.calcOSTotal()" style="background:rgba(255,59,59,0.1);border:1px solid rgba(255,59,59,0.3);border-radius:2px;color:var(--danger);cursor:pointer;width:32px;height:32px;">✕</button>
+    `;
+  } else {
+    div.style.cssText = 'display:grid;grid-template-columns:1fr 70px 100px 32px;gap:8px;align-items:center;margin-bottom:8px;';
+    div.innerHTML = `
+      <input type="text" class="j-input serv-desc" value="${escOS(s.desc || '')}" placeholder="Descrição do Serviço" oninput="window.calcOSTotal()">
+      <input type="text" inputmode="decimal" class="j-input serv-tempo" value="${String(s.tempo || '').replace('.', ',')}" placeholder="TMO h" title="Tempo de Mão de Obra (horas)" oninput="window.atualizarValorServicoPorHora(this.closest('div'))" style="text-align:center;font-family:var(--fm);font-size:0.78rem;color:var(--warn);">
+      <input type="text" inputmode="decimal" class="j-input serv-valor" value="${vBruto.toFixed(2).replace('.', ',')}" placeholder="R$ 0,00" oninput="this.closest('div').dataset.valorManual='1';window.calcOSTotal()" title="Valor bruto do serviço. Editável pelo admin.">
+      <button type="button" onclick="this.parentElement.remove();window.calcOSTotal()" style="background:rgba(255,59,59,0.1);border:1px solid rgba(255,59,59,0.3);border-radius:2px;color:var(--danger);cursor:pointer;width:32px;height:32px;">✕</button>
+    `;
+  }
   if($('containerServicosOS')) $('containerServicosOS').appendChild(div);
 };
 
@@ -413,14 +757,25 @@ window.adicionarPecaOS = function() {
   const sel = document.createElement('div');
 
   if (ehGov) {
-    // Cliente governamental — peça AVULSA (não usa estoque)
-    sel.style.cssText = 'display:grid;grid-template-columns:120px 1fr 60px 100px 32px;gap:8px;align-items:center;background:rgba(167,139,250,0.06);padding:8px;border-radius:3px;border:1px solid rgba(167,139,250,0.2);';
+    // Cliente governamental — peça AVULSA com badge de desconto
+    const dadosGovP = typeof window._osDadosGovernamental === 'function' ? window._osDadosGovernamental() : null;
+    const descPecaP = dadosGovP ? taxaDescontoOS(dadosGovP.descPeca || 0) : 0;
+    const colsGov = descPecaP > 0
+      ? '120px 1fr 60px 100px 80px 32px'
+      : '120px 1fr 60px 100px 32px';
+    sel.style.cssText = `display:grid;grid-template-columns:${colsGov};gap:8px;align-items:center;background:rgba(167,139,250,0.06);padding:8px;border-radius:3px;border:1px solid rgba(167,139,250,0.2);`;
     sel.dataset.pecaAvulsa = '1';
+    const badgePeca = descPecaP > 0 ? `
+      <div class="peca-desc-box" style="font-family:var(--fm);font-size:0.72rem;color:var(--ok);text-align:right;line-height:1.2;">
+        <div style="color:var(--purple,#A78BFA);font-size:0.65rem;">-${(descPecaP*100).toFixed(0)}%</div>
+        <div class="peca-desc-val">R$ 0,00</div>
+      </div>` : '';
     sel.innerHTML = `
       <input type="text" class="j-input peca-codigo" placeholder="Código original" title="Código original do fabricante (ex: 5207381)" style="font-family:var(--fm);font-size:0.78rem;">
       <input type="text" class="j-input peca-desc-livre" placeholder="Descrição da peça (ex: AMORTECEDOR DIANT. DIREITO)" oninput="window.calcOSTotal()">
-      <input type="number" class="j-input peca-qtd" value="1" min="1" placeholder="Qtd" oninput="window.calcOSTotal()">
-      <input type="number" class="j-input peca-venda" value="0" step="0.01" placeholder="Valor unit. registrado" oninput="window.calcOSTotal()" title="Valor unitário da ata de registro de preço">
+      <input type="number" class="j-input peca-qtd" value="1" min="1" placeholder="Qtd" oninput="window.calcOSTotal()" title="Quantidade da peça no orçamento">
+      <input type="text" inputmode="decimal" class="j-input peca-venda" value="0,00" placeholder="Valor unit. registrado" oninput="window.calcOSTotal()" title="Valor unitário da ata de registro de preço">
+      ${badgePeca}
       <button type="button" onclick="this.parentElement.remove();window.calcOSTotal()" style="background:rgba(255,59,59,0.1);border:1px solid rgba(255,59,59,0.3);border-radius:2px;color:var(--danger);cursor:pointer;width:32px;height:32px;">✕</button>
     `;
   } else {
@@ -431,9 +786,9 @@ window.adicionarPecaOS = function() {
       + '<option value="__avulsa__" data-venda="0" data-desc="">➕ Peça não cadastrada (digitar manualmente)</option>';
     sel.innerHTML = `
       <select class="j-select peca-sel" onchange="window.selecionarPecaOS(this)">${opts}</select>
-      <input type="number" class="j-input peca-qtd" value="1" min="1" placeholder="Qtd" oninput="window.calcOSTotal()">
-      <input type="number" class="j-input peca-custo" value="0" step="0.01" placeholder="Custo" oninput="window.calcOSTotal()">
-      <input type="number" class="j-input peca-venda" value="0" step="0.01" placeholder="Venda" oninput="window.calcOSTotal()">
+      <input type="number" class="j-input peca-qtd" value="1" min="1" placeholder="Qtd" oninput="window.calcOSTotal()" title="Quantidade da peça no orçamento">
+      <input type="text" inputmode="decimal" class="j-input peca-custo" value="0,00" placeholder="Custo" oninput="window.calcOSTotal()" title="Custo unitário interno da peça">
+      <input type="text" inputmode="decimal" class="j-input peca-venda" value="0,00" placeholder="Venda" oninput="window.calcOSTotal()" title="Valor unitário de venda/orçamento da peça">
       <button type="button" onclick="this.parentElement.remove();window.calcOSTotal()" style="background:rgba(255,59,59,0.1);border:1px solid rgba(255,59,59,0.3);border-radius:2px;color:var(--danger);cursor:pointer;width:32px;height:32px;">✕</button>
     `;
   }
@@ -442,15 +797,44 @@ window.adicionarPecaOS = function() {
 
 window.renderPecaOSRow = function(p) {
   const div = document.createElement('div');
-  div.style.cssText = 'display:grid;grid-template-columns:1fr 80px 90px 90px 32px;gap:8px;align-items:center;';
-  const opts = '<option value="">' + p.desc + '</option>' + J.estoque.filter(x => (x.qtd || 0) > 0 || x.id === p.estoqueId).map(x => `<option value="${x.id}" data-venda="${x.venda || 0}" data-desc="${x.desc || ''}" ${x.id === p.estoqueId ? 'selected' : ''}>[${x.qtd}un] ${x.desc}</option>`).join('');
-  div.innerHTML = `
-    <select class="j-select peca-sel" onchange="window.selecionarPecaOS(this)">${opts}</select>
-    <input type="number" class="j-input peca-qtd" value="${p.qtd || p.q || 1}" min="1" oninput="window.calcOSTotal()">
-    <input type="number" class="j-input peca-custo" value="${p.custo || p.c || 0}" step="0.01" oninput="window.calcOSTotal()">
-    <input type="number" class="j-input peca-venda" value="${p.venda || p.v || 0}" step="0.01" oninput="window.calcOSTotal()">
-    <button type="button" onclick="this.parentElement.remove();window.calcOSTotal()" style="background:rgba(255,59,59,0.1);border:1px solid rgba(255,59,59,0.3);border-radius:2px;color:var(--danger);cursor:pointer;width:32px;height:32px;">✕</button>
-  `;
+  const ehGov = typeof window._osClienteGovernamental === 'function' && window._osClienteGovernamental();
+  const dadosGov = ehGov && typeof window._osDadosGovernamental === 'function' ? window._osDadosGovernamental() : null;
+  const descPeca = dadosGov ? taxaDescontoOS(dadosGov.descPeca || 0) : 0;
+
+  if (ehGov && p.codigo !== undefined) {
+    // Peça avulsa (governo) — mostra código + desc + qtd + valor + badge desconto
+    const vBruto = numBR(p.venda || p.v || 0);
+    const qtd = numBR(p.qtd || p.q || 1) || 1;
+    const vFinal = +((qtd * vBruto) * (1 - descPeca)).toFixed(2);
+    const colsGov = descPeca > 0 ? '120px 1fr 60px 100px 80px 32px' : '120px 1fr 60px 100px 32px';
+    div.style.cssText = `display:grid;grid-template-columns:${colsGov};gap:8px;align-items:center;background:rgba(167,139,250,0.06);padding:8px;border-radius:3px;border:1px solid rgba(167,139,250,0.2);`;
+    div.dataset.pecaAvulsa = '1';
+    const badgePeca = descPeca > 0 ? `
+      <div class="peca-desc-box" style="font-family:var(--fm);font-size:0.72rem;color:var(--ok);text-align:right;line-height:1.2;">
+        <div style="color:var(--purple,#A78BFA);font-size:0.65rem;">-${(descPeca*100).toFixed(0)}%</div>
+        <div class="peca-desc-val">R$ ${vFinal.toFixed(2).replace('.',',')}</div>
+      </div>` : '';
+    div.innerHTML = `
+      <input type="text" class="j-input peca-codigo" value="${escOS(p.codigo || '')}" placeholder="Código original" style="font-family:var(--fm);font-size:0.78rem;" title="Código original/OEM da peça">
+      <input type="text" class="j-input peca-desc-livre" value="${escOS(p.desc || '')}" placeholder="Descrição da peça" oninput="window.calcOSTotal()" title="Descrição da peça no orçamento">
+      <input type="number" class="j-input peca-qtd" value="${qtd}" min="1" oninput="window.calcOSTotal()" title="Quantidade da peça no orçamento">
+      <input type="text" inputmode="decimal" class="j-input peca-venda" value="${vBruto.toFixed(2).replace('.', ',')}" placeholder="Valor unit. registrado" oninput="window.calcOSTotal()" title="Valor unitário da peça no orçamento">
+      ${badgePeca}
+      <button type="button" onclick="this.parentElement.remove();window.calcOSTotal()" style="background:rgba(255,59,59,0.1);border:1px solid rgba(255,59,59,0.3);border-radius:2px;color:var(--danger);cursor:pointer;width:32px;height:32px;">✕</button>
+    `;
+  } else {
+    // Cliente normal (estoque)
+    const vBruto = numBR(p.venda || p.v || 0);
+    div.style.cssText = 'display:grid;grid-template-columns:1fr 80px 90px 90px 32px;gap:8px;align-items:center;';
+    const opts = '<option value="">' + p.desc + '</option>' + (J.estoque||[]).filter(x => (x.qtd || 0) > 0 || x.id === p.estoqueId).map(x => `<option value="${x.id}" data-venda="${x.venda || 0}" data-desc="${x.desc || ''}" ${x.id === p.estoqueId ? 'selected' : ''}>[${x.qtd}un] ${x.desc}</option>`).join('');
+    div.innerHTML = `
+      <select class="j-select peca-sel" onchange="window.selecionarPecaOS(this)">${opts}</select>
+      <input type="number" class="j-input peca-qtd" value="${p.qtd || p.q || 1}" min="1" oninput="window.calcOSTotal()" title="Quantidade da peça no orçamento">
+      <input type="text" inputmode="decimal" class="j-input peca-custo" value="${numBR(p.custo || p.c || 0).toFixed(2).replace('.', ',')}" oninput="window.calcOSTotal()" title="Custo unitário interno da peça">
+      <input type="text" inputmode="decimal" class="j-input peca-venda" value="${vBruto.toFixed(2).replace('.', ',')}" oninput="window.calcOSTotal()" title="Valor unitário de venda/orçamento da peça">
+      <button type="button" onclick="this.parentElement.remove();window.calcOSTotal()" style="background:rgba(255,59,59,0.1);border:1px solid rgba(255,59,59,0.3);border-radius:2px;color:var(--danger);cursor:pointer;width:32px;height:32px;">✕</button>
+    `;
+  }
   if($('containerPecasOS')) $('containerPecasOS').appendChild(div);
 };
 
@@ -463,45 +847,109 @@ window.selecionarPecaOS = function(sel) {
     row.style.cssText = 'display:grid;grid-template-columns:1fr 80px 90px 90px 32px;gap:8px;align-items:center;background:rgba(255,165,0,0.06);padding:4px;border-radius:3px;border:1px solid rgba(255,165,0,0.25);';
     row.innerHTML = `
       <input type="text" class="j-input peca-desc-livre" placeholder="Descrição da peça" oninput="window.calcOSTotal()">
-      <input type="number" class="j-input peca-qtd" value="1" min="1" placeholder="Qtd" oninput="window.calcOSTotal()">
-      <input type="number" class="j-input peca-custo" value="0" step="0.01" placeholder="Custo" oninput="window.calcOSTotal()">
-      <input type="number" class="j-input peca-venda" value="0" step="0.01" placeholder="Venda" oninput="window.calcOSTotal()">
+      <input type="number" class="j-input peca-qtd" value="1" min="1" placeholder="Qtd" oninput="window.calcOSTotal()" title="Quantidade da peça no orçamento">
+      <input type="text" inputmode="decimal" class="j-input peca-custo" value="0,00" placeholder="Custo" oninput="window.calcOSTotal()" title="Custo unitário interno da peça">
+      <input type="text" inputmode="decimal" class="j-input peca-venda" value="0,00" placeholder="Venda" oninput="window.calcOSTotal()" title="Valor unitário de venda/orçamento da peça">
       <button type="button" onclick="this.parentElement.remove();window.calcOSTotal()" style="background:rgba(255,59,59,0.1);border:1px solid rgba(255,59,59,0.3);border-radius:2px;color:var(--danger);cursor:pointer;width:32px;height:32px;">✕</button>
     `;
     row.querySelector('.peca-desc-livre').focus();
   } else {
-    sel.parentElement.querySelector('.peca-venda').value = opt.dataset.venda || 0;
+    sel.parentElement.querySelector('.peca-venda').value = numBR(opt.dataset.venda || 0).toFixed(2).replace('.', ',');
   }
   window.calcOSTotal();
 };
 
+window.renderResumoSecoesOS = function(resumoSecoes) {
+    const el = $('osSecaoKpisOS');
+    if (!el) return;
+    const rows = Object.entries(resumoSecoes || {})
+      .filter(([, item]) => item.horas || item.total)
+      .sort((a, b) => b[1].total - a[1].total);
+    if (!rows.length) { el.innerHTML = ''; return; }
+    const moedaLocal = v => 'R$ ' + numBR(v).toFixed(2).replace('.', ',');
+    el.innerHTML = rows.map(([secao, item]) => `
+      <div class="os-secao-kpi">
+        <small>${escOS(secao)}</small>
+        <strong>${moedaLocal(item.total)}</strong>
+        <span>${item.horas.toFixed(2).replace('.', ',')}h em ${item.qtd} servico(s)</span>
+      </div>
+    `).join('');
+};
+
 window.calcOSTotal = function() {
     let total = 0;
-    
+    let totalServicos = 0;
+    let totalPecas = 0;
+    const resumoSecoesOS = {};
+
+    // Desconto: prioriza campo da OS; fallback para padrão do cadastro do cliente
+    const ehGov = typeof window._osClienteGovernamental === 'function' && window._osClienteGovernamental();
+    const dadosGov = ehGov && typeof window._osDadosGovernamental === 'function' ? window._osDadosGovernamental() : null;
+    const _osDescMOField = document.getElementById('osDescMO');
+    const _osDescPecaField = document.getElementById('osDescPeca');
+    const _osDescMOVal = _osDescMOField?.value?.trim();
+    const _osDescPecaVal = _osDescPecaField?.value?.trim();
+    // Se preenchido na OS, usa ele; senão usa padrão do cliente (já em decimal 0-1)
+    const descMO   = _osDescMOVal   !== '' && _osDescMOVal   != null ? taxaDescontoOS(_osDescMOVal)   : taxaDescontoOS(dadosGov?.descMO   || 0);
+    const descPeca = _osDescPecaVal !== '' && _osDescPecaVal != null ? taxaDescontoOS(_osDescPecaVal) : taxaDescontoOS(dadosGov?.descPeca || 0);
+
     document.querySelectorAll('#containerItensOS > div').forEach(div => {
-        const q = parseFloat(div.querySelector('.os-item-qtd')?.value || 0);
-        const v = parseFloat(div.querySelector('.os-item-venda')?.value || 0);
-        total += (q * v);
+        const q = numBR(div.querySelector('.os-item-qtd')?.value || 0);
+        const v = numBR(div.querySelector('.os-item-venda')?.value || 0);
+        totalPecas += (q * v);
     });
 
     document.querySelectorAll('#containerServicosOS > div').forEach(row => {
-        total += parseFloat(row.querySelector('.serv-valor')?.value || 0);
-    });
-  
-    document.querySelectorAll('#containerPecasOS > div').forEach(row => {
-        const qtd = parseFloat(row.querySelector('.peca-qtd')?.value || 0);
-        const venda = parseFloat(row.querySelector('.peca-venda')?.value || 0);
-        total += qtd * venda;
+        const vBruto = numBR(row.querySelector('.serv-valor')?.value || 0);
+        const vFinal = +(vBruto * (1 - descMO)).toFixed(2);
+        const tempo = numBR(row.querySelector('.serv-tempo')?.value || 0);
+        const desc = row.querySelector('.serv-desc')?.value?.trim() || '';
+        // Atualiza badge de desconto em tempo real
+        const descBox = row.querySelector('.serv-desc-val');
+        if (descBox) descBox.textContent = 'R$ ' + vFinal.toFixed(2).replace('.', ',');
+        totalServicos += vFinal;
+        if (desc || vBruto || tempo) {
+            const sel = row.querySelector('.serv-secao-hora');
+            const sistema = sel?.options?.[sel.selectedIndex]?.text?.replace(/\s+-\s+R\$.*/, '') || row.dataset.secaoHoraLabel || row.dataset.sistemaTabela || '';
+            const categoria = classificarSecaoResumoOS({
+                secaoHora: row.dataset.secaoHora || sel?.value || '',
+                secaoHoraLabel: sistema,
+                sistemaTabela: row.dataset.sistemaTabela,
+                sistema: row.dataset.sistemaTabela,
+                desc
+            });
+            if (!resumoSecoesOS[categoria]) resumoSecoesOS[categoria] = { horas: 0, total: 0, qtd: 0 };
+            resumoSecoesOS[categoria].horas += tempo;
+            resumoSecoesOS[categoria].total += vFinal;
+            resumoSecoesOS[categoria].qtd += 1;
+        }
     });
 
+    document.querySelectorAll('#containerPecasOS > div').forEach(row => {
+        const qtd   = numBR(row.querySelector('.peca-qtd')?.value   || 0);
+        const venda = numBR(row.querySelector('.peca-venda')?.value  || 0);
+        const vBruto = qtd * venda;
+        const vFinal = +(vBruto * (1 - descPeca)).toFixed(2);
+        // Atualiza badge de desconto em tempo real
+        const descBox = row.querySelector('.peca-desc-val');
+        if (descBox) descBox.textContent = 'R$ ' + vFinal.toFixed(2).replace('.', ',');
+        totalPecas += vFinal;
+    });
+
+    total = +(totalServicos + totalPecas).toFixed(2);
     if ($('osTotalVal')) $('osTotalVal').innerText = total.toFixed(2).replace('.', ',');
+    if ($('osTotalServicosVal')) $('osTotalServicosVal').innerText = totalServicos.toFixed(2).replace('.', ',');
+    if ($('osTotalPecasVal')) $('osTotalPecasVal').innerText = totalPecas.toFixed(2).replace('.', ',');
+    if ($('osTotalValMirror')) $('osTotalValMirror').innerText = total.toFixed(2).replace('.', ',');
     if ($('osTotalHidden')) $('osTotalHidden').value = total;
+    window.renderResumoSecoesOS(resumoSecoesOS);
 };
 
 window.verificarStatusOS = function() {
   const s = $v('osStatus');
   if($('areaPgtoOS')) $('areaPgtoOS').style.display = (s === 'Pronto' || s === 'Entregue' || s === 'pronto' || s === 'entregue') ? 'block' : 'none';
   if($('btnEnviarWppOS')) $('btnEnviarWppOS').style.display = (s === 'Orcamento_Enviado' || s === 'orcamento' || s === 'aprovacao') && $v('osId') ? 'flex' : 'none';
+  if($('btnAvisarProntoOS')) $('btnAvisarProntoOS').style.display = (s === 'Pronto' || s === 'pronto') && $v('osId') ? 'inline-flex' : 'none';
 };
 
 window.checkPgtoOS = function() {
@@ -517,8 +965,8 @@ window.salvarOS = async function() {
   const itens = [];
   document.querySelectorAll('#containerItensOS > div').forEach(div => {
     const desc = div.querySelector('.os-item-desc').value.trim();
-    const q = parseFloat(div.querySelector('.os-item-qtd').value || 0);
-    const v = parseFloat(div.querySelector('.os-item-venda').value || 0);
+    const q = numBR(div.querySelector('.os-item-qtd').value || 0);
+    const v = numBR(div.querySelector('.os-item-venda').value || 0);
     const t = div.querySelector('.os-item-tipo').value;
     if (desc && q > 0) itens.push({ desc, q, v, t });
   });
@@ -527,12 +975,35 @@ window.salvarOS = async function() {
   let totalMaoObra = 0;
   document.querySelectorAll('#containerServicosOS > div').forEach(row => {
     const desc = row.querySelector('.serv-desc')?.value || '';
-    const valor = parseFloat(row.querySelector('.serv-valor')?.value || 0);
+    const valor = numBR(row.querySelector('.serv-valor')?.value || 0);
     const tempoStr = row.querySelector('.serv-tempo')?.value || '';
-    const tempo = parseFloat(String(tempoStr).replace(',', '.')) || 0;
+    const tempo = numBR(tempoStr) || 0;
     const codigoTabela = row.dataset?.codigoTabela || '';
     const sistemaTabela = row.dataset?.sistemaTabela || '';
-    if (desc || valor > 0) { servicos.push({ desc, valor, tempo, codigoTabela, sistemaTabela }); totalMaoObra += valor; }
+    const secaoHora = row.querySelector('.serv-secao-hora')?.value || row.dataset?.secaoHora || '';
+    const secaoInfo = secaoHora ? OSU().getPMSPValorHora?.(secaoHora) : null;
+    let valorHora = numBR(row.querySelector('.serv-valor-hora')?.value || row.dataset?.valorHoraSecao || (tempo > 0 ? valor / tempo : 0));
+    if (row.dataset?.valorManual === '1' && row.dataset?.valorHoraManual !== '1' && tempo > 0 && valor > 0) {
+      valorHora = +(valor / tempo).toFixed(2);
+    }
+    const valorHoraTabela = secaoInfo ? numBR(secaoInfo.valor) : numBR(row.dataset?.valorHoraSecao || 0);
+    const secaoHoraLabel = secaoInfo?.label || row.dataset?.secaoHoraLabel || '';
+    const valorHoraManual = row.dataset?.valorHoraManual === '1' || (valorHoraTabela > 0 && valorHora > 0 && Math.abs(valorHora - valorHoraTabela) > 0.009);
+    if (desc || valor > 0) {
+      servicos.push({
+        desc,
+        valor,
+        tempo,
+        codigoTabela,
+        sistemaTabela,
+        secaoHora,
+        secaoHoraLabel,
+        valorHora,
+        valorHoraTabela,
+        valorHoraManual
+      });
+      totalMaoObra += valor;
+    }
   });
 
   const pecas = [];
@@ -542,8 +1013,8 @@ window.salvarOS = async function() {
     if (row.dataset?.pecaAvulsa === '1') {
       const codigo = row.querySelector('.peca-codigo')?.value || '';
       const descLivre = row.querySelector('.peca-desc-livre')?.value || '';
-      const qtd = parseFloat(row.querySelector('.peca-qtd')?.value || 1);
-      const venda = parseFloat(row.querySelector('.peca-venda')?.value || 0);
+      const qtd = numBR(row.querySelector('.peca-qtd')?.value || 1) || 1;
+      const venda = numBR(row.querySelector('.peca-venda')?.value || 0);
       if (descLivre || codigo) {
         totalPecas += (qtd * venda);
         pecas.push({
@@ -553,7 +1024,10 @@ window.salvarOS = async function() {
           desc: descLivre,
           qtd: qtd,
           custo: 0,
-          venda: venda
+          venda: venda,
+          ciliaBruto: numBR(row.dataset?.ciliaBruto || venda),
+          ciliaValorLiquido: numBR(row.dataset?.ciliaLiquido || 0),
+          ciliaDesconto: numBR(row.dataset?.ciliaDesconto || 0)
         });
       }
       return;
@@ -561,9 +1035,9 @@ window.salvarOS = async function() {
     // Peça normal (estoque)
     const sel = row.querySelector('.peca-sel');
     const opt = sel?.options[sel.selectedIndex];
-    const qtd = parseFloat(row.querySelector('.peca-qtd')?.value || 1);
-    const venda = parseFloat(row.querySelector('.peca-venda')?.value || 0);
-    const custo = parseFloat(row.querySelector('.peca-custo')?.value || 0);
+    const qtd = numBR(row.querySelector('.peca-qtd')?.value || 1) || 1;
+    const venda = numBR(row.querySelector('.peca-venda')?.value || 0);
+    const custo = numBR(row.querySelector('.peca-custo')?.value || 0);
     totalPecas += (qtd * venda);
 
     pecas.push({
@@ -573,8 +1047,8 @@ window.salvarOS = async function() {
     });
   });
 
-  const totalFormatado = $('osTotalVal') ? $('osTotalVal').innerText.replace(',', '.') : 0;
-  const total = parseFloat(totalFormatado);
+  const totalFormatado = $('osTotalVal') ? $('osTotalVal').innerText : 0;
+  const total = numBR(totalFormatado);
   
   const payload = {
     tenantId: J.tid,
@@ -596,6 +1070,28 @@ window.salvarOS = async function() {
   if ($v('osMec')) payload.mecId = $v('osMec');
   if ($v('osData')) payload.data = $v('osData');
   if ($v('osKm')) payload.km = $v('osKm');
+  if ($v('osEntregueA')) payload.entreguePara = $v('osEntregueA');
+  // Desconto personalizado desta OS (converte % para decimal)
+  const _descMOval = $v('osDescMO');
+  const _descPecaval = $v('osDescPeca');
+  if (_descMOval !== '' && _descMOval != null) payload.descMO = taxaDescontoOS(_descMOval);
+  if (_descPecaval !== '' && _descPecaval != null) payload.descPeca = taxaDescontoOS(_descPecaval);
+  // Peças realmente instaladas (somente dono)
+  const _pecasReais = [];
+  document.querySelectorAll('#containerPecasReais > div').forEach(row => {
+    const pr = {
+      codigo: row.querySelector('.pr-codigo')?.value?.trim() || '',
+      desc: row.querySelector('.pr-desc')?.value?.trim() || '',
+      qtd: numBR(row.querySelector('.pr-qtd')?.value || 1) || 1,
+      fornecedor: row.querySelector('.pr-fornec')?.value?.trim() || '',
+      nf: row.querySelector('.pr-nf')?.value?.trim() || '',
+      dataCompra: row.querySelector('.pr-datacompra')?.value?.trim() || '',
+      valorCompra: numBR(row.querySelector('.pr-valor')?.value || 0),
+      estoqueId: row.querySelector('.pr-estoque')?.value || ''
+    };
+    if (pr.desc || pr.codigo) _pecasReais.push(pr);
+  });
+  if (document.getElementById('containerPecasReais')) payload.pecasReais = _pecasReais;
   // LOTE C — Persistir próxima revisão (data e/ou KM) para o cliente ver
   if ($v('osProxRev')) payload.proxRev = $v('osProxRev');
   if ($v('osProxKm'))  payload.proxKm  = $v('osProxKm');
@@ -619,15 +1115,62 @@ window.salvarOS = async function() {
       payload.media = JSON.parse($('osMediaArray').value || '[]');
   }
 
+  const oldOSParaAprovacao = osId ? (J.os.find(x => x.id === osId) || {}) : {};
+  const statusPedeAprovacao = ['Aprovado', 'Andamento'].includes(payload.status);
+  if (statusPedeAprovacao && !OSU().hasApproval?.(oldOSParaAprovacao)) {
+      const cliAprov = (J.clientes || []).find(c => c.id === payload.clienteId);
+      const aprov = await OSU().openApprovalModal?.({ id: osId || 'nova-os', ...oldOSParaAprovacao, ...payload }, {
+          clientes: J.clientes,
+          cliente: cliAprov,
+          toast: window.toast
+      });
+      if (!aprov) return;
+      payload.status = 'Aprovado';
+      payload.aprovacao = {
+          status: aprov.status,
+          aprovadoEm: new Date().toISOString(),
+          aprovadoPor: J.nome || 'Gestor',
+          aprovadoPorTipo: 'jarvis',
+          totalOrcamento: aprov.totalOrcamento,
+          totalAprovado: aprov.totalAprovado,
+          itens: aprov.itens
+      };
+      payload.itensAprovados = aprov.keys;
+      payload.totalAprovado = aprov.totalAprovado;
+  } else if (oldOSParaAprovacao.totalAprovado != null) {
+      payload.totalAprovado = oldOSParaAprovacao.totalAprovado;
+      payload.aprovacao = oldOSParaAprovacao.aprovacao;
+      payload.itensAprovados = oldOSParaAprovacao.itensAprovados || oldOSParaAprovacao.aprovacao?.itens?.map(i => i.key) || [];
+  }
+
   // --- INÍCIO: DEEP DIFF E GATILHOS (AUDITORIA E WHATSAPP) ---
   const funcUser = J.nome || 'Mecânico/Gestor';
   let tl = [];
   let dispararAvisoEntrega = false;
+  let dispararAvisoPronto = false;
+  const auditoriaGeralOS = [];
 
   if (osId) {
       const oldOS = J.os.find(x => x.id === osId) || {};
       tl = oldOS.timeline ? [...oldOS.timeline] : JSON.parse($('osTimelineData')?.value || '[]');
       let registouAlgo = false;
+      let alterouCampoAuditavel = false;
+      const addAuditoriaCampo = acao => {
+          auditoriaGeralOS.push(acao);
+          alterouCampoAuditavel = true;
+      };
+      const fmtAudit = v => {
+          if (v == null || v === '') return 'vazio';
+          if (typeof v === 'number') return String(v).replace('.', ',');
+          return String(v);
+      };
+      const normAudit = v => JSON.stringify(v == null ? '' : v);
+      const auditCampoSeMudou = (key, label) => {
+          if (!Object.prototype.hasOwnProperty.call(payload, key)) return;
+          if (normAudit(oldOS[key]) !== normAudit(payload[key])) {
+              addAuditoriaCampo(`${label}: "${fmtAudit(oldOS[key])}" -> "${fmtAudit(payload[key])}"`);
+          }
+      };
 
       // 1. Mudança de Status e Gatilhos de Notificação
       if (oldOS.status !== payload.status) {
@@ -635,9 +1178,12 @@ window.salvarOS = async function() {
           tl.push({ dt: new Date().toISOString(), user: funcUser, acao: `Status alterado para: ${novoStatusLegivel}` });
           registouAlgo = true;
           
-          // Verifica se o status mudou para Pronto ou Entregue para disparar o WhatsApp
-          if ((payload.status === 'Pronto' || payload.status === 'Entregue') && 
-              oldOS.status !== 'Pronto' && oldOS.status !== 'Entregue') {
+          // Equipe avisa internamente; admin/gestor confirma Pronto e pode abrir WhatsApp ao cliente.
+          if (payload.status === 'Pronto' && oldOS.status !== 'Pronto') {
+              if (usuarioPodeDispararWppProntoOS()) dispararAvisoPronto = true;
+              else window.notificarAdminOSPronta?.(osId, 'jarvis_salvar');
+          }
+          if ((payload.status === 'Entregue') && oldOS.status !== 'Entregue') {
               dispararAvisoEntrega = true;
           }
       }
@@ -668,8 +1214,7 @@ window.salvarOS = async function() {
           if (oldVal !== newVal) {
               const labelDe = mapEstadoLabel[oldVal] || 'neutro';
               const labelPara = mapEstadoLabel[newVal] || 'neutro';
-              tl.push({ dt: new Date().toISOString(), user: funcUser, acao: `Checklist "${mapCheck[chk]}": ${labelDe} → ${labelPara}` });
-              registouAlgo = true;
+              addAuditoriaCampo(`Checklist "${mapCheck[chk]}": ${labelDe} -> ${labelPara}`);
           }
       });
 
@@ -677,23 +1222,40 @@ window.salvarOS = async function() {
       if (oldOS.mecId !== payload.mecId && payload.mecId) {
           const mecOld = (J.equipe || []).find(m => m.id === oldOS.mecId);
           const mecNovo = (J.equipe || []).find(m => m.id === payload.mecId);
-          tl.push({ dt: new Date().toISOString(), user: funcUser, acao: `Mecânico responsável: ${mecOld?.nome || '—'} → ${mecNovo?.nome || '—'}` });
-          registouAlgo = true;
+          addAuditoriaCampo(`Mecanico responsavel: ${mecOld?.nome || '-'} -> ${mecNovo?.nome || '-'}`);
       }
 
       // 3c. Mudança de KM
       if (oldOS.km && payload.km && String(oldOS.km).trim() !== String(payload.km).trim()) {
-          tl.push({ dt: new Date().toISOString(), user: funcUser, acao: `KM do veículo: ${oldOS.km} → ${payload.km}` });
-          registouAlgo = true;
+          addAuditoriaCampo(`KM do veiculo: ${oldOS.km} -> ${payload.km}`);
       }
 
       // 3d. Mudança de cliente vinculado
       if (oldOS.clienteId && payload.clienteId && oldOS.clienteId !== payload.clienteId) {
           const cOld = (J.clientes || []).find(c => c.id === oldOS.clienteId);
           const cNovo = (J.clientes || []).find(c => c.id === payload.clienteId);
-          tl.push({ dt: new Date().toISOString(), user: funcUser, acao: `Cliente vinculado: "${cOld?.nome || '—'}" → "${cNovo?.nome || '—'}"` });
-          registouAlgo = true;
+          addAuditoriaCampo(`Cliente vinculado: "${cOld?.nome || '-'}" -> "${cNovo?.nome || '-'}"`);
       }
+
+      [
+          ['placa', 'Placa'],
+          ['veiculo', 'Veiculo'],
+          ['veiculoId', 'Veiculo vinculado'],
+          ['celular', 'Celular'],
+          ['cpf', 'CPF/Documento'],
+          ['relato', 'Relato/queixa'],
+          ['desc', 'Descricao geral'],
+          ['data', 'Data da OS'],
+          ['entreguePara', 'Entregue para'],
+          ['descMO', 'Desconto mao de obra'],
+          ['descPeca', 'Desconto pecas'],
+          ['proxRev', 'Proxima revisao - data'],
+          ['proxKm', 'Proxima revisao - KM'],
+          ['chkObs', 'Observacoes do checklist'],
+          ['chkPneuDia', 'Pneu dianteiro'],
+          ['chkPneuTra', 'Pneu traseiro'],
+          ['chkComb', 'Nivel combustivel']
+      ].forEach(([key, label]) => auditCampoSeMudou(key, label));
 
       // 4. Identificação de Peças (Adições, Remoções, Alterações de Qtd/Valor)
       const oldPecas = oldOS.pecas || [];
@@ -707,9 +1269,8 @@ window.salvarOS = async function() {
               tl.push({ dt: new Date().toISOString(), user: funcUser, acao: `Adicionou peça: ${newP.desc} (Qtd: ${newP.qtd})` });
               registouAlgo = true;
           } else {
-              if (parseFloat(oldP.qtd || 0) !== parseFloat(newP.qtd || 0) || parseFloat(oldP.venda || 0) !== parseFloat(newP.venda || 0)) {
-                  tl.push({ dt: new Date().toISOString(), user: funcUser, acao: `Alterou peça ${newP.desc} para Qtd: ${newP.qtd} / Valor: R$ ${(newP.venda||0).toFixed(2).replace('.', ',')}` });
-                  registouAlgo = true;
+              if (numBR(oldP.qtd || 0) !== numBR(newP.qtd || 0) || numBR(oldP.venda || 0) !== numBR(newP.venda || 0)) {
+                  addAuditoriaCampo(`Alterou peca "${newP.desc}" para Qtd: ${newP.qtd} / Valor: R$ ${(newP.venda||0).toFixed(2).replace('.', ',')}`);
               }
           }
       });
@@ -735,9 +1296,17 @@ window.salvarOS = async function() {
               tl.push({ dt: new Date().toISOString(), user: funcUser, acao: `Adicionou serviço: ${newS.desc}` });
               registouAlgo = true;
           } else {
-              if (parseFloat(oldS.valor || 0) !== parseFloat(newS.valor || 0)) {
-                  tl.push({ dt: new Date().toISOString(), user: funcUser, acao: `Alterou valor do serviço ${newS.desc} para R$ ${(newS.valor||0).toFixed(2).replace('.', ',')}` });
-                  registouAlgo = true;
+              if (numBR(oldS.valor || 0) !== numBR(newS.valor || 0)) {
+                  addAuditoriaCampo(`Alterou valor do servico "${newS.desc}" para R$ ${(newS.valor||0).toFixed(2).replace('.', ',')}`);
+              }
+              if (numBR(oldS.tempo || 0) !== numBR(newS.tempo || 0)) {
+                  addAuditoriaCampo(`Alterou horas/TMO do servico "${newS.desc}" de ${String(oldS.tempo || 0).replace('.', ',')}h para ${String(newS.tempo || 0).replace('.', ',')}h`);
+              }
+              if ((oldS.secaoHora || '') !== (newS.secaoHora || '') || (oldS.secaoHoraLabel || '') !== (newS.secaoHoraLabel || '')) {
+                  addAuditoriaCampo(`Alterou secao de mao de obra do servico "${newS.desc}" de "${oldS.secaoHoraLabel || oldS.sistemaTabela || '-'}" para "${newS.secaoHoraLabel || newS.sistemaTabela || '-'}"`);
+              }
+              if (numBR(oldS.valorHora || 0) !== numBR(newS.valorHora || 0)) {
+                  addAuditoriaCampo(`Alterou valor/hora do servico "${newS.desc}" de R$ ${numBR(oldS.valorHora || 0).toFixed(2).replace('.', ',')} para R$ ${numBR(newS.valorHora || 0).toFixed(2).replace('.', ',')}`);
               }
           }
       });
@@ -764,8 +1333,9 @@ window.salvarOS = async function() {
           registouAlgo = true;
       }
 
-      // Fallback genérico caso tenha havido uma edição noutros campos (como KM)
-      if (!registouAlgo) {
+      // Fallback operacional: se nada entrou no histórico da OS e também não foi
+      // alteração de campo auditável, mantém um registro mínimo de edição.
+      if (!registouAlgo && !alterouCampoAuditavel) {
           tl.push({ dt: new Date().toISOString(), user: funcUser, acao: `Atualizou os detalhes gerais da Ordem de Serviço.` });
       }
       
@@ -773,6 +1343,14 @@ window.salvarOS = async function() {
       // Criação de Nova O.S.
       tl = JSON.parse($('osTimelineData')?.value || '[]');
       tl.push({ dt: new Date().toISOString(), user: funcUser, acao: `Abriu a O.S. (Status inicial: ${STATUS_MAP_LEGACY[payload.status] || payload.status})` });
+  }
+
+  if (payload.aprovacao && !oldOSParaAprovacao.aprovacao) {
+      tl.push({
+          dt: new Date().toISOString(),
+          user: funcUser,
+          acao: `Orcamento aprovado (${payload.aprovacao.status}) - ${(payload.aprovacao.itens || []).length} item(ns) - Total aprovado ${moeda(payload.aprovacao.totalAprovado || 0)}`
+      });
   }
 
   payload.timeline = tl;
@@ -826,7 +1404,9 @@ window.salvarOS = async function() {
 
       if (payload.pgtoForma && payload.pgtoData) {
         const parcelas = payload.pgtoParcelas;
-        const valorParc = payload.total / parcelas;
+        const valorFinanceiro = numBR(payload.totalAprovado || oldOSParaAprovacao.totalAprovado || payload.total);
+        payload.totalFaturado = valorFinanceiro;
+        const valorParc = valorFinanceiro / parcelas;
         const placaRef  = payload.placa || J.veiculos.find(v => v.id === payload.veiculoId)?.placa || '';
         const cliRef    = J.clientes.find(c => c.id === payload.clienteId)?.nome || payload.cliente || '';
 
@@ -853,7 +1433,7 @@ window.salvarOS = async function() {
             tipo:      'Entrada',
             status:    'Pago',
             desc:      `O.S. ${placaRef} — ${cliRef}`,
-            valor:     payload.total,
+            valor:     valorFinanceiro,
             pgto:      pgtoBase,
             venc:      payload.pgtoData,
             dataPgto:  payload.pgtoData,
@@ -931,7 +1511,7 @@ window.salvarOS = async function() {
             tipo:      'Entrada',
             status:    'Pendente',
             desc:      `O.S. ${placaRef} — ${cliRef}`,
-            valor:     payload.total,
+            valor:     valorFinanceiro,
             pgto:      pgtoBase,
             venc:      payload.pgtoData,
             osId:      osId || null,
@@ -942,17 +1522,11 @@ window.salvarOS = async function() {
           });
         }
 
-        // Baixa de estoque (independente da forma de pagamento) — exceto peças avulsas (cliente governo)
-        for (const p of pecas) {
-          if (p.avulsa) continue;  // peças avulsas NÃO baixam estoque
-          if (p.estoqueId) {
-            const item = J.estoque.find(x => x.id === p.estoqueId);
-            if (item) await db.collection('estoqueItems').doc(p.estoqueId).update({ qtd: Math.max(0, (item.qtd || 0) - p.qtd) });
-          }
-        }
+        // Estoque nao baixa pelo orcamento. A baixa acontece somente em pecas reais instaladas.
       }
   }
 
+  let savedOsId = osId;
 if (osId) {
     await db.collection('ordens_servico').doc(osId).update(payload);
     window.toast('✓ O.S. ATUALIZADA');
@@ -961,16 +1535,36 @@ if (osId) {
     payload.createdAt = new Date().toISOString();
     payload.pin = Math.floor(1000 + Math.random() * 9000).toString(); 
     const ref = await db.collection('ordens_servico').add(payload);
+    savedOsId = ref.id;
     window.toast('✓ O.S. CRIADA');
     audit('OS', `Criou OS para ${payload.placa || payload.cliente || J.clientes.find(c => c.id === payload.clienteId)?.nome}`);
   }
 
+  if (auditoriaGeralOS.length) {
+    for (const acao of auditoriaGeralOS) {
+      await auditGeralOS(savedOsId, acao);
+    }
+  }
+
+  if (_pecasReais.length > 0 || (oldOSParaAprovacao.pecasReais || []).length > 0) {
+    await window.baixarEstoquePecasReais?.(savedOsId, oldOSParaAprovacao.pecasReais || [], _pecasReais);
+  }
+
   if(typeof window.fecharModal === 'function') window.fecharModal('modalOS');
 
-  // Disparo automático de WhatsApp quando concluído
+  // Disparo de WhatsApp quando o gestor/admin confirmar que esta pronto.
+  if (dispararAvisoPronto && savedOsId) {
+      setTimeout(() => {
+          if (typeof window.dispararAvisoEntregaAutomatico === 'function') {
+              window.dispararAvisoEntregaAutomatico(savedOsId, 'Pronto');
+          }
+      }, 500);
+  }
+
+  // Disparo de WhatsApp quando o gestor/caixa confirmar entrega.
   if (dispararAvisoEntrega && payload.clienteId) {
       setTimeout(() => {
-          if (confirm('A O.S. foi marcada como PRONTA/ENTREGUE. Deseja avisar o cliente via WhatsApp agora?')) {
+          if (confirm('A O.S. foi marcada como ENTREGUE. Deseja avisar o cliente via WhatsApp agora?')) {
               const cli = J.clientes.find(c => c.id === payload.clienteId);
               if (cli && cli.wpp) {
                   const fone = cli.wpp.replace(/\D/g, '');
@@ -1154,58 +1748,818 @@ window.renderTimelineOS = function() {
 };
 
 window.gerarPDFOS = async function() {
-  if (typeof window.jspdf === 'undefined') { window.toast('⚠ jsPDF não carregado', 'err'); return; }
-  const { jsPDF } = window.jspdf; const doc = new jsPDF('p', 'mm', 'a4');
-  const pw = doc.internal.pageSize.getWidth(); let y = 15;
-  
-  doc.setFillColor(6, 10, 20); doc.rect(0, 0, pw, 35, 'F');
-  doc.setTextColor(0, 212, 255); doc.setFont('helvetica', 'bold'); doc.setFontSize(22);
-  doc.text('J.A.R.V.I.S — LAUDO TÉCNICO', pw / 2, 18, { align: 'center' });
-  doc.setFontSize(9); doc.setTextColor(200, 200, 200);
-  doc.text(J.tnome + ' · ' + new Date().toLocaleDateString('pt-BR'), pw / 2, 27, { align: 'center' });
-  y = 45;
+  if (typeof window.jspdf === 'undefined') { window.toast('jsPDF nao carregado', 'err'); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF('p', 'mm', 'a4');
+  const pw = doc.internal.pageSize.getWidth();
+  const ph = doc.internal.pageSize.getHeight();
+  const margem = 12;
+  let y = 12;
 
-  doc.setTextColor(0, 0, 0); doc.setFont('helvetica', 'bold'); doc.setFontSize(12);
-  doc.text('DADOS DO VEÍCULO E CLIENTE', 15, y); doc.line(15, y + 2, pw - 15, y + 2); y += 10;
-  
-  const v = J.veiculos.find(x => x.id === $v('osVeiculo'));
-  const c = J.clientes.find(x => x.id === $v('osCliente'));
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(10);
-  doc.text(`Cliente: ${c?.nome || $v('osCliente') || '-'}  |  WhatsApp: ${c?.wpp || $v('osCelular') || '-'}`, 15, y); y += 7;
-  doc.text(`Veículo: ${v?.modelo || $v('osVeiculo') || '-'}  |  Placa: ${v?.placa || $v('osPlaca') || '-'}  |  KM: ${$v('osKm') || '-'}`, 15, y); y += 12;
-  
-  doc.setFont('helvetica', 'bold'); doc.text('DEFEITO RECLAMADO / SERVIÇO', 15, y); doc.line(15, y + 2, pw - 15, y + 2); y += 10;
-  doc.setFont('helvetica', 'normal');
-  const descText = $v('osDescricao') || $v('osRelato') || '-';
-  const descLines = doc.splitTextToSize(descText, pw - 30);
-  doc.text(descLines, 15, y); y += descLines.length * 6 + 10;
-  
-  const relRows = [];
-  document.querySelectorAll('#containerServicosOS > div').forEach(row => {
-    const desc = row.querySelector('.serv-desc')?.value || 'Serviço';
-    const val = row.querySelector('.serv-valor')?.value || 0;
-    if (desc || val > 0) relRows.push([desc, '1 (Srv)', 'R$ ' + parseFloat(val).toFixed(2), 'R$ ' + parseFloat(val).toFixed(2)]);
-  });
-  
-  document.querySelectorAll('#containerPecasOS > div').forEach(row => {
-    const sel = row.querySelector('.peca-sel'); const opt = sel?.options[sel?.selectedIndex];
-    const qtd = row.querySelector('.peca-qtd')?.value || 0;
-    const val = row.querySelector('.peca-venda')?.value || 0;
-    relRows.push([opt?.dataset.desc || opt?.text || '-', qtd, 'R$ ' + parseFloat(val).toFixed(2), 'R$ ' + (parseFloat(qtd) * parseFloat(val)).toFixed(2)]);
-  });
-  
-  if (relRows.length) {
-    doc.setFont('helvetica', 'bold'); doc.text('ORÇAMENTO DETALHADO', 15, y); doc.line(15, y + 2, pw - 15, y + 2); y += 8;
-    doc.autoTable({ startY: y, head: [['Descrição', 'Qtd', 'Valor Unit.', 'Subtotal']], body: relRows, theme: 'grid', headStyles: { fillColor: [6, 10, 20], textColor: [0, 212, 255] }, margin: { left: 15, right: 15 } });
-    y = doc.lastAutoTable.finalY + 10;
+  const U = OSU();
+  const moedaPdf = value => (U.moeda ? U.moeda(value) : ('R$ ' + numBR(value).toFixed(2).replace('.', ',')));
+  const texto = value => String(value == null || value === '' ? '-' : value);
+  const hoje = new Date().toLocaleDateString('pt-BR');
+  const v = J.veiculos.find(x => x.id === $v('osVeiculo')) || {};
+  const c = J.clientes.find(x => x.id === $v('osCliente')) || {};
+  const osAtual = (J.os || []).find(x => x.id === $v('osId')) || {};
+  const osId = ($v('osId') || '').slice(-6).toUpperCase() || 'NOVA';
+  const pickPdf = (...values) => {
+    for (const value of values) {
+      if (value === undefined || value === null) continue;
+      if (String(value).trim() !== '') return value;
+    }
+    return '';
+  };
+  const upperPdf = (...values) => String(pickPdf(...values) || '').toUpperCase();
+  const clientePdf = {
+    nome: pickPdf(c.razaoSocial, c.nome, osAtual.cliente, c.govUnidade, $v('osCliente')),
+    unidade: pickPdf(c.govUnidade, c.unidade, c.nomeUnidade),
+    doc: pickPdf(c.doc, c.cnpj, c.cpf, osAtual.cpf, $v('osCpf')),
+    telefone: pickPdf(c.wpp, c.telefone, c.celular, osAtual.celular, $v('osCelular')),
+    fiscal: pickPdf(c.govFiscal, c.fiscalContrato, c.fiscal, c.responsavel),
+    endereco: enderecoPessoaOS(c)
+  };
+  const veiculoPdf = {
+    marca: upperPdf(v.marca, osAtual.marca),
+    modelo: pickPdf(v.modelo, osAtual.veiculo, osAtual.modelo, $v('osVeiculo')),
+    placa: upperPdf(v.placa, osAtual.placa, $v('osPlaca')),
+    ano: pickPdf(v.ano, osAtual.ano),
+    km: pickPdf($v('osKm'), osAtual.km, v.km),
+    chassis: upperPdf(v.chassis, v.chassi, osAtual.chassis, osAtual.chassi),
+    patrimonio: pickPdf(v.patrimonio, v.patrimonioNumero, v.patrimonioId, osAtual.patrimonio, osAtual.patrimonioNumero),
+    prefixo: upperPdf(v.prefixo, osAtual.prefixo)
+  };
+  const oficinaPdf = dadosOficinaAtualOS();
+  const oficinaNomePdf = String(pickPdf(oficinaPdf.nomeFantasia, oficinaPdf.razaoSocial, J.tnome, 'OFICINA')).toUpperCase();
+
+  function linhaTitulo(titulo) {
+    if (y > ph - 30) { doc.addPage(); y = 12; }
+    doc.setFillColor(28, 39, 58);
+    doc.rect(margem, y, pw - margem * 2, 7, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(255, 255, 255);
+    doc.text(titulo, margem + 2, y + 5);
+    y += 10;
   }
-  
-  doc.setFillColor(230, 250, 230); doc.rect(pw - 80, y, 65, 16, 'F');
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(14); doc.setTextColor(0, 100, 0);
-  doc.text('TOTAL: R$ ' + $v('osTotalHidden'), pw - 15, y + 10, { align: 'right' });
-  
-  doc.save(`Laudo_${v?.placa || $v('osPlaca') || 'OS'}_${new Date().getTime()}.pdf`);
-  window.toast('✓ PDF GERADO');
+
+  function blocoTexto(titulo, conteudo) {
+    linhaTitulo(titulo);
+    const linhas = doc.splitTextToSize(texto(conteudo), pw - margem * 2 - 4);
+    doc.setDrawColor(185, 195, 210);
+    doc.rect(margem, y - 1, pw - margem * 2, Math.max(12, linhas.length * 4 + 5));
+    doc.setTextColor(20, 30, 45);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.text(linhas, margem + 2, y + 4);
+    y += Math.max(14, linhas.length * 4 + 8);
+  }
+
+  async function carregarImagem(url) {
+    return new Promise(resolve => {
+      if (!url) return resolve(null);
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        try {
+          const max = 900;
+          const scale = Math.min(1, max / Math.max(img.width, img.height));
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.max(1, Math.round(img.width * scale));
+          canvas.height = Math.max(1, Math.round(img.height * scale));
+          canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+          resolve({ data: canvas.toDataURL('image/jpeg', 0.82), w: canvas.width, h: canvas.height });
+        } catch(e) { resolve(null); }
+      };
+      img.onerror = () => resolve(null);
+      img.src = url;
+    });
+  }
+
+  const dadosGov = typeof window._osDadosGovernamental === 'function' ? window._osDadosGovernamental() : null;
+  const descMOField = document.getElementById('osDescMO')?.value?.trim();
+  const descPecaField = document.getElementById('osDescPeca')?.value?.trim();
+  const descPadrao = OSU().getDescontosCliente ? OSU().getDescontosCliente(c, osAtual) : {
+    descMO: taxaDescontoOS(osAtual.descMO ?? dadosGov?.descMO ?? c.govDescMO ?? 0),
+    descPeca: taxaDescontoOS(osAtual.descPeca ?? dadosGov?.descPeca ?? c.govDescPeca ?? 0)
+  };
+  const descMO = descMOField !== '' && descMOField != null ? taxaDescontoOS(descMOField) : taxaDescontoOS(descPadrao.descMO || 0);
+  const descPeca = descPecaField !== '' && descPecaField != null ? taxaDescontoOS(descPecaField) : taxaDescontoOS(descPadrao.descPeca || 0);
+  const servicos = [];
+  const resumoSecoesPDF = {};
+  let totalServicos = 0;
+  document.querySelectorAll('#containerServicosOS > div').forEach(row => {
+    const desc = row.querySelector('.serv-desc')?.value?.trim() || '';
+    const tempo = numBR(row.querySelector('.serv-tempo')?.value || 0);
+    const valorHora = numBR(row.querySelector('.serv-valor-hora')?.value || (tempo ? numBR(row.querySelector('.serv-valor')?.value || 0) / tempo : 0));
+    const bruto = numBR(row.querySelector('.serv-valor')?.value || 0);
+    const final = +(bruto * (1 - descMO)).toFixed(2);
+    const sel = row.querySelector('.serv-secao-hora');
+    const sistema = sel?.options?.[sel.selectedIndex]?.text?.replace(/\s+-\s+R\$.*/, '') || row.dataset.secaoHoraLabel || row.dataset.sistemaTabela || '';
+    if (desc || bruto || tempo) {
+      totalServicos += final;
+      const categoria = classificarSecaoResumoOS({
+        secaoHora: row.dataset.secaoHora || sel?.value || '',
+        secaoHoraLabel: sistema,
+        sistemaTabela: row.dataset.sistemaTabela,
+        sistema: row.dataset.sistemaTabela,
+        desc
+      });
+      if (!resumoSecoesPDF[categoria]) resumoSecoesPDF[categoria] = { horas: 0, total: 0 };
+      resumoSecoesPDF[categoria].horas += tempo;
+      resumoSecoesPDF[categoria].total += final;
+      servicos.push({ sistema: sistema || '-', desc: desc || '-', tempo, valorHora, descPct: descMO, total: final, categoria });
+    }
+  });
+
+  const pecas = [];
+  let totalPecas = 0;
+  document.querySelectorAll('#containerPecasOS > div').forEach(row => {
+    const sel = row.querySelector('.peca-sel');
+    const opt = sel?.options?.[sel.selectedIndex];
+    const codigo = row.querySelector('.peca-codigo')?.value?.trim() || '';
+    const descLivre = row.querySelector('.peca-desc-livre')?.value?.trim();
+    const desc = descLivre || opt?.dataset?.desc || opt?.text || '';
+    const qtd = numBR(row.querySelector('.peca-qtd')?.value || 0) || 1;
+    const unit = numBR(row.querySelector('.peca-venda')?.value || 0);
+    const final = +(qtd * unit * (1 - descPeca)).toFixed(2);
+    if (desc || codigo || unit) {
+      totalPecas += final;
+      pecas.push([codigo || 'sem oem', desc || '-', qtd, moedaPdf(unit), descPeca ? (descPeca * 100).toFixed(1).replace('.', ',') + '%' : '0,0%', moedaPdf(final)]);
+    }
+  });
+
+  doc.setFillColor(255, 255, 255);
+  doc.rect(0, 0, pw, ph, 'F');
+  doc.setDrawColor(20, 45, 95);
+  doc.setLineWidth(0.7);
+  doc.line(margem, 15, pw - margem, 15);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(13);
+  doc.setTextColor(10, 25, 48);
+  doc.text(oficinaNomePdf, margem, 10);
+  doc.setFontSize(12);
+  doc.text('ORDEM DE SERVICO / LAUDO TECNICO', pw - margem, 10, { align: 'right' });
+  y = 22;
+
+  doc.autoTable({
+    startY: y,
+    theme: 'grid',
+    margin: { left: margem, right: margem },
+    styles: { fontSize: 8, cellPadding: 2, textColor: [20, 30, 45], lineColor: [185, 195, 210], lineWidth: 0.15 },
+    headStyles: { fillColor: [228, 233, 240], textColor: [0, 0, 0], fontStyle: 'bold' },
+    body: [
+      ['Oficina', texto(oficinaPdf.razaoSocial), 'CNPJ Oficina', texto(oficinaPdf.cnpj)],
+      ['Endereco Oficina', texto(oficinaPdf.endereco), 'Telefone Oficina', texto(oficinaPdf.telefone)],
+      ['Orcamentista', texto(oficinaPdf.orcamentista), 'Resp. Legal', texto(oficinaPdf.responsavel || oficinaPdf.representante)],
+      ['OS', osId, 'Emissao', hoje],
+      ['Cliente', texto(clientePdf.nome), 'CPF/CNPJ', texto(clientePdf.doc)],
+      ['Unidade/OPM', texto(clientePdf.unidade), 'Endereco Cliente', texto(clientePdf.endereco)],
+      ['Telefone', texto(clientePdf.telefone), 'Status', texto($v('osStatus') || osAtual.status)],
+      ['Veiculo', texto([veiculoPdf.marca, veiculoPdf.modelo].filter(Boolean).join(' ')), 'Placa', texto(veiculoPdf.placa)],
+      ['Ano', texto(veiculoPdf.ano), 'KM', texto(veiculoPdf.km)],
+      ['Chassi', texto(veiculoPdf.chassis), 'Prefixo/Patrimonio', texto([veiculoPdf.prefixo, veiculoPdf.patrimonio].filter(Boolean).join(' / '))],
+      ['Fiscal Contrato', texto(clientePdf.fiscal), '', '']
+    ]
+  });
+  y = doc.lastAutoTable.finalY + 7;
+
+  blocoTexto('DEFEITO RECLAMADO / QUEIXA DO CLIENTE', $v('osRelato') || $v('osDescricao') || '-');
+  blocoTexto('DIAGNOSTICO TECNICO', $v('osDiagnostico') || '-');
+
+  const resumoSecoesRows = Object.entries(resumoSecoesPDF)
+    .filter(([, item]) => item.horas || item.total)
+    .sort((a, b) => b[1].total - a[1].total)
+    .map(([secao, item]) => [secao, item.horas.toFixed(2).replace('.', ','), moedaPdf(item.total)]);
+  if (resumoSecoesRows.length) {
+    linhaTitulo('RESUMO POR SECAO DE MAO DE OBRA');
+    doc.autoTable({
+      startY: y,
+      head: [['Secao', 'Horas', 'Valor']],
+      body: resumoSecoesRows,
+      theme: 'grid',
+      margin: { left: margem, right: margem },
+      styles: { fontSize: 7.6, cellPadding: 1.7, lineColor: [190, 198, 210], lineWidth: 0.12 },
+      headStyles: { fillColor: [28, 39, 58], textColor: [255, 255, 255] },
+      columnStyles: { 0: { cellWidth: 112 }, 1: { halign: 'center', cellWidth: 22 }, 2: { halign: 'right', cellWidth: 38 } }
+    });
+    y = doc.lastAutoTable.finalY + 6;
+  }
+
+  if (servicos.length) {
+    linhaTitulo('SERVICOS / MAO DE OBRA');
+    doc.autoTable({
+      startY: y,
+      head: [['Descricao no sistema', 'Descricao do servico', 'TMO', 'Valor h', 'Desc.', 'Valor']],
+      body: servicos.map(s => [
+        s.sistema,
+        s.desc,
+        s.tempo ? s.tempo.toFixed(2).replace('.', ',') : '-',
+        moedaPdf(s.valorHora),
+        s.descPct ? (s.descPct * 100).toFixed(1).replace('.', ',') + '%' : '0,0%',
+        moedaPdf(s.total)
+      ]),
+      theme: 'grid',
+      margin: { left: margem, right: margem },
+      styles: { fontSize: 7.3, cellPadding: 1.6, lineColor: [190, 198, 210], lineWidth: 0.12 },
+      headStyles: { fillColor: [28, 39, 58], textColor: [255, 255, 255] },
+      columnStyles: { 0: { cellWidth: 38 }, 1: { cellWidth: 64 }, 2: { halign: 'center', cellWidth: 14 }, 3: { halign: 'right', cellWidth: 22 }, 4: { halign: 'center', cellWidth: 16 }, 5: { halign: 'right', cellWidth: 24 } }
+    });
+    y = doc.lastAutoTable.finalY + 6;
+  }
+
+  if (pecas.length) {
+    linhaTitulo('PECAS / MATERIAIS');
+    doc.autoTable({
+      startY: y,
+      head: [['Codigo da peca', 'Descricao', 'Qtd', 'Valor unit.', 'Desc.', 'Valor']],
+      body: pecas,
+      theme: 'grid',
+      margin: { left: margem, right: margem },
+      styles: { fontSize: 7.3, cellPadding: 1.6, lineColor: [190, 198, 210], lineWidth: 0.12 },
+      headStyles: { fillColor: [28, 39, 58], textColor: [255, 255, 255] },
+      columnStyles: { 0: { cellWidth: 32 }, 1: { cellWidth: 70 }, 2: { halign: 'center', cellWidth: 12 }, 3: { halign: 'right', cellWidth: 24 }, 4: { halign: 'center', cellWidth: 16 }, 5: { halign: 'right', cellWidth: 26 } }
+    });
+    y = doc.lastAutoTable.finalY + 6;
+  }
+
+  if (y > ph - 34) { doc.addPage(); y = 12; }
+  const totalGeral = +(totalServicos + totalPecas).toFixed(2);
+  doc.autoTable({
+    startY: y,
+    theme: 'plain',
+    margin: { left: pw - 95, right: margem },
+    styles: { fontSize: 9, cellPadding: 1.8 },
+    body: [
+      ['TOTAL DE PECAS', moedaPdf(totalPecas)],
+      ['TOTAL DE MAO DE OBRA', moedaPdf(totalServicos)],
+      ['VALOR DO CONTRATO', moedaPdf(totalGeral)]
+    ],
+    columnStyles: { 0: { fontStyle: 'bold', halign: 'right' }, 1: { fontStyle: 'bold', halign: 'right' } },
+    didParseCell: data => {
+      if (data.row.index === 2) {
+        data.cell.styles.fillColor = [205, 200, 160];
+        data.cell.styles.fontSize = 12;
+      }
+    }
+  });
+  y = doc.lastAutoTable.finalY + 10;
+
+  let media = [];
+  try { media = JSON.parse(document.getElementById('osMediaArray')?.value || '[]'); } catch(e) { media = []; }
+  const imagens = media.filter(m => (m.type || 'image') !== 'video' && m.url).slice(0, 12);
+  if (imagens.length) {
+    linhaTitulo('EVIDENCIAS DIGITAIS');
+    const thumbW = 55, thumbH = 38, gap = 5;
+    let x = margem;
+    let count = 0;
+    for (const m of imagens) {
+      if (y + thumbH > ph - 18) { doc.addPage(); y = 12; x = margem; }
+      const img = await carregarImagem(m.url);
+      doc.setDrawColor(190, 198, 210);
+      doc.rect(x, y, thumbW, thumbH);
+      if (img) {
+        const ratio = Math.min(thumbW / img.w, thumbH / img.h);
+        const w = img.w * ratio;
+        const h = img.h * ratio;
+        doc.addImage(img.data, 'JPEG', x + (thumbW - w) / 2, y + (thumbH - h) / 2, w, h);
+      } else {
+        doc.setFontSize(7);
+        doc.setTextColor(120, 130, 145);
+        doc.text('Imagem nao carregada', x + 3, y + 19);
+      }
+      count++;
+      x += thumbW + gap;
+      if (count % 3 === 0) { x = margem; y += thumbH + 8; }
+    }
+    if (count % 3 !== 0) y += thumbH + 8;
+  }
+
+  if (y > ph - 28) { doc.addPage(); y = ph - 28; }
+  y = Math.max(y, ph - 28);
+  doc.setDrawColor(70, 80, 95);
+  doc.line(margem, y, margem + 70, y);
+  doc.line(pw - margem - 70, y, pw - margem, y);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7);
+  doc.setTextColor(30, 40, 55);
+  doc.text(oficinaNomePdf, margem + 35, y + 5, { align: 'center' });
+  doc.text('RESPONSAVEL TECNICO', margem + 35, y + 9, { align: 'center' });
+  doc.text(texto(clientePdf.nome || 'CLIENTE'), pw - margem - 35, y + 5, { align: 'center' });
+  doc.text('ASSINATURA DO CLIENTE', pw - margem - 35, y + 9, { align: 'center' });
+
+  doc.save(`Laudo_${veiculoPdf.placa || 'OS'}_${Date.now()}.pdf`);
+  window.toast('PDF GERADO', 'ok');
 };
 
 /* Powered by thIAguinho Soluções Digitais */
+
+
+// ══════════════════════════════════════════════════════════════════════
+// IMPORTAR PEÇAS DO SISTEMA CÍLIA (PDF ou XML)
+// ══════════════════════════════════════════════════════════════════════
+
+// ══════════════════════════════════════════════════════════════════════
+// PEÇAS REAIS INSTALADAS — linha editável
+// ══════════════════════════════════════════════════════════════════════
+window.adicionarPecaReal = function() {
+  window.adicionarPecaRealRow({});
+};
+
+window.adicionarPecaRealRow = function(p) {
+  const ct = document.getElementById('containerPecasReais');
+  if (!ct) return;
+  const hoje = new Date().toISOString().slice(0,10);
+  const div = document.createElement('div');
+  div.style.cssText = 'display:grid;grid-template-columns:110px 1fr 50px 130px 110px 130px 105px 105px 32px;gap:6px;align-items:center;background:rgba(255,59,59,0.05);padding:6px;border-radius:3px;border:1px solid rgba(255,59,59,0.2);';
+  const estoqueOpts = '<option value="">Nao baixar estoque</option>' + (window.J?.estoque || [])
+    .map(e => `<option value="${escOS(e.id)}" data-codigo="${escOS(e.codigo || '')}" data-desc="${escOS(e.desc || '')}" data-custo="${numBR(e.custo || 0)}" ${e.id === p.estoqueId ? 'selected' : ''}>${escOS(e.codigo || '')} ${escOS(e.desc || '')} (${e.qtd || 0})</option>`)
+    .join('');
+  div.innerHTML = `
+    <input type="text" class="j-input pr-codigo" value="${_escVal(p.codigo||'')}" placeholder="Cód. real" style="font-family:var(--fm);font-size:0.75rem;" title="Código OEM/real da peça instalada">
+    <input type="text" class="j-input pr-desc" value="${_escVal(p.desc||'')}" placeholder="Descrição real instalada">
+    <input type="number" class="j-input pr-qtd" value="${p.qtd||1}" min="1" placeholder="Qtd">
+    <select class="j-select pr-estoque" onchange="window.selecionarPecaRealEstoque(this)" title="Selecione uma peça do estoque somente se esta peça real deve baixar estoque">${estoqueOpts}</select>
+    <input type="text" class="j-input pr-fornec" value="${_escVal(p.fornecedor||'')}" placeholder="Fornecedor">
+    <input type="text" class="j-input pr-nf" value="${_escVal(p.nf||'')}" placeholder="Nº Nota Fiscal">
+    <input type="date" class="j-input pr-datacompra" value="${p.dataCompra||hoje}" title="Data da compra">
+    <input type="text" inputmode="decimal" class="j-input pr-valor" value="${numBR(p.valorCompra||0).toFixed(2).replace('.', ',')}" placeholder="R$ compra" title="Valor real de compra da peça instalada">
+    <button type="button" onclick="this.parentElement.remove()" style="background:rgba(255,59,59,0.1);border:1px solid rgba(255,59,59,0.3);border-radius:2px;color:var(--danger);cursor:pointer;width:32px;height:32px;">✕</button>
+  `;
+  ct.appendChild(div);
+};
+
+window.selecionarPecaRealEstoque = function(sel) {
+  const opt = sel.options[sel.selectedIndex];
+  const row = sel.closest('div');
+  if (!opt || !row || !sel.value) return;
+  const codigo = opt.dataset.codigo || '';
+  const desc = opt.dataset.desc || '';
+  const custo = numBR(opt.dataset.custo || 0);
+  if (codigo && !row.querySelector('.pr-codigo')?.value) row.querySelector('.pr-codigo').value = codigo;
+  if (desc && !row.querySelector('.pr-desc')?.value) row.querySelector('.pr-desc').value = desc;
+  if (custo && numBR(row.querySelector('.pr-valor')?.value || 0) <= 0) row.querySelector('.pr-valor').value = custo.toFixed(2).replace('.', ',');
+};
+
+window.baixarEstoquePecasReais = async function(osId, antigas, novas) {
+  const role = (window.J?.role || sessionStorage.getItem('j_role') || '').toLowerCase();
+  if (!['admin','superadmin','gestor','gerente'].includes(role)) return;
+  const antigasPorEstoque = {};
+  (antigas || []).forEach(p => {
+    if (!p.estoqueId) return;
+    antigasPorEstoque[p.estoqueId] = (antigasPorEstoque[p.estoqueId] || 0) + numBR(p.qtd || 0);
+  });
+  const novasPorEstoque = {};
+  (novas || []).forEach(p => {
+    if (!p.estoqueId) return;
+    novasPorEstoque[p.estoqueId] = (novasPorEstoque[p.estoqueId] || 0) + numBR(p.qtd || 0);
+  });
+  for (const estoqueId of Object.keys(novasPorEstoque)) {
+    const delta = novasPorEstoque[estoqueId] - (antigasPorEstoque[estoqueId] || 0);
+    if (delta <= 0) continue;
+    const item = (window.J?.estoque || []).find(x => x.id === estoqueId);
+    if (!item) continue;
+    await db.collection('estoqueItems').doc(estoqueId).update({
+      qtd: Math.max(0, numBR(item.qtd || 0) - delta),
+      updatedAt: new Date().toISOString()
+    });
+    await db.collection('lixeira_auditoria').add({
+      tenantId: J.tid,
+      modulo: 'ESTOQUE',
+      acao: `Baixa por peca real instalada OS ${String(osId || '').slice(-6).toUpperCase()}: ${item.desc || estoqueId} (-${delta})`,
+      usuario: J.nome || 'Gestor',
+      ts: new Date().toISOString()
+    }).catch(() => {});
+  }
+};
+
+function statusOptionsExecOS(tipo, atual) {
+  const opts = tipo === 'peca'
+    ? [
+        ['pendente', 'Pendente'],
+        ['trocada', 'Peca trocada/executada'],
+        ['nao_encontrada', 'Peca nao encontrada'],
+        ['nao_trocada', 'Nao trocada']
+      ]
+    : [
+        ['pendente', 'Pendente'],
+        ['em_execucao', 'Em execucao'],
+        ['executado', 'Servico executado'],
+        ['nao_executado', 'Nao executado']
+      ];
+  return opts.map(([value, label]) => `<option value="${value}" ${value === atual ? 'selected' : ''}>${label}</option>`).join('');
+}
+
+window.salvarExecucaoAprovadosOS = async function(osId) {
+  if (!osId) { window.toast?.('Salve a O.S. antes de marcar execucao.', 'warn'); return; }
+  const osAtual = (window.J?.os || []).find(o => o.id === osId) || {};
+  const execucaoItens = { ...(osAtual.execucaoItens || {}) };
+  const rows = document.querySelectorAll('#resumoAprovacaoOS .execucao-aprovado-row');
+  rows.forEach(row => {
+    const key = row.dataset.key;
+    if (!key) return;
+    execucaoItens[key] = {
+      key,
+      tipo: row.dataset.tipo || '',
+      status: row.querySelector('.exec-status')?.value || 'pendente',
+      obs: row.querySelector('.exec-obs')?.value?.trim() || '',
+      usuario: window.J?.nome || 'Gestor',
+      updatedAt: new Date().toISOString()
+    };
+  });
+  const timeline = Array.isArray(osAtual.timeline) ? osAtual.timeline.slice() : [];
+  timeline.push({
+    dt: new Date().toISOString(),
+    user: window.J?.nome || 'Gestor',
+    acao: `Atualizou execucao interna de ${rows.length} item(ns) aprovado(s).`
+  });
+  await db.collection('ordens_servico').doc(osId).update({
+    execucaoItens,
+    timeline,
+    updatedAt: new Date().toISOString()
+  });
+  window.toast?.('Execucao interna salva.', 'ok');
+};
+
+window.aplicarMarcadoresAprovacaoOS = function(os) {
+  const U = OSU();
+  document.getElementById('resumoAprovacaoOS')?.remove();
+  document.querySelectorAll('#containerServicosOS .aprovacao-item-badge,#containerPecasOS .aprovacao-item-badge').forEach(el => el.remove());
+  if (!U.hasApproval?.(os)) return;
+  const keys = U.getApprovedKeys?.(os) || new Set();
+  const badge = key => `<div class="aprovacao-item-badge" style="grid-column:1/-1;font-family:var(--fm);font-size:.62rem;letter-spacing:.8px;color:${keys.has(key) ? 'var(--success)' : 'var(--danger)'};border-top:1px dashed rgba(255,255,255,.12);padding-top:5px;margin-top:2px;">${keys.has(key) ? 'APROVADO NO ORÇAMENTO' : 'NÃO APROVADO - MANTIDO APENAS COMO HISTÓRICO'}</div>`;
+  document.querySelectorAll('#containerServicosOS > div').forEach((row, idx) => {
+    row.querySelector('.aprovacao-item-badge')?.remove();
+    row.insertAdjacentHTML('beforeend', badge('servico-' + idx));
+  });
+  document.querySelectorAll('#containerPecasOS > div').forEach((row, idx) => {
+    row.querySelector('.aprovacao-item-badge')?.remove();
+    row.insertAdjacentHTML('beforeend', badge('peca-' + idx));
+  });
+  const cliente = (window.J?.clientes || []).find(c => c.id === os?.clienteId);
+  const itens = U.buildBudgetItems?.(os, cliente) || [];
+  const aprovados = itens.filter(it => keys.has(it.key));
+  const historico = itens.filter(it => !keys.has(it.key));
+  const totalAprovado = os?.totalAprovado != null ? numBR(os.totalAprovado) : aprovados.reduce((sum, it) => sum + numBR(it.valorFinal), 0);
+  const moeda = U.moeda || (v => 'R$ ' + numBR(v).toFixed(2).replace('.', ','));
+  const exec = os?.execucaoItens || {};
+  const execHtml = aprovados.length ? `
+    <div style="margin-top:14px;border-top:1px solid rgba(255,255,255,.12);padding-top:12px;">
+      <div style="font-family:var(--fm);font-size:.72rem;color:var(--cyan);font-weight:800;letter-spacing:1px;margin-bottom:8px;">EXECUCAO INTERNA DOS ITENS APROVADOS</div>
+      <div style="display:grid;gap:7px;">
+        ${aprovados.map(it => {
+          const e = exec[it.key] || {};
+          return `<div class="execucao-aprovado-row" data-key="${escOS(it.key)}" data-tipo="${escOS(it.tipo)}" style="display:grid;grid-template-columns:minmax(210px,1fr) 165px minmax(180px,1fr);gap:7px;align-items:center;background:rgba(0,0,0,.16);border:1px solid rgba(255,255,255,.10);border-radius:3px;padding:8px;">
+            <div style="font-size:.75rem;color:var(--text);"><b>${escOS(it.labelTipo || it.tipo)}</b> ${it.codigo ? '[' + escOS(it.codigo) + '] ' : ''}${escOS(it.desc || '-')}</div>
+            <select class="j-select exec-status" style="font-size:.72rem;">${statusOptionsExecOS(it.tipo, e.status || 'pendente')}</select>
+            <input class="j-input exec-obs" value="${escOS(e.obs || '')}" placeholder="Observacao interna: peca nao encontrada, aguardando, executado...">
+          </div>`;
+        }).join('')}
+      </div>
+      <button type="button" class="btn-primary" style="margin-top:10px;" onclick="window.salvarExecucaoAprovadosOS('${escOS(os.id || '')}')">SALVAR EXECUCAO INTERNA</button>
+    </div>` : '';
+  const resumo = document.createElement('div');
+  resumo.id = 'resumoAprovacaoOS';
+  resumo.className = 'aprovacao-resumo';
+  resumo.innerHTML = `
+    <h4>ORCAMENTO APROVADO - ${aprovados.length}/${itens.length} ITEM(NS) - ${moeda(totalAprovado)}</h4>
+    <div class="aprovacao-resumo-grid">
+      ${aprovados.map(it => `<div class="aprovacao-resumo-item"><strong style="color:var(--success);">APROVADO</strong><br>${escOS(it.labelTipo || it.tipo)} ${it.codigo ? '[' + escOS(it.codigo) + '] ' : ''}${escOS(it.desc || '-')}${it.tempo ? `<br><small>TMO ${String(it.tempo).replace('.', ',')}h</small>` : ''}<br><b>${moeda(it.valorFinal)}</b></div>`).join('')}
+      ${historico.map(it => `<div class="aprovacao-resumo-item nao"><strong style="color:var(--warn);">NAO APROVADO</strong><br>${escOS(it.labelTipo || it.tipo)} ${it.codigo ? '[' + escOS(it.codigo) + '] ' : ''}${escOS(it.desc || '-')}<br><small>Mantido no historico do orçamento.</small></div>`).join('')}
+    </div>
+    ${execHtml}`;
+  const alvo = document.getElementById('containerServicosOS')?.closest('div');
+  if (alvo) alvo.insertAdjacentElement('beforebegin', resumo);
+};
+
+// ══════════════════════════════════════════════════════════════════════
+// BUSCA HISTÓRICO POR PLACA + SERVIÇO/PEÇA
+// ══════════════════════════════════════════════════════════════════════
+window.buscarHistoricoOS = function(opts = {}) {
+  const placaId = opts.placaId || 'histBuscaPlaca';
+  const termoId = opts.termoId || 'histBuscaTermo';
+  const resultadoId = opts.resultadoId || 'histBuscaResultado';
+  const placa = OSU().normalizePlate ? OSU().normalizePlate(document.getElementById(placaId)?.value || '') : (document.getElementById(placaId)?.value || '').trim().toUpperCase().replace(/[^A-Z0-9]/g,'');
+  const termoRaw = document.getElementById(termoId)?.value || '';
+  const termo = OSU().normalizeText ? OSU().normalizeText(termoRaw) : termoRaw.trim().toLowerCase();
+  const el = document.getElementById(resultadoId);
+  if (!el) return;
+  if (!placa && !termo) { el.innerHTML = '<div style="color:var(--muted);font-size:0.8rem;">Digite a placa e/ou o serviço/peça.</div>'; return; }
+
+  const hits = (window.J?.os || []).filter(o => {
+    const veicOS = (window.J?.veiculos||[]).find(v=>v.id===o.veiculoId)||{};
+    const placaOS = OSU().normalizePlate ? OSU().normalizePlate(o.placa || veicOS.placa || '') : String(o.placa || veicOS.placa || '').toUpperCase().replace(/[^A-Z0-9]/g,'');
+    const matchPlaca = !placa || placaOS === placa || placaOS.includes(placa);
+    if (!matchPlaca) return false;
+    if (!termo) return true;
+    const textoOS = [
+      ...(o.servicos||[]).map(s=>[s.desc,s.codigoTabela,s.sistemaTabela,s.tempo].join(' ')),
+      ...(o.pecas||[]).map(p=>[p.desc,p.codigo,p.qtd,p.venda].join(' ')),
+      ...(o.pecasReais||[]).map(p=>[p.desc,p.codigo,p.nf,p.fornecedor].join(' ')),
+      o.diagnostico || '',
+      o.relato || '',
+      o.desc || ''
+    ].join(' ');
+    return (OSU().normalizeText ? OSU().normalizeText(textoOS) : textoOS.toLowerCase()).includes(termo);
+  });
+
+  if (!hits.length) {
+    el.innerHTML = `<div style="color:var(--muted);font-family:var(--fm);font-size:0.8rem;padding:10px 0;">Nenhuma OS encontrada${placa?' para placa '+escOS(placa):''}${termoRaw?' com "'+escOS(termoRaw)+'"':''}.</div>`;
+    return;
+  }
+
+  const html = hits.map(o => {
+    const cli = (window.J?.clientes||[]).find(c=>c.id===o.clienteId)||{};
+    const veic = (window.J?.veiculos||[]).find(v=>v.id===o.veiculoId)||{};
+    const matchText = value => !termo || (OSU().normalizeText ? OSU().normalizeText(value) : String(value||'').toLowerCase()).includes(termo);
+    const servMatches = (o.servicos||[]).filter(s=>matchText([s.desc,s.codigoTabela,s.sistemaTabela,s.tempo].join(' ')));
+    const pecMatches  = (o.pecas||[]).filter(p=>matchText([p.desc,p.codigo,p.qtd,p.venda].join(' ')));
+    const reaisMtch   = (o.pecasReais||[]).filter(p=>matchText([p.desc,p.codigo,p.nf,p.fornecedor].join(' ')));
+    return `<div style="background:var(--surf3);border:1px solid var(--border);border-radius:3px;padding:12px;margin-bottom:8px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:8px;">
+        <div>
+          <span style="font-family:var(--fm);font-size:0.7rem;color:var(--cyan);font-weight:700;">OS #${(o.id||'').slice(-6).toUpperCase()}</span>
+          <span style="font-family:var(--fm);font-size:0.65rem;color:var(--muted);margin-left:10px;">${escOS(o.data||'')}</span>
+          <span style="font-family:var(--fm);font-size:0.65rem;color:var(--muted);margin-left:10px;">${escOS(veic.placa || o.placa || '')}</span>
+          <span style="font-family:var(--fm);font-size:0.65rem;color:var(--muted);margin-left:10px;">${escOS(cli.nome||o.cliente||'')}</span>
+        </div>
+        <span style="font-family:var(--fm);font-size:0.7rem;color:var(--success);font-weight:700;">${moeda(o.totalAprovado || o.total || 0)}</span>
+      </div>
+      ${servMatches.length?`<div style="font-size:0.75rem;margin-bottom:4px;"><strong style="color:var(--cyan);">Serviços:</strong> ${servMatches.map(s=>`${escOS(s.codigoTabela||'')} ${escOS(s.desc||'')} (${String(s.tempo||0).replace('.',',')}h - ${moeda(s.valor||0)})`).join(' | ')}</div>`:''}
+      ${pecMatches.length?`<div style="font-size:0.75rem;margin-bottom:4px;"><strong style="color:var(--success);">Peças orç.:</strong> ${pecMatches.map(p=>`${escOS(p.codigo||'')} ${escOS(p.desc||'')} x${p.qtd||1} - ${moeda(numBR(p.venda||0)*(numBR(p.qtd||1)||1))}`).join(' | ')}</div>`:''}
+      ${reaisMtch.length?`<div style="font-size:0.75rem;margin-bottom:4px;"><strong style="color:var(--danger);">Peças reais:</strong> ${reaisMtch.map(p=>`${escOS(p.codigo||'')} ${escOS(p.desc||'')} x${p.qtd||1} - NF:${escOS(p.nf||'-')} ${escOS(p.fornecedor||'')}`).join(' | ')}</div>`:''}
+    </div>`;
+  }).join('');
+
+  el.innerHTML = `<div style="font-family:var(--fm);font-size:0.65rem;color:var(--muted);margin-bottom:6px;">${hits.length} OS encontrada(s)</div>${html}`;
+};
+
+window.importarCilia = async function(input) {
+  if (!input || !input.files || !input.files.length) return;
+  const file = input.files[0];
+  const ext = file.name.split('.').pop().toLowerCase();
+  input.value = '';
+
+  if (ext === 'xml') {
+    _ciliaProcessarXML(file);
+  } else if (ext === 'pdf') {
+    _ciliaProcessarPDF(file);
+  } else {
+    if (typeof window.toast === 'function') window.toast('Formato inválido. Use XML ou PDF do Cília.', 'err');
+  }
+};
+
+function _ciliaAdicionarPecas(pecas) {
+  pecas = OSU().normalizeCiliaPieces ? OSU().normalizeCiliaPieces(pecas) : pecas;
+  if (!pecas || !pecas.length) {
+    if (typeof window.toast === 'function') window.toast('Nenhuma peça encontrada no arquivo Cília.', 'warn');
+    return;
+  }
+  const ehGov = typeof window._osClienteGovernamental === 'function' && window._osClienteGovernamental();
+  const dadosGov = ehGov && typeof window._osDadosGovernamental === 'function' ? window._osDadosGovernamental() : null;
+  const descPeca = dadosGov ? taxaDescontoOS(dadosGov.descPeca || 0) : 0;
+
+  // Contador interno para correlacionar cada peça importada com a eventual
+  // linha de serviço sugerida. Isso permite vincular depois a seleção da Tabela
+  // Tempária com a linha de serviço correta, possibilitando substituir a
+  // sugestão inicial "Troca de X" por uma opção da Tabela. Inicializa aqui
+  // para que cada chamada a esta função reinicie a contagem.
+  let _ciliaPecaIndexCounter = 0;
+
+  pecas.forEach(p => {
+    const div = document.createElement('div');
+    const vBruto = numBR(p.venda || p.valor || 0);
+    const qtd = numBR(p.qtd || 1) || 1;
+    const vFinal = +(qtd * vBruto * (1 - descPeca)).toFixed(2);
+    const colsGov = (ehGov && descPeca > 0) ? '120px 1fr 60px 100px 80px 32px' : '120px 1fr 60px 100px 32px';
+    const badgePeca = (ehGov && descPeca > 0) ? `
+      <div class="peca-desc-box" style="font-family:var(--fm);font-size:0.72rem;color:var(--ok);text-align:right;line-height:1.2;">
+        <div style="color:var(--purple,#A78BFA);font-size:0.65rem;">-${(descPeca*100).toFixed(0)}%</div>
+        <div class="peca-desc-val">R$ ${vFinal.toFixed(2).replace('.',',')}</div>
+      </div>` : '';
+
+    div.style.cssText = `display:grid;grid-template-columns:${colsGov};gap:8px;align-items:center;background:rgba(0,212,255,0.06);padding:8px;border-radius:3px;border:1px solid rgba(0,212,255,0.25);`;
+    div.dataset.pecaAvulsa = '1';
+    div.dataset.cilia = '1';
+    div.dataset.ciliaBruto = String(vBruto);
+    div.dataset.ciliaLiquido = String(numBR(p.ciliaValorLiquido || 0));
+    div.dataset.ciliaDesconto = String(numBR(p.ciliaDesconto || 0));
+    // Identificador desta peça na sessão Cília. Permite relacionar com a linha de serviço sugerida
+    div.dataset.ciliaPieceIndex = String(_ciliaPecaIndexCounter);
+    div.innerHTML = `
+      <input type="text" class="j-input peca-codigo" value="${_escVal(p.codigo)}" placeholder="Código OEM" style="font-family:var(--fm);font-size:0.78rem;" title="Código OEM (editável)">
+      <input type="text" class="j-input peca-desc-livre" value="${_escVal(p.desc)}" placeholder="Descrição da peça" oninput="window.calcOSTotal()">
+      <input type="number" class="j-input peca-qtd" value="${qtd}" min="1" oninput="window.calcOSTotal()" title="Quantidade importada do Cília">
+      <input type="text" inputmode="decimal" class="j-input peca-venda" value="${vBruto.toFixed(2).replace('.', ',')}" placeholder="Valor unit." oninput="this.dataset.editadoManual='1';window.calcOSTotal()" title="Valor unitário bruto importado do Cília (editável)">
+      ${badgePeca}
+      <button type="button" onclick="this.parentElement.remove();window.calcOSTotal()" style="background:rgba(255,59,59,0.1);border:1px solid rgba(255,59,59,0.3);border-radius:2px;color:var(--danger);cursor:pointer;width:32px;height:32px;">✕</button>
+    `;
+    if (typeof $ === 'function' && $('containerPecasOS')) {
+      $('containerPecasOS').appendChild(div);
+    }
+
+      // ─── Serviço sugerido para peças importadas ─────────────────────────────
+      // Quando a OS é de cliente governamental (cliente oficial), adiciona
+      // automaticamente um serviço relacionado à troca dessa peça. A linha
+      // de serviço é criada usando a função existente `adicionarServicoOS` e
+      // preenche a descrição com "Troca de <descrição da peça>". Outros
+      // campos permanecem editáveis para que o usuário ajuste conforme
+      // necessário. Essa lógica adiciona sem interferir na lógica
+      // original de importação das peças.
+      try {
+        if (typeof window._osClienteGovernamental === 'function' && window._osClienteGovernamental()) {
+          if (typeof window.adicionarServicoOS === 'function' && typeof $ === 'function') {
+            // Cria nova linha de serviço
+            window.adicionarServicoOS();
+            // Seleciona o contêiner de serviços e a última linha adicionada
+            const contServ = $('containerServicosOS');
+            if (contServ && contServ.lastElementChild) {
+              const newRow = contServ.lastElementChild;
+              // Vincula a linha de serviço com esta peça
+              newRow.dataset.ciliaPieceIndex = String(_ciliaPecaIndexCounter);
+              const descInput = newRow.querySelector('.serv-desc');
+              if (descInput) {
+                descInput.value = `Troca de ${String(p.desc || '').trim()}`;
+              }
+            }
+          }
+        }
+
+      } catch (err) {
+        console.warn('Erro ao sugerir serviço para peça importada:', err);
+      }
+      // Incrementa o índice para a próxima peça
+      _ciliaPecaIndexCounter++;
+  });
+
+  if (typeof window.calcOSTotal === 'function') window.calcOSTotal();
+  if (typeof window.toast === 'function') window.toast(`✓ ${pecas.length} peça(s) importada(s) do Cília`, 'ok');
+}
+
+function _escVal(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ── XML: estrutura esperada do Cília ──────────────────────────────────
+// <Pecas><Peca><Codigo>XX</Codigo><Descricao>YY</Descricao><Quantidade>1</Quantidade><PrecoUnitario>100.00</PrecoUnitario></Peca></Pecas>
+// Também tenta variações comuns de tag
+function _ciliaProcessarXML(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const parser = new DOMParser();
+      const xml = parser.parseFromString(e.target.result, 'application/xml');
+      if (xml.querySelector('parsererror')) throw new Error('XML inválido ou corrompido.');
+
+      const segmentos = Array.from(xml.querySelectorAll('segment')).map(n => n.textContent?.trim() || '').filter(Boolean);
+      if (segmentos.length) {
+        const pecasSegmentadas = OSU().parseCiliaPiecesFromTokens ? OSU().parseCiliaPiecesFromTokens(segmentos) : [];
+        if (!pecasSegmentadas.length) throw new Error('Nenhuma peça encontrada nos segmentos do Cília.');
+        _ciliaAdicionarPecas(pecasSegmentadas);
+        return;
+      }
+
+      // Tenta vários nomes de tag de item
+      const tagsCandidatas = ['Peca','peca','PECA','Item','item','ITEM','Produto','produto'];
+      let nos = [];
+      for (const tag of tagsCandidatas) {
+        nos = Array.from(xml.querySelectorAll(tag));
+        if (nos.length) break;
+      }
+      if (!nos.length) throw new Error('Nenhuma tag de peça reconhecida no XML. Verifique o arquivo Cília.');
+
+      const pecas = nos.map(n => {
+        const t = tag => n.querySelector(tag)?.textContent?.trim() || '';
+        return {
+          codigo: t('Codigo') || t('codigo') || t('CODIGO') || t('CodigoOEM') || t('codigoOem') || t('CodPeca') || '',
+          desc:   t('Descricao') || t('descricao') || t('DESCRICAO') || t('Descr') || t('Nome') || t('nome') || '',
+          qtd:    numBR(t('Quantidade') || t('quantidade') || t('Qtd') || t('qtd') || '1') || 1,
+          venda:  numBR(t('PrecoUnitario') || t('precoUnitario') || t('Preco') || t('preco') || t('ValorUnitario') || '0') || 0
+        };
+      }).filter(p => p.desc || p.codigo);
+
+      _ciliaAdicionarPecas(pecas);
+    } catch(err) {
+      if (typeof window.toast === 'function') window.toast('Erro ao ler XML Cília: ' + err.message, 'err');
+    }
+  };
+  reader.readAsText(file, 'UTF-8');
+}
+
+// ── PDF: extrai texto e tenta parsear tabela de peças ────────────────
+// Requer pdf.js (CDN) — carrega dinamicamente se não estiver presente
+async function _ciliaProcessarPDF(file) {
+  if (typeof window.toast === 'function') window.toast('Lendo PDF do Cília...', 'warn');
+  try {
+    // Carrega pdf.js dinamicamente
+    if (!window.pdfjsLib) {
+      await new Promise((res, rej) => {
+        const s = document.createElement('script');
+        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+        s.onload = res; s.onerror = rej;
+        document.head.appendChild(s);
+      });
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+
+    // Coleta TODOS os spans com coordenadas X,Y de todas as páginas
+    const allSpans = [];
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const tc = await page.getTextContent();
+      tc.items.forEach(item => {
+        if (item.str.trim()) {
+          allSpans.push({
+            text: item.str.trim(),
+            page: i,
+            x: Math.round(item.transform[4]),
+            y: Math.round(item.transform[5])
+          });
+        }
+      });
+    }
+
+    // Agrupa por linha (Y ±4px), ordena por X dentro de cada linha
+    const linhasMap = {};
+    allSpans.forEach(sp => {
+      const yKey = Math.round(sp.y / 4) * 4;
+      if (!linhasMap[yKey]) linhasMap[yKey] = [];
+      linhasMap[yKey].push(sp);
+    });
+    // PDF: Y cresce de baixo pra cima — invertemos para ter ordem natural
+    const linhas = Object.keys(linhasMap)
+      .map(Number)
+      .sort((a, b) => b - a)
+      .map(y => linhasMap[y].sort((a, b) => a.x - b.x).map(s => s.text).join(' '));
+
+    const tokensOrdenados = linhas.join(' ').split(/\s+/).filter(Boolean);
+    const utils = OSU();
+    const sane = lista => !utils.isSaneCiliaPieces || utils.isSaneCiliaPieces(lista || []);
+    let pecas = utils.parseCiliaPiecesFromSpans ? utils.parseCiliaPiecesFromSpans(allSpans) : [];
+    if (!pecas.length || !sane(pecas)) {
+      pecas = utils.parseCiliaPiecesFromLines ? utils.parseCiliaPiecesFromLines(linhas) : [];
+    }
+    if (!pecas.length || !sane(pecas)) {
+      const porTokens = utils.parseCiliaPiecesFromTokens ? utils.parseCiliaPiecesFromTokens(tokensOrdenados) : [];
+      pecas = sane(porTokens) ? porTokens : [];
+    }
+    const brl = s => numBR(s);
+
+    for (const linha of (pecas.length ? [] : linhas)) {
+      // ── PADRÃO PRINCIPAL CÍLIA ──────────────────────────────────────────────
+      // "T R&I 0,00 1.00 BOMBA DE COMBUSTÍVEL Cód: 172029382R Oficina R$ 1.795,30 % 48,00 R$ 933,56"
+      // Captura: operação | TMO | qtd | DESCRIÇÃO Cód: CODIGO Fornec | preçoBruto | %desc | preçoLíquido
+      const mPrincipal = linha.match(
+        /(?:[TR](?:\s+R&I)?)\s+[\d,]+\s+([\d,]+)\s+(.+?)\s+C.?d[:\.]\s*([A-Z0-9\-\.\/]+)\s+\w+\s+R\$\s*([\d\.,]+)\s+%\s*[\d,]+\s+R\$\s*([\d\.,]+)/i
+      );
+      if (mPrincipal) {
+        pecas.push({
+          codigo: mPrincipal[3].trim(),
+          desc:   mPrincipal[2].trim(),
+          qtd:    numBR(mPrincipal[1]) || 1,
+          venda:  brl(mPrincipal[4]), // preço bruto fiel ao PDF; desconto do cliente calcula o líquido
+          ciliaValorLiquido: brl(mPrincipal[5])
+        });
+        continue;
+      }
+
+      // ── PADRÃO SEM OPERAÇÃO: "DESCRICAO Cód: CODIGO Qtd R$ PRECO_LIQ" ──────
+      const mSemOp = linha.match(/(.+?)\s+C.?d[:\.]\s*([A-Z0-9\-\.\/]+)\s+[\w\/]+\s+R\$\s*([\d\.,]+)\s+%\s*[\d,]+\s+R\$\s*([\d\.,]+)/i);
+      if (mSemOp) {
+        pecas.push({
+          codigo: mSemOp[2].trim(),
+          desc:   mSemOp[1].trim(),
+          qtd:    1,
+          venda:  brl(mSemOp[3]),
+          ciliaValorLiquido: brl(mSemOp[4])
+        });
+        continue;
+      }
+
+      // ── PADRÃO LEGADO (espaços largos): "CODIGO   DESCRICAO   QTD   VALOR" ─
+      const mLeg = linha.match(/^([A-Z0-9\-\.\/]{4,25})\s{2,}(.+?)\s{2,}(\d+(?:[,.]\d+)?)\s{2,}([\d\.,]+)\s*$/);
+      if (mLeg) {
+        pecas.push({
+          codigo: mLeg[1].trim(),
+          desc:   mLeg[2].trim(),
+          qtd:    numBR(mLeg[3]) || 1,
+          venda:  brl(mLeg[4])
+        });
+      }
+    }
+
+    if (!pecas.length || !sane(pecas)) {
+      if (typeof window.toast === 'function') window.toast('Não foi possível extrair as peças do PDF Cília com segurança. Tente exportar o Cília em XML para melhor resultado.', 'warn');
+      return;
+    }
+    _ciliaAdicionarPecas(pecas);
+  } catch(err) {
+    if (typeof window.toast === 'function') window.toast('Erro ao ler PDF Cília: ' + err.message, 'err');
+    console.error('[Cília PDF]', err);
+  }
+}

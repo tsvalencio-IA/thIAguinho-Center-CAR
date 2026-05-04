@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+<script>(function(){try{var t=localStorage.getItem("thiaguinho_theme");if(!t){t=window.matchMedia&&window.matchMedia("(prefers-color-scheme: light)").matches?"light":"dark";}document.documentElement.setAttribute("data-theme",t);}catch(e){document.documentElement.setAttribute("data-theme","dark");}})();</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>JARVIS ERP — Acesso ao Sistema</title>
+<title>thIAguinho ERP — Acesso ao Sistema</title>
 <!-- ═══ PWA ═══ -->
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#00D4FF">
@@ -89,6 +90,8 @@ body::after {
 </style>
 </head>
 <body>
+  <!-- Botão de alternância de tema fixo no canto superior (login) -->
+  <button data-theme-toggle style="position:fixed;top:14px;right:14px;z-index:9999;"></button>
 <div id="toast-container"></div>
 
 <div class="login-page" style="position:relative;z-index:1">
@@ -208,6 +211,30 @@ function _togglePwd() {
 document.getElementById('pwd').addEventListener('keydown', e => { if (e.key === 'Enter') autenticar(); });
 document.getElementById('usr').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('pwd').focus(); });
 
+function _dadosOficinaSessao(d) {
+  return {
+    nomeFantasia: d.nomeFantasia || '',
+    razaoSocial: d.razaoSocial || d.nomeFantasia || '',
+    cnpj: d.cnpj || '',
+    endereco: d.endereco || '',
+    numero: d.numero || '',
+    bairro: d.bairro || '',
+    cidade: d.cidade || '',
+    uf: d.uf || '',
+    cep: d.cep || '',
+    enderecoCompleto: d.enderecoCompleto || [d.endereco, d.numero, d.bairro, d.cidade, d.uf, d.cep].filter(Boolean).join(', '),
+    telefone: d.telefone || d.wpp || '',
+    email: d.email || '',
+    wpp: d.wpp || '',
+    responsavel: d.responsavel || '',
+    representante: d.representante || d.responsavel || '',
+    orcamentista: d.orcamentista || '',
+    nicho: d.nicho || 'carros',
+    firebaseConfig: d.firebaseConfig || null,
+    apiKeys: d.apiKeys || {}
+  };
+}
+
 async function autenticar() {
   const usr = document.getElementById('usr').value.trim();
   const pwd = document.getElementById('pwd').value.trim();
@@ -267,6 +294,10 @@ async function autenticar() {
         j_cloud_name:   d.apiKeys?.cloudName   || 'dmuvm1o6m',
         j_cloud_preset: d.apiKeys?.cloudPreset || 'evolution',
       };
+      sessao.j_oficina = JSON.stringify(_dadosOficinaSessao(d));
+      if (d.firebaseConfig?.projectId && d.firebaseConfig?.apiKey) {
+        sessao.j_firebase_config = JSON.stringify(d.firebaseConfig);
+      }
 
       const brand = {
         name:       d.brandName    || d.nomeFantasia,
@@ -311,6 +342,10 @@ async function autenticar() {
         j_cloud_name:   maeData.apiKeys?.cloudName   || 'dmuvm1o6m',
         j_cloud_preset: maeData.apiKeys?.cloudPreset || 'evolution',
       };
+      sessao.j_oficina = JSON.stringify(_dadosOficinaSessao(maeData));
+      if (maeData.firebaseConfig?.projectId && maeData.firebaseConfig?.apiKey) {
+        sessao.j_firebase_config = JSON.stringify(maeData.firebaseConfig);
+      }
 
       const brand = {
         name:       maeData.brandName    || maeData.nomeFantasia,
@@ -357,5 +392,6 @@ function _hexDim(hex, alpha) {
   return `rgba(${r},${g},${b},${alpha})`;
 }
 </script>
+<script src="js/theme.js"></script>
 </body>
 </html>

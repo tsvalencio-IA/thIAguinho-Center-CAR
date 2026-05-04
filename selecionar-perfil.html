@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+<script>(function(){try{var t=localStorage.getItem("thiaguinho_theme");if(!t){t=window.matchMedia&&window.matchMedia("(prefers-color-scheme: light)").matches?"light":"dark";}document.documentElement.setAttribute("data-theme",t);}catch(e){document.documentElement.setAttribute("data-theme","dark");}})();</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>thIAguinho — Selecionar Perfil</title>
@@ -363,6 +364,8 @@ body::after {
 </head>
 
 <body>
+  <!-- Botão de alternância de tema fixo no canto superior (selecionar perfil) -->
+  <button data-theme-toggle style="position:fixed;top:14px;right:14px;z-index:9999;"></button>
   <div class="container">
 
     <div class="brand-header">
@@ -442,5 +445,6 @@ body::after {
       }, 80);
     }
   </script>
+<script src="js/theme.js"></script>
 </body>
 </html>
